@@ -6,9 +6,15 @@ import PaginationContainer from "../components/pagination";
 import CustomSkeleton from "../components/skeleton";
 import SortOrdersList from "../components/sortOrderList";
 import RiderCard from "../components/riderCard";
+import SearchInput from "../components/searchInput";
+import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import { Space, Switch } from "antd";
+import SearchCard from "../components/searchCard";
 
 export default function OrderManagement() {
   const [riders, setRiders] = useState(null);
+  const [searchType, setSearchType] = useState("phone");
+  const [searchResult, setSearchResult] = useState(null);
 
   const { data, loading } = useFetch("/admin/list-of-riders");
 
@@ -16,6 +22,8 @@ export default function OrderManagement() {
     console.log(data);
     setRiders(data);
   }, [data]);
+
+  console.log(searchResult);
 
   return (
     <Layout>
@@ -28,9 +36,33 @@ export default function OrderManagement() {
           List of riders
         </h1>
 
-        <div className="ml-48 my-4">
-          Filter: <SortOrdersList setRiders={setRiders} />
+        <div className="w-full flex items-center justify-evenly my-8 ">
+          <div className="">
+            Filter: <SortOrdersList setRiders={setRiders} />
+          </div>
+          <div className="flex items-center gap-2">
+            <div>
+              <Switch
+                checkedChildren={searchType}
+                unCheckedChildren={searchType}
+                defaultChecked
+                onChange={() => {
+                  setSearchType((prev) => {
+                    return prev === "phone" ? "id" : "phone";
+                  });
+                }}
+              />
+            </div>
+            <SearchInput
+              inputType="rider"
+              searchType={searchType}
+              setSearchResult={setSearchResult}
+            />
+          </div>
         </div>
+
+        <div>{searchResult && <SearchCard rider={searchResult?.riders}/>}</div>
+
         <div className="flex items-center justify-center gap-12 flex-wrap">
           {riders === null ? <CustomSkeleton /> : null}
           {riders &&

@@ -10,6 +10,11 @@ import OrderManagement from "./pages/orderManagement";
 import RiderManagement from "./pages/riderManagement";
 import RestrauntManagement from "./pages/restrauntManagement";
 import NotFound from "./pages/notFound";
+import MenuManagement from "./pages/menuManagement";
+import UserManagement from "./pages/userManagement";
+import { Toaster } from "react-hot-toast";
+import RestaurantListOfMenu from "./pages/restaurantListOfMenu";
+import CategoryManagement from "./pages/categoryManagement";
 
 function App() {
   return (
@@ -19,6 +24,9 @@ function App() {
         autoClose={3000}
         hideProgressBar={true}
       />
+
+      <Toaster position="top-center" />
+
       <AuthProvider>
         <BrowserRouter>
           <Routes>
@@ -59,6 +67,14 @@ function App() {
             />
 
             <Route
+              path="/category-management"
+              element={
+                <ProtectedRoute>
+                  <CategoryManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/restaurant-management"
               element={
                 <ProtectedRoute>
@@ -66,7 +82,31 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/menu-management"
+              element={
+                <ProtectedRoute>
+                  <MenuManagement />
+                </ProtectedRoute>
+              }
+            />
 
+            <Route
+              path="/user-management"
+              element={
+                <ProtectedRoute>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/restaurant/menu-list/:id"
+              element={
+                <ProtectedRoute>
+                  <RestaurantListOfMenu />
+                </ProtectedRoute>
+              }
+            />
             {/* not found page */}
             <Route path="/*" element={<NotFound />} />
           </Routes>

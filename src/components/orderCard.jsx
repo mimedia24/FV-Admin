@@ -2,9 +2,18 @@ import { Card } from "antd";
 import ChangeStatus from "./changeStatus";
 import { useState } from "react";
 import AssignRiderModal from "./assignRiderModal";
+import DeleteOrderButton from "./deleteOrderButton";
+import convertDateAsLocalTime from "../helpers/timeStamp";
 export default function OrderCard({ order }) {
   const [status, setStatus] = useState(order?.status);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [orderTime, setOrderTime] = useState(
+    convertDateAsLocalTime(order?.orderDate)
+  );
+
+  const [updateTime, setUpdateTime] = useState(
+    convertDateAsLocalTime(order?.updateTime)
+  );
 
   return (
     <Card style={{ width: 450 }}>
@@ -29,8 +38,8 @@ export default function OrderCard({ order }) {
       <p>Rider ID: {order?.riderId || "N/A"}</p>
       <p>Total Amount: BDT {order?.totalAmount}</p>
       <p>Delivery Amount: BDT {order?.deliveryAmount}</p>
-      <p>Updated Time: {order?.updateTime}</p>
-
+      <p>Order Time: {orderTime}</p>
+      <p>Last update: {updateTime}</p>
       <div>
         <ChangeStatus order={order} status={status} setStatus={setStatus} />
 
@@ -46,12 +55,9 @@ export default function OrderCard({ order }) {
           isModalOpen={isModalOpen}
           setIsModalOpen={setIsModalOpen}
         />
-        <button className="px-4 py-1 bg-blue-500 text-white  me-4 rounded-sm mt-3 capitalize">
-          delete order
-        </button>
-        <button className="px-4 py-1 bg-blue-300  me-4 rounded-md mt-3 capitalize">
-          assign order
-        </button>
+
+        <DeleteOrderButton order={order} />
+        
       </div>
     </Card>
   );

@@ -46,6 +46,7 @@ export default function OrderManagement() {
         <div className="flex items-center justify-center gap-12 flex-wrap">
           {orders === null ? <CustomSkeleton /> : null}
           {orders &&
+            orders?.orders.length > 0 &&
             orders?.orders.map((order) => (
               <OrderCard order={order} key={order._id} />
             ))}

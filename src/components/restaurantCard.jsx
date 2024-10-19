@@ -1,18 +1,14 @@
 import { Card } from "antd";
 import React, { useState } from "react";
 import ChangeRestaurantStatus from "./changeRestaurantStatus";
+import { Link } from "react-router-dom";
 
 export default function RestaurantCard({ restaurant }) {
   const [status, setStatus] = useState(restaurant?.status);
   return (
     <Card className="w-[500px]">
-
-
-<div className="absolute top-4 right-8 w-24 h-24 rounded-full bg-gray-100">
-        <img
-          src={restaurant?.profileImage}
-          alt=""
-        />
+      <div className="absolute top-4 right-8 w-24 h-24 rounded-full bg-gray-100">
+        <img src={restaurant?.profileImage} alt="" />
       </div>
 
       <p>
@@ -48,10 +44,12 @@ export default function RestaurantCard({ restaurant }) {
 
       <div>
         <ChangeRestaurantStatus
-          restaurant={ restaurant }
+          restaurant={restaurant}
           status={status}
           setStatus={setStatus}
         />
+
+        <Link className="px-4 py-2 rounded-sm text-white bg-blue-500" to={`/restaurant/menu-list/${restaurant._id}`}>View menu</Link>
       </div>
     </Card>
   );

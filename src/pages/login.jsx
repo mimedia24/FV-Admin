@@ -30,6 +30,11 @@ export default function Login() {
       });
       const result = await apiResponse.json();
 
+      if(!result?.success){
+        toast(result?.message);
+        return false;
+      }
+
       if (result?.accessToken) {
         setAdmin(true);
         navigate("/dashboard");

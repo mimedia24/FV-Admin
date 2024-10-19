@@ -28,6 +28,16 @@ const navigation = [
     href: "/user-management",
     icon: "",
   },
+  {
+    title: "Menu management",
+    href: "/menu-management",
+    icon: "",
+  },
+  {
+    title: "Category management",
+    href: "/category-management",
+    icon: "",
+  },
 ];
 
 export default function SiderBar() {
@@ -47,7 +57,7 @@ export default function SiderBar() {
         {navigation.map((item) => {
           return (
             <Link
-              className="block py-3 px-3 w-full bg-blue-400 mt-5 rounded-md text-white text-center"
+              className="block py-3 px-3 w-full bg-blue-400 mt-5 text-sm rounded-md text-white text-center"
               key={item.title}
               to={item.href}
             >

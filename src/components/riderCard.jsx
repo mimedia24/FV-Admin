@@ -7,16 +7,13 @@ export default function RiderCard({ order: rider }) {
   const [status, setStatus] = useState(rider?.riderStatus);
   const [session, setSession] = useState(rider?.session);
 
-  useEffect(() => {
-    console.log(rider)
-  }, []);
-
   return (
     <Card style={{ width: 450 }}>
-      <div className="absolute top-4 right-8 w-24 h-24 rounded-full bg-gray-100">
+      <div className="absolute top-4 right-8 w-24 h-24 object-cover rounded-full bg-gray-100">
         <img
           src={rider?.profileImage}
           alt=""
+          className="object-cover absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full h-full w-full border-2"
         />
       </div>
       <p>Rider ID: {rider?._id}</p>
@@ -53,7 +50,7 @@ export default function RiderCard({ order: rider }) {
               ? "px-2 py-1 bg-gray-400 text-white rounded-sm"
               : session === "Offline"
               ? "px-2 py-1 bg-red-600 text-white rounded-sm"
-              : session === "Out for delivery"
+              : session === "Out For Delivery"
               ? "px-2 py-1 bg-sky-600 text-white rounded-sm"
               : null
           }
@@ -62,6 +59,9 @@ export default function RiderCard({ order: rider }) {
         </span>
       </p>
 
+      <p>
+        Full Name: <span>{rider.name}</span>
+      </p>
       <p>
         Phone Number: <span>{rider.phoneNumber}</span>
       </p>
