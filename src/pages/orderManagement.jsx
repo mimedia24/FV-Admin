@@ -43,14 +43,48 @@ export default function OrderManagement() {
             /> */}
           </div>
         </div>
-        <div className="flex items-center justify-center gap-12 flex-wrap">
-          {orders === null ? <CustomSkeleton /> : null}
-          {orders &&
-            orders?.orders.length > 0 &&
-            orders?.orders.map((order) => (
-              <OrderCard order={order} key={order._id} />
-            ))}
+
+        <div>
+          <div className="overflow-x-scroll w-full">
+            <table className="w-[95%] mx-auto border p-2 ">
+              <thead>
+                <tr>
+                  <th className="border py-4 px-1">SL NO</th>
+                  <th className="border py-4 px-1">Order ID</th>
+                  <th className="border py-4 px-1 min-w-32">Status</th>
+                  <th className="border py-4 px-1">User ID</th>
+                  <th className="border py-4 px-1">Restaurant ID</th>
+                  <th className="border py-4 px-1">Rider ID</th>
+                  <th className="border py-4 px-1 max-w-[80px]">
+                    Order Amount
+                  </th>
+                  <th className="border py-4 px-1 ">Delivery amount</th>
+                  <th className="border py-4 px-1 min-w-[150px]">
+                    Update Time
+                  </th>
+                  <th className="border py-4 px-1">Change Status</th>
+                  <th className="border py-4 px-1">Assign Rider</th>
+                  <th className="border py-4 px-1">Delete</th>
+                  <th className="border py-4 px-1"> view items</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {orders &&
+                  orders?.orders.length > 0 &&
+                  orders?.orders.map((order, index) => (
+                    <OrderCard order={order} key={order._id} slNo={index} />
+                  ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+
+        <div className="w-full flex items-center justify-center mt-12 mx-auto">
+          {orders === null ? <CustomSkeleton /> : null}
+        </div>
+
+        <div className="flex items-center justify-center gap-12 flex-wrap"></div>
 
         <div className="w-full flex items-center justify-center mt-5">
           <PaginationContainer setOrders={setOrders} orders={orders} />

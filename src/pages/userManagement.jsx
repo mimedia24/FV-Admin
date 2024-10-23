@@ -23,16 +23,56 @@ export default function UserManagement() {
           All user list
         </h1>
 
-        <div className="w-fit mx-auto mt-12">
-          {loading ? <CustomSkeleton /> : null}
+        <div className="w-[90%] mx-auto overflow-scroll">
+          <table className="w-full text-sm border">
+            <thead>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Sl no
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                ID
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Avater
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Status
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Name
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Email
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Phone
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Home
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Office
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Others
+              </th>
+              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
+                Action
+              </th>
+            </thead>
+
+            <tbody>
+              {user && user.length > 0
+                ? user.map((user, index) => (
+                    <UserCard slNO={index} detail={user} key={user?._id} />
+                  ))
+                : null}
+            </tbody>
+          </table>
         </div>
 
-        <div className="flex items-center flex-wrap gap-8 justify-center  ">
-          {user && user.length > 0 ? (
-            user.map((user) => <UserCard detail={user} key={user?._id}/>)
-          ) : (
-            <h1> No users found.</h1>
-          )}
+        <div className="w-fit mx-auto mt-12">
+          {loading ? <CustomSkeleton /> : null}
         </div>
       </div>
     </Layout>

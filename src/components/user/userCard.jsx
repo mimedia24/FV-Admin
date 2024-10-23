@@ -2,60 +2,78 @@ import { Card } from "antd";
 import React, { useState } from "react";
 import ChangeUserStatus from "./changeUserStatus";
 
-export default function UserCard({ detail }) {
+export default function UserCard({ detail, slNO }) {
   const [address, setAddress] = useState(detail.address);
 
   const [status, setStatus] = useState(detail?.status);
   return (
-    <Card
-      style={{
-        width: 350,
-      }}
-    >
-      <h1>
-        ID: <span>{detail?._id}</span>
-      </h1>
-      <h1>
-        status:
+    <tr>
+      <td className="border px-2 text-center">{slNO + 1}</td>
+      <td className="border px-2 text-center">
+        <span>{detail?._id}</span>
+      </td>
+      <td className="border px-2 flex items-center justify-center py-1">
+        <img
+          src={detail.profileImage || "images/avater.png"}
+          alt="profile-image"
+          className="w-12 border h-12 rounded-full"
+        />
+      </td>
+      <td className="border px-2 text-center">
         <span
           className={
             status == "active"
-              ? "px-4 py-1 text-white bg-blue-500"
-              : "px-4 py-1 text-white bg-orange-500"
+              ? "px-4 py-1 min-w-[70px] inline-block text-white bg-blue-500"
+              : "px-4 py-1 min-w-[70px] inline-block text-white bg-orange-500"
           }
         >
           {status}
         </span>
-      </h1>
-      <h1>
-        Name: <span>{detail.fullName}</span>
-      </h1>
-      <h1>
-        Email: <span>{detail.email}</span>
-      </h1>
-      <h1>
-        Phone: <span>{detail.phoneNumber}</span>
-      </h1>
-      <h1>Addresses</h1>
-      <div>
-        <h1>
-          Home: <span>{address?.home?.address}</span>
-        </h1>
-        <h1>
-          Office: <span>{address?.home?.office}</span>
-        </h1>
-        <h1>
-          Others: <span>{address?.home?.others}</span>
-        </h1>
-      </div>
+      </td>
+      <td className="border px-2 text-center">
+        <span>{detail.fullName}</span>
+      </td>
+      <td className="border px-2 text-center">
+        <span>{detail.email}</span>
+      </td>
+      <td className="border px-2 text-center">
+        <span>{detail.phoneNumber}</span>
+      </td>
+      <td className="border px-2 text-center">
+        <span className="block">{address?.home?.address}</span>
+        <span className="block">
+          longitude: {address?.office?.coordinator?.longitude}
+        </span>
+        <span className="block">
+          latitude: {address?.office?.coordinator?.latitude}
+        </span>
+      </td>
 
-      <div>
+      <td className="border px-2 text-center ">
+        <span className="block">{address?.office?.address}</span>
+        <span className="block">
+          longitude: {address?.office?.coordinator?.longitude}
+        </span>
+        <span className="block">
+          latitude: {address?.office?.coordinator?.latitude}
+        </span>
+      </td>
+      <td className="border px-2 text-center">
+        <span className="block">{address?.others?.address}</span>
+        <span className="block">
+          longitude: {address?.others?.coordinator?.longitude}
+        </span>
+        <span className="block">
+          latitude: {address?.others?.coordinator?.latitude}
+        </span>
+      </td>
+      <td className="border px-2 text-center">
         <ChangeUserStatus
           detail={detail}
           status={status}
           setStatus={setStatus}
         />
-      </div>
-    </Card>
+      </td>
+    </tr>
   );
 }

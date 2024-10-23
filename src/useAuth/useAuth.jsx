@@ -9,20 +9,14 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const accessToken = Cookies.get("accessToken");
-    console.log(Cookies.get());
-
-    if (accessToken) {
-      setAdmin(true);
-      setLoading(false);
-    } else {
-      setAdmin(false);
-      setLoading(false);
-    }
+  
+    setAdmin(!!accessToken); 
+    setLoading(false); 
   }, []);
 
   return (
     <authContext.Provider value={{ admin, setAdmin, loading }}>
-      {children}
+      {loading ? <div>Loading...</div> : children}
     </authContext.Provider>
   );
 };

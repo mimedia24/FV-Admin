@@ -3,54 +3,26 @@ import React, { useState } from "react";
 import { Card } from "antd";
 import ChangeStatus from "./changeStatus";
 import UpdateMenuDiscountRate from "./updateMenuDiscountRate";
-export default function MenuCard({ menu, setMenus }) {
+export default function MenuCard({ menu, setMenus, slNo }) {
   const [status, setStatus] = useState(menu?.status);
 
   return (
-    <Card
-      style={{
-        width: 300,
-      }}
-    >
-      <div>
+    <tr className="w-full border text-center text-sm">
+      <td className="text-sm text-center border px-3 py-1 min-w-20">{slNo + 1}</td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">{menu._id}</td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
         <img
           className="w-20 h-20 rounded-full border-2 object-cover"
           src={menu?.image || "/images/menuIcon.png"}
           alt="image"
         />
-      </div>
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">{menu.restaurantId}</td>
 
-      <h1>
-        Menu ID: <span>{menu._id}</span>
-      </h1>
-      <h1>
-        Restaurant ID: <span>{menu.restaurantId}</span>
-      </h1>
-      <h1>
-        Category: <span className="px-4 py-1 rounded-sm text-white bg-blue-500">{menu.category}</span>
-      </h1>
-      <h1>
-        Title: <span>{menu.name}</span>
-      </h1>
-      <h1>
-        Description: <span>{menu.description}</span>
-      </h1>
-
-      <h1>
-        Based Price:{" "}
-        <span className="text-lg font-bold">BDT {menu.basedPrice}</span>
-      </h1>
-      <h1>
-        Discount Rate:{" "}
-        <span className="text-lg font-bold">{menu.discountRate}%</span>
-      </h1>
-      <h1>
-        Offer Price:{" "}
-        <span className="text-lg font-bold">BDT {menu.offerPrice}</span>
-      </h1>
-
-      <h1 className="mt-2">
-        status:{" "}
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <span className="px-3 py-1 text-center bg-blue-500 text-white min-w-16 inline-block">{menu.category}</span>
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
         <span
           className={
             status === "in stock"
@@ -64,11 +36,29 @@ export default function MenuCard({ menu, setMenus }) {
         >
           {status}
         </span>
-      </h1>
-      <div className="mt-4 flex flex-wrap gap-4">
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <span>{menu.name}</span>
+      </td>
+      <td className="text-sm text-center border px-3 py-1 overflow-scroll max-w-20">
+        <span>{menu.description}</span>
+      </td>
+
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <span className="text-lg font-bold">BDT {menu.basedPrice}</span>
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <span className="text-lg font-bold">{menu.discountRate}%</span>
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <span className="text-lg font-bold">BDT {menu.offerPrice}</span>
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
         <ChangeStatus menu={menu} setStatus={setStatus} status={status} />
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
         <UpdateMenuDiscountRate menu={menu} />
-      </div>
-    </Card>
+      </td>
+    </tr>
   );
 }

@@ -1,9 +1,9 @@
 import { Button, Form, Input } from "antd";
 import { apiAuthToken, apiPath } from "../../secrets";
-import { Navigate, redirect, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../useAuth/useAuth";
-import { toast } from "react-toastify";
+import Cookies from "js-cookie";
+import toast from "react-hot-toast";
 
 const onFinishFailed = (errorInfo) => {
   console.log("Failed:", errorInfo);
@@ -29,14 +29,14 @@ export default function Login() {
         }),
       });
       const result = await apiResponse.json();
-
-      if(!result?.success){
-        toast(result?.message);
+      if (result.result === "Invalid credentials.") {
+        toast(result.result);
         return false;
       }
 
       if (result?.accessToken) {
         setAdmin(true);
+        Cookies.set("accessToken", result.accessToken);
         navigate("/dashboard");
       }
     } catch (error) {

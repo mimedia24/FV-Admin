@@ -1,9 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Layout from "./layout";
-import handleApiRequest from "../helpers/handleApiRequest";
-import { apiPath } from "../../secrets";
 import useFetch from "../useFetch/useFetch";
-import { Skeleton } from "antd";
 import CustomSkeleton from "../components/skeleton";
 import FilterMenu from "../components/menu/filterMenu";
 import MenuCard from "../components/menu/menuCard";
@@ -30,22 +27,46 @@ export default function MenuManagement() {
         <FilterMenu setMenus={setMenus} />
         <FilterMenuByCategory />
       </div>
+
+      <div className="w-[90%] mx-auto overflow-scroll">
+        <table className="w-full">
+          <thead>
+            <th className="text-center border px-2 text-gray-400">SL No</th>
+            <th className="text-center border px-2 text-gray-400">ID</th>
+            <th className="text-center border px-2 text-gray-400">Thumbnails</th>
+            <th className="text-center border px-2 text-gray-400">Restaurant ID</th>
+            <th className="text-center border px-2 text-gray-400">Category</th>
+            <th className="text-center border px-2 text-gray-400">Status</th>
+            <th className="text-center border px-2 text-gray-400">Title</th>
+            <th className="text-center border px-2 text-gray-400">Description</th>
+            <th className="text-center border px-2 text-gray-400">Based Price</th>
+            <th className="text-center border px-2 text-gray-400">Discount</th>
+            <th className="text-center border px-2 text-gray-400">Offer Price</th>
+            <th className="text-center border px-2 text-gray-400">Change status</th>
+            <th className="text-center border px-2 text-gray-400">Update Discount</th>
+          </thead>
+
+          <tbody>
+            {menus &&
+              menus.length > 0 &&
+              menus.map((menu, index) => (
+                <MenuCard
+                  key={menu?._id}
+                  menus={menus}
+                  setMenus={setMenus}
+                  menu={menu}
+                  slNo={index}
+                />
+              ))}
+          </tbody>
+        </table>
+      </div>
+
       <div className="w-full flex  items-center justify-center mt-12">
         {loading ? <CustomSkeleton /> : null}
       </div>
 
-      <div className="flex items-center justify-center gap-12  flex-wrap">
-        {menus &&
-          menus.length > 0 &&
-          menus.map((menu) => (
-            <MenuCard
-              key={menu?._id}
-              menus={menus}
-              setMenus={setMenus}
-              menu={menu}
-            />
-          ))}
-      </div>
+      <div className="flex items-center justify-center gap-12  flex-wrap"></div>
     </Layout>
   );
 }

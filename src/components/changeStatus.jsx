@@ -40,7 +40,8 @@ export default function ChangeStatus({ order, status, setStatus }) {
       className="mr-4"
       defaultValue={status}
       style={{
-        width: "40%",
+        width: "100px",
+        margin: "0 auto"
       }}
       onChange={handleChange}
       options={[
