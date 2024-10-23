@@ -3,9 +3,49 @@ import Layout from "./layout";
 import useFetch from "../useFetch/useFetch";
 import CustomSkeleton from "../components/skeleton";
 import UserCard from "../components/user/userCard";
+import { Input } from "antd";
+const { Search } = Input;
+
+const userTableHeading = [
+  {
+    title: "Sl no",
+  },
+  {
+    title: "ID",
+  },
+  {
+    title: "Avater",
+  },
+  {
+    title: "Status",
+  },
+  {
+    title: "Name",
+  },
+  {
+    title: "Email",
+  },
+  {
+    title: "Phone",
+  },
+  {
+    title: "Home",
+  },
+  {
+    title: "Office",
+  },
+  {
+    title: "Others",
+  },
+  {
+    title: "Action",
+  },
+];
 
 export default function UserManagement() {
   const [user, setUser] = useState(null);
+
+  const onSearch = (value, _e, info) => console.log(info?.source, value);
 
   const { data, loading } = useFetch("/admin/list-of-users", {});
 
@@ -23,42 +63,29 @@ export default function UserManagement() {
           All user list
         </h1>
 
+        <div className="w-4/5 mx-auto my-4">
+          <Search
+            placeholder="search user by phone"
+            allowClear
+            enterButton="Search"
+            size="medium"
+            onSearch={onSearch}
+          />
+        </div>
+
         <div className="w-[90%] mx-auto overflow-scroll">
           <table className="w-full text-sm border">
             <thead>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Sl no
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                ID
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Avater
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Status
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Name
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Email
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Phone
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Home
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Office
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Others
-              </th>
-              <th className="text-center px-2 py-1 border text-gray-400 min-w-24">
-                Action
-              </th>
+              {userTableHeading.map((title, index) => {
+                return (
+                  <th
+                    key={index}
+                    className="text-center px-2 py-1 border text-gray-400 min-w-24"
+                  >
+                    {title.title}
+                  </th>
+                );
+              })}
             </thead>
 
             <tbody>

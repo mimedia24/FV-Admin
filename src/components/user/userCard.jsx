@@ -12,11 +12,11 @@ export default function UserCard({ detail, slNO }) {
       <td className="border px-2 text-center">
         <span>{detail?._id}</span>
       </td>
-      <td className="border px-2 flex items-center justify-center py-1">
+      <td className="border px-2 py-1">
         <img
           src={detail.profileImage || "images/avater.png"}
           alt="profile-image"
-          className="w-12 border h-12 rounded-full"
+          className="w-12 border mx-auto h-12 rounded-full"
         />
       </td>
       <td className="border px-2 text-center">
