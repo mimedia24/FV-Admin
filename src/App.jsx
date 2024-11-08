@@ -15,6 +15,7 @@ import UserManagement from "./pages/userManagement";
 import { Toaster } from "react-hot-toast";
 import RestaurantListOfMenu from "./pages/restaurantListOfMenu";
 import CategoryManagement from "./pages/categoryManagement";
+import Offermanagement from "./pages/Offermanagement";
 
 function App() {
   return (
@@ -107,6 +108,16 @@ function App() {
                 </ProtectedRoute>
               }
             />
+
+            <Route
+              path="/offer-management"
+              element={
+                <ProtectedRoute>
+                  <Offermanagement />
+                </ProtectedRoute>
+              }
+            />
+
             {/* not found page */}
             <Route path="/*" element={<NotFound />} />
           </Routes>

@@ -38,6 +38,11 @@ const navigation = [
     href: "/category-management",
     icon: "",
   },
+  {
+    title: "Offer Management",
+    href: "/offer-management",
+    icon: "",
+  },
 ];
 
 export default function SiderBar() {

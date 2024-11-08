@@ -3,6 +3,7 @@ import Layout from "./layout";
 import useFetch from "../useFetch/useFetch";
 import CustomSkeleton from "../components/skeleton";
 import CategoryCard from "../components/category/CategoryCard";
+import AddCategoryModal from "../components/category/AddCategoryModal";
 
 export default function CategoryManagement() {
   const [categories, setCategories] = React.useState(null);
@@ -23,13 +24,21 @@ export default function CategoryManagement() {
       </div>
 
       <div className="w-full flex items-center justify-center mt-5">
+        <AddCategoryModal setCategories={setCategories} />
+      </div>
+
+      <div className="w-full flex items-center justify-center mt-5">
         {loading ? <CustomSkeleton /> : null}
       </div>
 
-      <div className="flex p-8 items-center justify-center gap-8 ">
+      <div className="flex p-8 flex-wrap items-center justify-center gap-8 ">
         {categories &&
           categories.map((category) => (
-            <CategoryCard key={category._id} category={category} />
+            <CategoryCard
+              key={category._id}
+              category={category}
+              setCategories={setCategories}
+            />
           ))}
       </div>
     </Layout>
