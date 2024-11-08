@@ -4,10 +4,12 @@ import axios from "axios";
 import { apiAuthToken, apiPath } from "../../secrets";
 import OfferCard from "../components/offer/OfferCard";
 import CustomSkeleton from "../components/skeleton";
+import AddOfferModal from "../components/offer/AddOfferModal";
 
 export default function Offermanagement() {
   const [advertisement, setAdvertisement] = useState(null);
   const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     async function fetchAdvertisementImage() {
       try {
@@ -24,8 +26,8 @@ export default function Offermanagement() {
           setLoading(false);
         }
       } catch (error) {
-        throw new Error(error);
         setLoading(false);
+        throw new Error(error);
       }
     }
     fetchAdvertisementImage();
@@ -44,6 +46,10 @@ export default function Offermanagement() {
 
         <div className="w-full text-center text-3xl text-gray-400">
           Advertisement image
+        </div>
+
+        <div className="flex items-center justify-center mt-12">
+          <AddOfferModal />
         </div>
         {loading ? (
           <div className="w-full flex items-center justify-center mt-8">
