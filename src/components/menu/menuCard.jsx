@@ -45,7 +45,7 @@ export default function MenuCard({ menu, setMenus, slNo }) {
       </td>
 
       <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="text-lg font-bold">BDT {menu.basedPrice}</span>
+        <span className="text-lg font-bold">BDT {menu.basePrice}</span>
       </td>
       <td className="text-sm text-center border px-3 py-1 min-w-20">
         <span className="text-lg font-bold">{menu.discountRate}%</span>

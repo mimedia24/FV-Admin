@@ -13,7 +13,7 @@ const defaultForm = {
   thumbnail: null,
 };
 
-function AddOfferModal({ setCategories }) {
+function AddOfferModal() {
   const [formData, setFormData] = useState(defaultForm);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const showModal = () => {
@@ -46,7 +46,7 @@ function AddOfferModal({ setCategories }) {
 
     if (data.success) {
       toast.success(data.message);
-      setCategories(data.category);
+
       setFormData(defaultForm);
       setIsModalOpen(false);
     } else {
