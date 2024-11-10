@@ -16,6 +16,7 @@ import { Toaster } from "react-hot-toast";
 import RestaurantListOfMenu from "./pages/restaurantListOfMenu";
 import CategoryManagement from "./pages/categoryManagement";
 import Offermanagement from "./pages/Offermanagement";
+import Settings from "./pages/Settings";
 
 function App() {
   return (
@@ -114,6 +115,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Offermanagement />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
                 </ProtectedRoute>
               }
             />

@@ -37,6 +37,7 @@ export default function Login() {
       if (result?.accessToken) {
         setAdmin(true);
         Cookies.set("accessToken", result.accessToken);
+        localStorage.setItem("id", result.id);
         navigate("/dashboard");
       }
     } catch (error) {

@@ -11,11 +11,13 @@ import { IoFastFoodSharp } from "react-icons/io5";
 import { FaUserFriends } from "react-icons/fa";
 import { BiCategory } from "react-icons/bi";
 import { FaMoneyBillAlt } from "react-icons/fa";
+import { IoMdSettings } from "react-icons/io";
 const navigation = [
   {
     title: "Dashboard",
     href: "/dashboard",
     icon: <FaHome />,
+    default: true,
   },
   {
     title: "Order managenet",
@@ -51,6 +53,11 @@ const navigation = [
     title: "Offer Management",
     href: "/offer-management",
     icon: <FaMoneyBillAlt />,
+  },
+  {
+    title: "Settings",
+    href: "/settings",
+    icon: <IoMdSettings />,
   },
 ];
 

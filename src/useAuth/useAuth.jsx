@@ -1,3 +1,4 @@
+
 import { useContext, useState, useEffect, createContext } from "react";
 import Cookies from "js-cookie";
 
@@ -9,7 +10,6 @@ const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const accessToken = Cookies.get("accessToken");
-  
     setAdmin(!!accessToken); 
     setLoading(false); 
   }, []);
