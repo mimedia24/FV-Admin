@@ -72,7 +72,7 @@ export default function SiderBar() {
   }
 
   // get location
-  const location = useLocation();
+  let location = useLocation();
 
   return (
     <div className="flex flex-col justify-between items-center max-h-screen bg-slate-100 px-4 py-12 h-screen">

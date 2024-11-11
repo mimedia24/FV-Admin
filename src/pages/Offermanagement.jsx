@@ -56,12 +56,12 @@ export default function Offermanagement() {
             <CustomSkeleton />
           </div>
         ) : null}
-        <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 mt-8 lg:grid-cols-3 ">
           {advertisement?.map((item) => {
             return (
               <OfferCard
                 item={item}
-                key={item.id}
+                key={item._id}
                 setAdvertisement={setAdvertisement}
               />
             );

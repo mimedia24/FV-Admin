@@ -8,7 +8,7 @@ export default function RestaurantCard({ restaurant }) {
   return (
     <Card className="w-[500px]">
       <div className="absolute top-4 right-8 w-24 h-24 rounded-full bg-gray-100">
-        <img src={restaurant?.profileImage} alt="" />
+        <img src={restaurant?.image} alt="" className="object-cover w-full h-full rounded-full"/>
       </div>
 
       <p>

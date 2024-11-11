@@ -35,7 +35,9 @@ function Settings() {
               {settingsSubMenu.map((setting, i) => {
                 return (
                   <li
-                    className="text-md text-gray-600 px-4 py-2 cursor-pointer"
+                    className={
+                      subMenuItems === setting.href ? "text-md text-white bg-blue-500 px-4 py-2 cursor-pointer" : "text-md text-gray-600 px-4 py-2 cursor-pointer"
+                    }
                     onClick={() => setSubMenuItems(setting.href)}
                     key={i}
                   >
