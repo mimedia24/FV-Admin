@@ -3,13 +3,18 @@ import React, { useState } from "react";
 import { Card } from "antd";
 import ChangeStatus from "./changeStatus";
 import UpdateMenuDiscountRate from "./updateMenuDiscountRate";
+import UpdateMenuPlateFormFee from "./UpdateMenuPlateformFee";
 export default function MenuCard({ menu, setMenus, slNo }) {
   const [status, setStatus] = useState(menu?.status);
 
   return (
     <tr className="w-full border text-center text-sm">
-      <td className="text-sm text-center border px-3 py-1 min-w-20">{slNo + 1}</td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">{menu._id}</td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        {slNo + 1}
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        {menu._id}
+      </td>
       <td className="text-sm text-center border px-3 py-1 min-w-20">
         <img
           className="w-20 h-20 rounded-full border-2 object-cover"
@@ -17,21 +22,25 @@ export default function MenuCard({ menu, setMenus, slNo }) {
           alt="image"
         />
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">{menu.restaurantId}</td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        {menu.restaurantId}
+      </td>
 
       <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="px-3 py-1 text-center bg-blue-500 text-white min-w-16 inline-block">{menu.category}</span>
+        <span className="px-3 py-1 text-center bg-blue-500 text-white min-w-16 inline-block">
+          {menu.category}
+        </span>
       </td>
       <td className="text-sm text-center border px-3 py-1 min-w-20">
         <span
           className={
             status === "in stock"
-              ? "px-4 py-1 text-white bg-blue-500"
+              ? "px-4 py-1 text-[11px] min-w-fit text-white bg-blue-500"
               : status === "discontinued"
-              ? "px-4 py-1 text-white bg-red-500"
+              ? "px-4 py-1 text-[11px] min-w-fit text-white bg-red-500"
               : status === "out of stock"
-              ? "px-4 py-1 text-white bg-orange-500"
-              : "px-4 py-1 text-white bg-gray-500"
+              ? "px-4 py-1 text-[11px] min-w-fit text-white bg-orange-500"
+              : "px-4 py-1 text-[11px] min-w-fit text-white bg-gray-500"
           }
         >
           {status}
@@ -45,19 +54,29 @@ export default function MenuCard({ menu, setMenus, slNo }) {
       </td>
 
       <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="text-lg font-bold">BDT {menu.basePrice}</span>
+        <span className="text-[12px] font-bold">BDT {menu.basedPrice}</span>
       </td>
       <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="text-lg font-bold">{menu.discountRate}%</span>
+        <span className="text-[12px] font-bold">BDT {menu.plateformFee}</span>
       </td>
       <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="text-lg font-bold">BDT {menu.offerPrice}</span>
+        <span className="text-[12px] font-bold">BDT {menu.sellingPrice}</span>
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <span className="text-[12px] font-bold">{menu.discountRate}%</span>
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <span className="text-[12px] font-bold">BDT {menu.offerPrice}</span>
       </td>
       <td className="text-sm text-center border px-3 py-1 min-w-20">
         <ChangeStatus menu={menu} setStatus={setStatus} status={status} />
       </td>
       <td className="text-sm text-center border px-3 py-1 min-w-20">
         <UpdateMenuDiscountRate menu={menu} />
+      </td>
+
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <UpdateMenuPlateFormFee menu={menu} />
       </td>
     </tr>
   );

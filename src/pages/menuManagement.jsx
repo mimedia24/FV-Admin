@@ -28,22 +28,43 @@ export default function MenuManagement() {
         <FilterMenuByCategory />
       </div>
 
-      <div className="w-[90%] mx-auto overflow-scroll">
-        <table className="w-full">
+      <div className="w-[90%] mx-auto overflow-scroll  min-h-[250px]">
+        <table className="w-full text-[12px]">
           <thead>
             <th className="text-center border px-2 text-gray-400">SL No</th>
             <th className="text-center border px-2 text-gray-400">ID</th>
-            <th className="text-center border px-2 text-gray-400">Thumbnails</th>
-            <th className="text-center border px-2 text-gray-400">Restaurant ID</th>
+            <th className="text-center border px-2 text-gray-400">
+              Thumbnails
+            </th>
+            <th className="text-center border px-2 text-gray-400">
+              Restaurant ID
+            </th>
             <th className="text-center border px-2 text-gray-400">Category</th>
             <th className="text-center border px-2 text-gray-400">Status</th>
             <th className="text-center border px-2 text-gray-400">Title</th>
-            <th className="text-center border px-2 text-gray-400">Description</th>
-            <th className="text-center border px-2 text-gray-400">Based Price</th>
+            <th className="text-center border px-2 text-gray-400">
+              Description
+            </th>
+            <th className="text-center border px-2 text-gray-400">
+              Based Price
+            </th>
+            <th className="text-center border px-2 text-gray-400">
+              PlateformFee
+            </th>
+            <th className="text-center border px-2 text-gray-400">BasedPrice + plateformFee</th>
             <th className="text-center border px-2 text-gray-400">Discount</th>
-            <th className="text-center border px-2 text-gray-400">Offer Price</th>
-            <th className="text-center border px-2 text-gray-400">Change status</th>
-            <th className="text-center border px-2 text-gray-400">Update Discount</th>
+            <th className="text-center border px-2 text-gray-400">
+              Offer Price
+            </th>
+            <th className="text-center border px-2 text-gray-400">
+              Change status
+            </th>
+            <th className="text-center border px-2 text-gray-400">
+              Update Discount
+            </th>
+            <th className="text-center border px-2 text-gray-400">
+              Update plateformFee
+            </th>
           </thead>
 
           <tbody>

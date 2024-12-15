@@ -12,6 +12,9 @@ import { FaUserFriends } from "react-icons/fa";
 import { BiCategory } from "react-icons/bi";
 import { FaMoneyBillAlt } from "react-icons/fa";
 import { IoMdSettings } from "react-icons/io";
+
+import { FaMoneyCheckAlt } from "react-icons/fa";
+
 const navigation = [
   {
     title: "Dashboard",
@@ -53,6 +56,11 @@ const navigation = [
     title: "Offer Management",
     href: "/offer-management",
     icon: <FaMoneyBillAlt />,
+  },
+  {
+    title: "Schedule Charges",
+    href: "/charges",
+    icon: <FaMoneyCheckAlt />,
   },
   {
     title: "Settings",

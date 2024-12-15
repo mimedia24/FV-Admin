@@ -17,6 +17,7 @@ import RestaurantListOfMenu from "./pages/restaurantListOfMenu";
 import CategoryManagement from "./pages/categoryManagement";
 import Offermanagement from "./pages/Offermanagement";
 import Settings from "./pages/Settings";
+import Charges from "./pages/Charges";
 
 function App() {
   return (
@@ -55,6 +56,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <OrderManagement />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/charges"
+              element={
+                <ProtectedRoute>
+                  <Charges />
                 </ProtectedRoute>
               }
             />
