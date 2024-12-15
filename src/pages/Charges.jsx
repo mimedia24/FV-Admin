@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import Layout from "./layout";
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../secrets";
+import UpdateChargeForm from "../components/charges/UpdateChargeForm";
+import PostScheduleCharge from "../components/charges/PostScheduleChargeForm";
+import DeleteChargeList from "../components/charges/DeleteChargeList";
 
 export default function Charges() {
   const [charges, setCharges] = useState(null);
@@ -20,13 +23,6 @@ export default function Charges() {
       } catch (error) {
         throw new Error(error);
       }
-
-      // if (data.success) {
-      //   console.log(`charges is : ${data.charges[0]}`);
-      //   setChargeList(data.charges[0]);
-      // } else {
-      //   toast.error("something went wrong. Please try again.");
-      // }
     }
 
     getChargeList();
@@ -39,6 +35,9 @@ export default function Charges() {
         </h1>
 
         <div className="p-4 md:p-8 lg:p-12">
+          <div className="my-2 ">
+            <PostScheduleCharge />
+          </div>
           <div>
             <table className="w-full">
               <tr>
@@ -86,10 +85,15 @@ export default function Charges() {
                           {item.userOthersKMCharge}
                         </td>
                         <td className="border px-3 py-1 text-sm text-center">
-                          {item.isActive ? "active" : "disabled"}
+                          {item.isActive ? (
+                            <span className="text-blue-500">active</span>
+                          ) : (
+                            <span className="text-red-500">disabled</span>
+                          )}
                         </td>
-                        <td className="border px-3 py-1 text-sm text-center">
-                          edit
+                        <td className="border px-3 py-1 text-sm text-center grid grid-cols-2 w-full items-center justify-center">
+                          <UpdateChargeForm item={item} />
+                          <DeleteChargeList item={item} />
                         </td>
                       </tr>
                     );
