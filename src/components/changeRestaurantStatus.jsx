@@ -45,24 +45,24 @@ export default function ChangeRestaurantStatus({
       onChange={handleChange}
       options={[
         {
-          value: "Active",
-          label: "Active",
+          value: "active",
+          label: "active",
         },
         {
-          value: "Not Approved",
-          label: "Not Approved",
+          value: "not approved",
+          label: "not approved",
         },
         {
-          value: "Waiting For Approved",
-          label: "Waiting For Approved",
+          value: "waiting for approved",
+          label: "waiting for approved",
         },
         {
-          value: "Banned",
-          label: "Banned",
+          value: "banned",
+          label: "banned",
         },
         {
-          value: "Closed",
-          label: "Closed",
+          value: "closed",
+          label: "closed",
         },
       ]}
     />

@@ -13,12 +13,15 @@ const defaultForm = {
 };
 
 function AddCategoryModal({ setCategories }) {
+  const [loading, setLoading] = useState(null);
+
   const [formData, setFormData] = useState(defaultForm);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const showModal = () => {
     setIsModalOpen(true);
   };
   const handleOk = async () => {
+    setLoading(true);
     const form = new FormData();
     form.append("name", formData.name);
     form.append("description", formData.description);
@@ -43,8 +46,10 @@ function AddCategoryModal({ setCategories }) {
       setCategories(data.category);
       setFormData(defaultForm);
       setIsModalOpen(false);
+      setLoading(false);
     } else {
       toast.error(data.message);
+      setLoading(false);
     }
 
     //  setIsModalOpen(false);
@@ -105,6 +110,7 @@ function AddCategoryModal({ setCategories }) {
             name="thumbnail"
             onChange={handleOnChange}
           />
+          <h1>{loading ? <h1>Loading... please wait...</h1> : null}</h1>
         </form>
       </Modal>
     </>

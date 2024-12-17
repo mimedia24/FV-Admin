@@ -8,7 +8,7 @@ import AddCategoryModal from "../components/category/AddCategoryModal";
 export default function CategoryManagement() {
   const [categories, setCategories] = React.useState(null);
 
-  const { data, loading } = useFetch(`/category`, {});
+  const { data, loading } = useFetch(`/category/all`, {});
 
   useEffect(() => {
     console.log(data);
