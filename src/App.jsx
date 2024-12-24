@@ -18,6 +18,7 @@ import CategoryManagement from "./pages/categoryManagement";
 import Offermanagement from "./pages/Offermanagement";
 import Settings from "./pages/Settings";
 import Charges from "./pages/Charges";
+import PaymentManagement from "./pages/PaymentManagement";
 
 function App() {
   return (
@@ -65,6 +66,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Charges />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payment"
+              element={
+                <ProtectedRoute>
+                  <PaymentManagement />
                 </ProtectedRoute>
               }
             />
