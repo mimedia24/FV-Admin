@@ -4,7 +4,8 @@ import { Card } from "antd";
 import ChangeStatus from "./changeStatus";
 import UpdateMenuDiscountRate from "./updateMenuDiscountRate";
 import UpdateMenuPlateFormFee from "./UpdateMenuPlateformFee";
-export default function MenuCard({ menu, setMenus, slNo }) {
+
+export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
   const [status, setStatus] = useState(menu?.status);
 
   return (
@@ -69,14 +70,19 @@ export default function MenuCard({ menu, setMenus, slNo }) {
         <span className="text-[12px] font-bold">BDT {menu.offerPrice}</span>
       </td>
       <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <ChangeStatus menu={menu} setStatus={setStatus} status={status} />
+        <ChangeStatus
+          menu={menu}
+          setStatus={setStatus}
+          status={status}
+          getMenus={getMenus}
+        />
       </td>
       <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <UpdateMenuDiscountRate menu={menu} />
+        <UpdateMenuDiscountRate menu={menu} getMenus={getMenus} />
       </td>
 
       <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <UpdateMenuPlateFormFee menu={menu} />
+        <UpdateMenuPlateFormFee menu={menu} getMenus={getMenus} />
       </td>
     </tr>
   );

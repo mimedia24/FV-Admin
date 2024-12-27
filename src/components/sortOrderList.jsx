@@ -5,12 +5,12 @@ export default function SortOrdersList({ sort = "all", setOrders }) {
   const handleChange = async (value) => {
     console.log(`selected ${value}`);
 
-    if (value === "All") {
+    if (value === "all") {
       const { result } = await handleApiRequest(`/admin/list-of-orders`, {});
 
       console.log(result);
       if (result) {
-        setOrders(result);
+        setOrders(result.orders);
       }
       return;
     }
@@ -19,7 +19,7 @@ export default function SortOrdersList({ sort = "all", setOrders }) {
       {}
     );
     if (result) {
-      setOrders(result);
+      setOrders(result.orders);
     }
   };
 
@@ -32,36 +32,36 @@ export default function SortOrdersList({ sort = "all", setOrders }) {
       onChange={handleChange}
       options={[
         {
-          value: "All",
-          label: "All",
+          value: "all",
+          label: "all",
         },
         {
-          value: "Pending",
-          label: "Pending",
+          value: "pending",
+          label: "pending",
         },
         {
-          value: "Delivered",
-          label: "Delivered",
+          value: "delivered",
+          label: "delivered",
         },
         {
-          value: "Accept By Rider",
-          label: "Accept By Rider",
+          value: "accept by rider",
+          label: "accept by rider",
         },
         {
-          value: "Ready for Pickup",
-          label: "Ready for Pickup",
+          value: "ready for cickup",
+          label: "ready for cickup",
         },
         {
-          value: "Picked Up",
-          label: "Picked Up",
+          value: "picked up",
+          label: "picked up",
         },
         {
-          value: "Cancelled by Restaurant",
-          label: "Cancelled by Restaurant",
+          value: "cancelled by restaurant",
+          label: "cancelled by restaurant",
         },
         {
-          value: "Cencelled",
-          label: "Cencelled",
+          value: "cencelled",
+          label: "cencelled",
         },
       ]}
     />

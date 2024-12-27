@@ -3,7 +3,7 @@ import { Button, message, Popconfirm } from "antd";
 import handleApiRequest from "../helpers/handleApiRequest";
 import { toast } from "react-toastify";
 
-export default function DeleteOrderButton({ order }) {
+export default function DeleteOrderButton({ order, getOrders }) {
   const confirm = async (e) => {
     console.log(e);
     message.success("Click on Yes");
@@ -17,6 +17,7 @@ export default function DeleteOrderButton({ order }) {
     );
 
     if (result?.success) {
+      getOrders();
       toast(result?.message);
     }
   };

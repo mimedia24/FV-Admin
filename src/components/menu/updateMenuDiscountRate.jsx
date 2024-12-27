@@ -4,7 +4,7 @@ import { Input } from "antd";
 import handleApiRequest from "../../helpers/handleApiRequest";
 import toast from "react-hot-toast";
 
-export default function UpdateMenuDiscountRate({ menu }) {
+export default function UpdateMenuDiscountRate({ menu, getMenus }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [discountRate, setDiscountRate] = useState(menu.discountRate);
   const showModal = () => {
@@ -25,6 +25,7 @@ export default function UpdateMenuDiscountRate({ menu }) {
 
     if (result?.success) {
       toast.success(result?.message);
+      getMenus();
     } else {
       toast.error(result?.message);
     }

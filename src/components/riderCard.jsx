@@ -42,15 +42,15 @@ export default function RiderCard({ order: rider }) {
         Current Session:{" "}
         <span
           className={
-            session === "Available"
+            session === "available"
               ? "px-2 py-1 bg-blue-400 text-white rounded-sm"
-              : session === "Offline"
+              : session === "offline"
               ? "px-2 py-1 bg-orange-400 text-white rounded-sm"
-              : session === "Break"
+              : session === "break"
               ? "px-2 py-1 bg-gray-400 text-white rounded-sm"
-              : session === "Offline"
+              : session === "offline"
               ? "px-2 py-1 bg-red-600 text-white rounded-sm"
-              : session === "Out For Delivery"
+              : session === "out For Delivery"
               ? "px-2 py-1 bg-sky-600 text-white rounded-sm"
               : null
           }

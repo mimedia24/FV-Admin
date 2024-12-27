@@ -5,13 +5,33 @@ import CustomSkeleton from "../components/skeleton";
 import FilterMenu from "../components/menu/filterMenu";
 import MenuCard from "../components/menu/menuCard";
 import FilterMenuByCategory from "../components/menu/FilterMenuByCategory";
+import { apiAuthToken, apiPath } from "../../secrets";
+import axios from "axios";
 
 export default function MenuManagement() {
   const [menus, setMenus] = useState(null);
-  const { loading, data } = useFetch("/admin/list-of-menus", {});
+
+  //  const { loading, data } = useFetch("/admin/list-of-menus", {});
+
+  async function getMenus() {
+    try {
+      const { data } = await axios.get(`${apiPath}/admin/list-of-menus`, {
+        headers: {
+          "x-auth-token": apiAuthToken,
+        },
+      });
+
+      console.log(data);
+      if (data) {
+        setMenus(data.menus);
+      }
+    } catch (error) {
+      throw new Error(error.message);
+    }
+  }
   useEffect(() => {
-    setMenus(data?.menus);
-  }, [data]);
+    getMenus();
+  }, []);
 
   return (
     <Layout>
@@ -51,7 +71,9 @@ export default function MenuManagement() {
             <th className="text-center border px-2 text-gray-400">
               PlateformFee
             </th>
-            <th className="text-center border px-2 text-gray-400">BasedPrice + plateformFee</th>
+            <th className="text-center border px-2 text-gray-400">
+              BasedPrice + plateformFee
+            </th>
             <th className="text-center border px-2 text-gray-400">Discount</th>
             <th className="text-center border px-2 text-gray-400">
               Offer Price
@@ -77,15 +99,16 @@ export default function MenuManagement() {
                   setMenus={setMenus}
                   menu={menu}
                   slNo={index}
+                  getMenus={getMenus}
                 />
               ))}
           </tbody>
         </table>
       </div>
 
-      <div className="w-full flex  items-center justify-center mt-12">
+      {/* <div className="w-full flex  items-center justify-center mt-12">
         {loading ? <CustomSkeleton /> : null}
-      </div>
+      </div> */}
 
       <div className="flex items-center justify-center gap-12  flex-wrap"></div>
     </Layout>

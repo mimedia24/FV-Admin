@@ -45,20 +45,20 @@ export default function ChangeRiderSession({ rider, session, setSession }) {
       onChange={handleChange}
       options={[
         {
-          value: "Available",
-          label: "Available",
+          value: "available",
+          label: "available",
         },
         {
-          value: "Out for delivery",
+          value: "out for delivery",
           label: "Out for delivery",
         },
         {
-          value: "Break",
+          value: "busy",
           label: "Break",
         },
         {
-          value: "Offline",
-          label: "Offline",
+          value: "offline",
+          label: "offline",
         },
       ]}
     />

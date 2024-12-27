@@ -6,16 +6,45 @@ import PaginationContainer from "../components/pagination";
 import CustomSkeleton from "../components/skeleton";
 import SortOrdersList from "../components/sortOrderList";
 import AssignRiderModal from "../components/assignRiderModal";
+import axios from "axios";
+import { apiAuthToken, apiPath } from "../../secrets";
 
 export default function OrderManagement() {
   const [orders, setOrders] = useState(null);
-  const { data, loading } = useFetch("/admin/list-of-orders");
+  // const { data, loading } = useFetch("/admin/list-of-orders");
+
+  // loading
+  const [loading, setLoading] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  async function getOrders() {
+    try {
+      setLoading(true);
+      setOrders([]);
+      const { data } = await axios.get(`${apiPath}/admin/list-of-orders`, {
+        headers: {
+          "x-auth-token": apiAuthToken,
+        },
+      });
+
+      console.log(data);
+      if (data) {
+        setLoading(false);
+        setOrders(data.orders);
+      }
+    } catch (error) {
+      setLoading(false);
+      throw new Error(error.message);
+    }
+  }
   useEffect(() => {
-    setOrders(data);
-  }, [data]);
+    getOrders();
+  }, []);
+
+  // useEffect(() => {
+  //   setOrders(data);
+  // }, [data]);
 
   return (
     <Layout>
@@ -45,7 +74,7 @@ export default function OrderManagement() {
         </div>
 
         <div>
-          <div className="overflow-x-scroll w-full">
+          <div className="overflow-x-scroll w-full text-sm">
             <table className="w-[95%] mx-auto border p-2 ">
               <thead>
                 <tr>
@@ -70,11 +99,17 @@ export default function OrderManagement() {
               </thead>
 
               <tbody>
-                {orders &&
-                  orders?.orders.length > 0 &&
-                  orders?.orders.map((order, index) => (
-                    <OrderCard order={order} key={order._id} slNo={index} />
-                  ))}
+                {loading ? <h1>Loading...Please wait</h1> : null}
+                {orders?.length > 0
+                  ? orders?.map((order, index) => (
+                      <OrderCard
+                        order={order}
+                        key={order._id}
+                        slNo={index}
+                        getOrders={getOrders}
+                      />
+                    ))
+                  : null}
               </tbody>
             </table>
           </div>

@@ -5,7 +5,7 @@ import DeleteOrderButton from "./deleteOrderButton";
 import convertDateAsLocalTime from "../helpers/timeStamp";
 import ViewOrderItem from "./order/viewOrderItem";
 
-export default function OrderCard({ order, slNo }) {
+export default function OrderCard({ order, slNo, getOrders }) {
   const [status, setStatus] = useState(order?.status);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -14,7 +14,7 @@ export default function OrderCard({ order, slNo }) {
   );
 
   return (
-    <tr className="text-center border">
+    <tr className="text-center border text-sm">
       <td>{slNo + 1}</td>
       <td className="text-[13px] border">{order?._id}</td>
       <td className="border text-[14px] ">
@@ -35,8 +35,8 @@ export default function OrderCard({ order, slNo }) {
       <td className="text-[13px] border">{order?.userId}</td>
       <td className="text-[13px] border">{order?.restaurantId}</td>
       <td className="text-[13px] border">{order?.riderId || "N/A"}</td>
-      <td className="border p-1">BDT {order?.totalAmount}</td>
-      <td className="border p-1">BDT {order?.deliveryAmount}</td>
+      <td className="border p-1">BDT {order?.totalAmount.toFixed()}</td>
+      <td className="border p-1">BDT {order?.deliveryAmount.toFixed()}</td>
       <td className="border p-1 text-[12px]">{updateTime}</td>
       <td className="border p-1">
         <ChangeStatus order={order} status={status} setStatus={setStatus} />
@@ -56,7 +56,7 @@ export default function OrderCard({ order, slNo }) {
         />
       </td>
       <td className="border p-1">
-        <DeleteOrderButton order={order} />
+        <DeleteOrderButton order={order} getOrders={getOrders} />
       </td>
       <td>
         <ViewOrderItem order={order} />

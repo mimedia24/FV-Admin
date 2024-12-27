@@ -4,7 +4,7 @@ import { Input } from "antd";
 import handleApiRequest from "../../helpers/handleApiRequest";
 import toast from "react-hot-toast";
 
-export default function UpdateMenuPlateFormFee({ menu }) {
+export default function UpdateMenuPlateFormFee({ menu, getMenus }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [plateformFee, setPlateformFee] = useState(menu.plateformFee);
   const showModal = () => {
@@ -16,7 +16,7 @@ export default function UpdateMenuPlateFormFee({ menu }) {
       {
         method: "PUT",
         body: JSON.stringify({
-            platformFee: Number(plateformFee),
+          platformFee: Number(plateformFee),
         }),
       }
     );
@@ -25,6 +25,7 @@ export default function UpdateMenuPlateFormFee({ menu }) {
 
     if (result?.success) {
       toast.success(result?.message);
+      getMenus();
     } else {
       toast.error(result?.message);
     }
@@ -41,13 +42,13 @@ export default function UpdateMenuPlateFormFee({ menu }) {
         Update fee
       </Button>
       <Modal
-        title="Update discount rate"
+        title="Update flatform fee"
         open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}
       >
         <Input
-          placeholder="update discount rate"
+          placeholder="update flatform fee"
           value={plateformFee}
           type="number"
           onChange={(event) => setPlateformFee(event.target.value)}

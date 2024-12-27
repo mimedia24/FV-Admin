@@ -64,7 +64,7 @@ const navigation = [
   },
   {
     title: "Payment",
-    href: "/payment",
+    href: "/payment/rider",
     icon: <FaMoneyCheckAlt />,
   },
   {

@@ -43,20 +43,20 @@ export default function ChangeRiderStatus({ rider, status, setStatus }) {
       onChange={handleChange}
       options={[
         {
-          value: "Active",
-          label: "Active",
+          value: "active",
+          label: "active",
         },
         {
-          value: "Busy",
-          label: "Busy",
+          value: "busy",
+          label: "busy",
         },
         {
-          value: "Banned",
-          label: "Banned",
+          value: "banned",
+          label: "banned",
         },
         {
-          value: "Waiting for Approved",
-          label: "Waiting for Approved",
+          value: "waiting for Approved",
+          label: "waiting for Approved",
         },
       ]}
     />
