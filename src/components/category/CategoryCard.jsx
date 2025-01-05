@@ -53,6 +53,7 @@ export default function CategoryCard({ category, setCategories }) {
       <h1>{category?.name}</h1>
       <h1>Description: {category?.description}</h1>
       <h1>Meta: {category?.meta}</h1>
+      <h1>Popular : <span className="px-2 text-[12px] bg-blue-600 text-white">{category?.isPopular ? "popular" : "regular"}</span></h1>
 
       <div className="absolute top-4 right-2 cursor-pointer">
         {menu ? (

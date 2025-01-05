@@ -11,6 +11,7 @@ function EditCategoryModal({ setCategories, category, isModalOpenT }) {
     description: category.description || "",
     meta: category.meta || "",
     thumbnail: null,
+    isPopular: category.isPopular
   };
 
   const [formData, setFormData] = useState(defaultForm);
@@ -23,6 +24,7 @@ function EditCategoryModal({ setCategories, category, isModalOpenT }) {
     form.append("name", formData.name);
     form.append("description", formData.description);
     form.append("meta", formData.meta);
+    form.append("isPopular", formData.isPopular);
 
     if (formData.thumbnail) {
       form.append("thumbnail", formData.thumbnail);
@@ -109,6 +111,17 @@ function EditCategoryModal({ setCategories, category, isModalOpenT }) {
             name="thumbnail"
             onChange={handleOnChange}
           />
+
+
+          <div>
+            <select name="isPopular" id="isPopular" className="w-full px-3 py-2 mt-4" onChange={handleOnChange}>
+              <option value="" disabled selected>select option</option>
+              <option value={true}>active</option>
+              <option value={false}>disabled</option>
+            </select>
+
+          </div>
+
         </form>
       </Modal>
     </>
