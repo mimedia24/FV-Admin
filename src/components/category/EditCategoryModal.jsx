@@ -80,44 +80,49 @@ function EditCategoryModal({ setCategories, category, isModalOpenT }) {
         onCancel={handleCancel}
       >
         <form action="" encType="multipart/form-data">
+          <label htmlFor="name"
+            className="mt-4">Category name</label>
           <Input
             placeholder="name"
             required
-            className="mt-4"
             name="name"
             value={formData.name}
             onChange={handleOnChange}
           />
+          <label htmlFor="description"
+            className="mt-4">Description</label>
           <Input
             placeholder="description"
             required
             name="description"
-            className="mt-4"
             value={formData.description}
             onChange={handleOnChange}
           />
+          <label htmlFor="meta"
+            className="mt-4">Meta Code</label>
           <Input
             placeholder="meta keywords"
             required
             name="meta"
-            className="mt-4"
             value={formData.meta}
             onChange={handleOnChange}
           />
+          <label htmlFor="thumbnail"
+            className="mt-4">Image</label>
           <Input
             required
             type="file"
-            className="mt-4"
             name="thumbnail"
             onChange={handleOnChange}
           />
 
 
           <div>
-            <select name="isPopular" id="isPopular" className="w-full px-3 py-2 mt-4" onChange={handleOnChange}>
-              <option value="" disabled selected>select option</option>
-              <option value={true}>active</option>
-              <option value={false}>disabled</option>
+            <label htmlFor="isPopular">Is popular</label>
+            <select name="isPopular" id="isPopular" className="w-full px-3 py-2" onChange={handleOnChange}>
+              <option value="" disabled selected>Display category in home</option>
+              <option value={true}>popular</option>
+              <option value={false}>regular</option>
             </select>
 
           </div>
