@@ -87,7 +87,7 @@ export default function RestrauntManagement() {
           List of Restaurant
         </h1>
         <h1 className="w-4/5 mx-auto my-4">
-          <span>total restaurant is : {count}</span>
+          <span>Total : {restaurantList && restaurantList.length}</span>
         </h1>
 
         {loading ? (
