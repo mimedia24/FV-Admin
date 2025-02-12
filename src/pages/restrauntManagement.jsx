@@ -9,14 +9,17 @@ import axios from "axios";
 import { apiAuthToken, apiPath } from "../../secrets";
 import Pagination from "../components/pagination/Pagination";
 import toast from "react-hot-toast";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 export default function RestrauntManagement() {
-  const [restaurant, setRestaurant] = useState([]);
+  const [restaurantList, setRestaurant] = useState([]);
   const [count, setCount] = useState(0);
+  const [loading, setLoading] = useState(null);
 
   const [page, setPage] = useState(1);
 
   async function fetchData() {
+    setLoading(true);
     try {
       const { data } = await axios.get(
         `${apiPath}/admin/list-of-restaurants?page=1&limit=20`,
@@ -28,12 +31,15 @@ export default function RestrauntManagement() {
       );
       setRestaurant(data.restaurants);
       setCount(data.count);
+      setLoading(false);
     } catch (error) {
       console.log("fetching restaurant error : ", error);
+      setLoading(false);
     }
   }
 
   async function fetchMore() {
+    setLoading(true);
     try {
       const { data } = await axios.get(
         `${apiPath}/admin/list-of-restaurants?page=${page}&limit=20`,
@@ -44,12 +50,14 @@ export default function RestrauntManagement() {
         }
       );
 
-      console.log("fetch more is called : ", data);
+      // console.log("fetch more is called : ", data);
       if (data.success) {
         setRestaurant(data.restaurants);
+        setLoading(false);
       }
     } catch (error) {
       console.log("fetching restaurant error : ", error);
+      setLoading(false);
 
       if (
         error.response.data.message ===
@@ -78,19 +86,29 @@ export default function RestrauntManagement() {
         <h1 className="text-xl text-center font-extrabold text-gray-400 my-8">
           List of Restaurant
         </h1>
-        <h1>
+        <h1 className="w-4/5 mx-auto my-4">
           <span>total restaurant is : {count}</span>
         </h1>
 
-        <div className="grid h-[600px] overflow-y-scroll grid-cols-1 place-items-center lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {restaurant &&
-            restaurant.map((restaurant) => (
-              <RestaurantCard key={restaurant.name} restaurant={restaurant} />
-            ))}
-        </div>
+        {loading ? (
+          <div className="w-full h-full flex items-center justify-center">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <div className="grid border gap-3 py-4 pl-[100px] h-[600px] overflow-y-scroll grid-cols-1 place-items-center lg:grid-cols-2">
+            {restaurantList &&
+              restaurantList.map((res) => (
+                <RestaurantCard
+                  key={res.name}
+                  restaurant={res}
+                  setRestaurant={setRestaurant}
+                  restaurantList={restaurantList}
+                />
+              ))}
+          </div>
+        )}
+        <Pagination currentPage={page} updatePage={setPage} />
       </div>
-
-      <Pagination currentPage={page} updatePage={setPage} />
     </Layout>
   );
 }

@@ -3,8 +3,7 @@ import handleApiRequest from "../helpers/handleApiRequest";
 
 export default function SortOrdersList({ sort = "all", setOrders }) {
   const handleChange = async (value) => {
-    console.log(`selected ${value}`);
-
+    
     if (value === "all") {
       const { result } = await handleApiRequest(`/admin/list-of-orders`, {});
 

@@ -4,6 +4,9 @@ import useFetch from "../useFetch/useFetch";
 import CustomSkeleton from "../components/skeleton";
 import UserCard from "../components/user/userCard";
 import { Input } from "antd";
+import Pagination from "../components/pagination/Pagination";
+import axios from "axios";
+import { apiAuthToken, apiPath } from "../../secrets";
 const { Search } = Input;
 
 const userTableHeading = [
@@ -44,14 +47,47 @@ const userTableHeading = [
 
 export default function UserManagement() {
   const [user, setUser] = useState(null);
+  const [page, setPage] = useState(1);
 
-  const onSearch = (value, _e, info) => console.log(info?.source, value);
+  async function handleSearchByPhone(phoneNumber) {
+    try {
+      const { data } = await axios.get(
+        `${apiPath}/admin/search-user-by-phone-number?phoneNumber=${phoneNumber}`,
+        {
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      );
 
-  const { data, loading } = useFetch("/admin/list-of-users", {});
+      if (data.success) {
+        const userArr = [];
+        userArr.push(data.user);
+        setUser(userArr);
+      }
+    } catch (error) {
+      console.log("search by phone errro : ", error);
+    }
+  }
+
+  const onSearch = (value, _e, info) => {
+    //  console.log("value is : ", value);
+
+    handleSearchByPhone(value);
+  };
+
+  const { data, loading } = useFetch(
+    `/admin/list-of-users?page=${page}&limit=20`,
+    {}
+  );
 
   useEffect(() => {
     setUser(data?.users);
   }, [data]);
+
+  useEffect(() => {
+    console.log("users list is : ", user);
+  }, [user]);
 
   return (
     <Layout>
@@ -71,6 +107,9 @@ export default function UserManagement() {
             size="medium"
             onSearch={onSearch}
           />
+        </div>
+        <div className="w-[90%] mx-auto my-2">
+          <h1>page: {page}</h1>
         </div>
 
         <div className="w-[90%] mx-auto overflow-scroll">
@@ -97,6 +136,7 @@ export default function UserManagement() {
             </tbody>
           </table>
         </div>
+        <Pagination updatePage={setPage} currentPage={page} />
 
         <div className="w-fit mx-auto mt-12">
           {loading ? <CustomSkeleton /> : null}

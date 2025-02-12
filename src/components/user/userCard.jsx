@@ -5,8 +5,6 @@ import ChangeUserStatus from "./changeUserStatus";
 export default function UserCard({ detail, slNO }) {
   const [address, setAddress] = useState(detail.address);
 
-  console.log(`detail is : `, detail);
-
   const [status, setStatus] = useState(detail?.status);
   return (
     <tr className="text-[11px]">
@@ -43,31 +41,19 @@ export default function UserCard({ detail, slNO }) {
       </td>
       <td className="border px-2 text-center">
         <span className="block">{address?.home?.address}</span>
-        <span className="block">
-          longitude: {address?.office?.longitude}
-        </span>
-        <span className="block">
-          latitude: {address?.office?.latitude}
-        </span>
+        <span className="block">longitude: {address?.office?.longitude}</span>
+        <span className="block">latitude: {address?.office?.latitude}</span>
       </td>
 
       <td className="border px-2 text-center ">
         <span className="block">{address?.office?.address}</span>
-        <span className="block">
-          longitude: {address?.office?.longitude}
-        </span>
-        <span className="block">
-          latitude: {address?.office?.latitude}
-        </span>
+        <span className="block">longitude: {address?.office?.longitude}</span>
+        <span className="block">latitude: {address?.office?.latitude}</span>
       </td>
       <td className="border px-2 text-center">
         <span className="block">{address?.others?.address}</span>
-        <span className="block">
-          longitude: {address?.others?.longitude}
-        </span>
-        <span className="block">
-          latitude: {address?.others?.latitude}
-        </span>
+        <span className="block">longitude: {address?.others?.longitude}</span>
+        <span className="block">latitude: {address?.others?.latitude}</span>
       </td>
       <td className="border px-2 text-center">
         <ChangeUserStatus

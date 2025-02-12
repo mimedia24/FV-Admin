@@ -8,10 +8,12 @@ import SortOrdersList from "../components/sortOrderList";
 import AssignRiderModal from "../components/assignRiderModal";
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../secrets";
+import Pagination from "../components/pagination/Pagination";
 
 export default function OrderManagement() {
   const [orders, setOrders] = useState(null);
   // const { data, loading } = useFetch("/admin/list-of-orders");
+  const [page, setPage] = useState(1);
 
   // loading
   const [loading, setLoading] = useState(null);
@@ -22,11 +24,14 @@ export default function OrderManagement() {
     try {
       setLoading(true);
       setOrders([]);
-      const { data } = await axios.get(`${apiPath}/admin/list-of-orders`, {
-        headers: {
-          "x-auth-token": apiAuthToken,
-        },
-      });
+      const { data } = await axios.get(
+        `${apiPath}/admin/list-of-orders?page=${page}`,
+        {
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      );
 
       console.log(data);
       if (data) {
@@ -62,14 +67,7 @@ export default function OrderManagement() {
             Filter: <SortOrdersList setOrders={setOrders} />
           </div>
           <div>
-            {/* <button className="w-fit px-12 py-2 bg-blue-500 text-white rounded-md" onClick={() => setIsModalOpen(true)}>
-              Assign Rider
-            </button> */}
-            {/* modal */}
-            {/* <AssignRiderModal
-              setIsModalOpen={setIsModalOpen}
-              isModalOpen={isModalOpen}
-            /> */}
+            
           </div>
         </div>
 
@@ -122,7 +120,7 @@ export default function OrderManagement() {
         <div className="flex items-center justify-center gap-12 flex-wrap"></div>
 
         <div className="w-full flex items-center justify-center mt-5">
-          <PaginationContainer setOrders={setOrders} orders={orders} />
+          <Pagination updatePage={setPage} currentPage={page} />
         </div>
       </div>
     </Layout>
