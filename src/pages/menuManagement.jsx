@@ -87,6 +87,10 @@ export default function MenuManagement() {
             <th className="text-center border px-2 text-gray-400">
               Update plateformFee
             </th>
+            <th className="text-center border px-2 text-gray-400">
+              Admin Approval
+            </th>
+            <th className="text-center border px-2 text-gray-400">Popular</th>
           </thead>
 
           <tbody>

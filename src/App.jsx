@@ -19,6 +19,8 @@ import Offermanagement from "./pages/Offermanagement";
 import Settings from "./pages/Settings";
 import Charges from "./pages/Charges";
 import PaymentManagement from "./pages/PaymentManagement";
+import Notification from "./pages/Notification";
+import AllNotification from "./pages/AllNotification";
 
 function App() {
   return (
@@ -42,7 +44,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route path="/login" element={<Login />} />
             <Route
               path="/dashboard"
@@ -60,7 +61,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/charges"
               element={
@@ -77,7 +77,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/rider-management"
               element={
@@ -86,7 +85,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/category-management"
               element={
@@ -111,7 +109,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/user-management"
               element={
@@ -128,7 +125,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/offer-management"
               element={
@@ -137,7 +133,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
             <Route
               path="/settings"
               element={
@@ -146,7 +141,22 @@ function App() {
                 </ProtectedRoute>
               }
             />
-
+            <Route
+              path="/notification"
+              element={
+                <ProtectedRoute>
+                  <Notification />
+                </ProtectedRoute>
+              }
+            />{" "}
+            <Route
+              path="/notification/all"
+              element={
+                <ProtectedRoute>
+                  <AllNotification />
+                </ProtectedRoute>
+              }
+            />
             {/* not found page */}
             <Route path="/*" element={<NotFound />} />
           </Routes>

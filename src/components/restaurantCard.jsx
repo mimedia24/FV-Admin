@@ -13,7 +13,6 @@ export default function RestaurantCard({
 }) {
   const [status, setStatus] = useState(restaurant?.status);
 
-  // UPDATE RESTAURANT AFTER DELETE
   function updateRestaurants(id) {
     const filterItem = restaurantList.filter((item) => item._id !== id);
     setRestaurant(filterItem);
@@ -22,7 +21,7 @@ export default function RestaurantCard({
   async function handleDeleteRestaurant(id) {
     try {
       if (!id) return;
-      const alertPrompt = confirm(`are you sure to delete this restaurant?`);
+      const alertPrompt = confirm(`Are you sure you want to delete this restaurant?`);
       if (!alertPrompt) return;
       const { data } = await axios.delete(
         `${apiPath}/admin/restaurant/delete/${id}`,
@@ -37,70 +36,77 @@ export default function RestaurantCard({
         updateRestaurants(id);
       }
     } catch (error) {
-      console.log("delete restaurant error : ", error);
+      console.log("Delete restaurant error:", error);
     }
   }
 
   return (
-    <Card className="w-[500px]">
-      <div className="absolute top-4 right-8 w-24 h-24 rounded-full bg-gray-100">
-        <img
-          src={restaurant?.image}
-          alt=""
-          className="object-cover w-full h-full rounded-full"
-        />
-      </div>
-
-      {/* DELETE RESTAURANT BY ADMIN    */}
+    <Card
+      className="relative w-full max-w-[500px] bg-white rounded-2xl shadow-lg p-6 border border-gray-200"
+      bodyStyle={{ padding: 0 }}
+    >
+      {/* Delete Icon */}
       <MdDelete
-        className="absolute top-2 right-2 text-xl text-red-500"
+        className="absolute top-4 right-4 text-2xl text-red-500 cursor-pointer hover:scale-110 transition"
         onClick={() => handleDeleteRestaurant(restaurant._id)}
       />
 
-      <p>
-        Restaurant ID: <span>{restaurant._id}</span>
-      </p>
-      <p>
-        Status:{" "}
-        <span
-          className={
-            status
-              ? "bg-blue-500 text-white min-w-16 px-4 py-1 rounded-md"
-              : "bg-gray-500 min-w-16 text-white px-4 py-1 rounded-md"
-          }
-        >
-          {status}
-        </span>
-      </p>
-      <p>
-        Name: <span>{restaurant.name}</span>
-      </p>
-      <p>
-        Phone: <span>{restaurant.phone}</span>
-      </p>
-      <p>
-        Description: <span>{restaurant.description}</span>
-      </p>
-      <p>
-        Owner name ID: <span>{restaurant.owner}</span>
-      </p>
-      <p>
-        Address: <span>{restaurant.address}</span>
-      </p>
-
-      <div>
-        <ChangeRestaurantStatus
-          restaurant={restaurant}
-          status={status}
-          setStatus={setStatus}
+      {/* Image */}
+      <div className="w-24 h-24 rounded-full overflow-hidden shadow-md border border-gray-300 mx-auto -mt-12 mb-4 bg-gray-100">
+        <img
+          src={restaurant?.image}
+          alt="Restaurant"
+          className="w-full h-full object-cover"
         />
+      </div>
 
-        <Link
-          className="px-4 py-2 rounded-sm text-white bg-blue-500"
-          to={`/restaurant/menu-list/${restaurant._id}`}
-        >
-          View menu
-        </Link>
+      <div className="px-4 pb-4 space-y-2 text-center">
+        <h2 className="text-lg font-semibold">{restaurant.name}</h2>
+        <p className="text-sm text-gray-500">{restaurant.description}</p>
+
+        <div className="flex justify-center gap-2 mt-2">
+          <span className="text-sm font-medium bg-gray-100 px-3 py-1 rounded-full">
+            ID: {restaurant._id}
+          </span>
+          <span
+            className={`text-sm font-medium px-3 py-1 rounded-full ${
+              status ? "bg-blue-500 text-white" : "bg-gray-400 text-white"
+            }`}
+          >
+            {status}
+          </span>
+        </div>
+
+        <div className="text-sm text-left mt-4 space-y-1">
+          <p>
+            <strong>Phone:</strong> {restaurant.phone}
+          </p>
+          <p>
+            <strong>Owner:</strong> {restaurant.owner}
+          </p>
+          <p>
+            <strong>Address:</strong> {restaurant.address}
+          </p>
+          <p>
+            <strong>Balance:</strong> {restaurant.balance}
+          </p>
+        </div>
+
+        {/* Status control + Menu link */}
+        <div className="mt-4 space-y-2">
+          <ChangeRestaurantStatus
+            restaurant={restaurant}
+            status={status}
+            setStatus={setStatus}
+          />
+
+          <Link
+            className="inline-block w-full text-center py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition"
+            to={`/restaurant/menu-list/${restaurant._id}`}
+          >
+            View Menu
+          </Link>
+        </div>
       </div>
     </Card>
   );

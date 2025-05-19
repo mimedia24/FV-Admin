@@ -68,6 +68,11 @@ const navigation = [
     icon: <FaMoneyCheckAlt />,
   },
   {
+    title: "Notification",
+    href: "/notification",
+    icon: <FaMoneyCheckAlt />,
+  },
+  {
     title: "Settings",
     href: "/settings",
     icon: <IoMdSettings />,

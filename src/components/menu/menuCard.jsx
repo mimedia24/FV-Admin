@@ -4,9 +4,59 @@ import { Card } from "antd";
 import ChangeStatus from "./changeStatus";
 import UpdateMenuDiscountRate from "./updateMenuDiscountRate";
 import UpdateMenuPlateFormFee from "./UpdateMenuPlateformFee";
+import { Checkbox } from "antd";
+import { apiAuthToken, apiPath } from "../../../secrets";
 
 export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
   const [status, setStatus] = useState(menu?.status);
+  const [approvalStatus, setApprovalStatus] = useState(menu.isApproved);
+  const [isPopular, setIsPopular] = useState(menu.isPopular)
+
+  async function handleAdminApproved() {
+    try {
+      const res = await fetch(
+        `${apiPath}/menu/update/approval?approvalStatus=${!menu.isApproved}&menuId=${
+          menu._id
+        }`,
+        {
+          method: "PUT",
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (data.success) {
+        setApprovalStatus(!approvalStatus);
+      }
+    } catch (error) {
+      console.log("error: ", error);
+    }
+  }
+
+  async function handlePopularItem(){
+    try {
+      const res = await fetch(
+        `${apiPath}/menu/update/popular?status=${!menu.isPopular}&menuId=${
+          menu._id
+        }`,
+        {
+          method: "PUT",
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      );
+
+      const data = await res.json();
+      if (data.success) {
+        setIsPopular(!isPopular);
+      }
+    } catch (error) {
+      console.log("error: ", error);
+    }
+  }
 
   return (
     <tr className="w-full border text-center text-sm">
@@ -83,6 +133,13 @@ export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
 
       <td className="text-sm text-center border px-3 py-1 min-w-20">
         <UpdateMenuPlateFormFee menu={menu} getMenus={getMenus} />
+      </td>
+
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <Checkbox checked={approvalStatus} onChange={handleAdminApproved} />
+      </td>
+      <td className="text-sm text-center border px-3 py-1 min-w-20">
+        <Checkbox checked={isPopular} onChange={handlePopularItem} />
       </td>
     </tr>
   );
