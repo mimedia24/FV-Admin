@@ -73,7 +73,7 @@ export default function RestaurantCard({
               status ? "bg-blue-500 text-white" : "bg-gray-400 text-white"
             }`}
           >
-            {status}
+            {status}   
           </span>
         </div>
 
