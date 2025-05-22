@@ -30,26 +30,30 @@ export default function PaymentManagement() {
       if (data.success) {
         setRiderList(data.wallet);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   // get restauarnt wallet list
   async function getRestaurantWalletList() {
     try {
       const { data } = await axios.get(
-        `${apiPath}/wallet/restaurant/wallet/list-wallet`,
+        `${apiPath}/admin/payment/restaurant/wallet`,
         {
           headers: {
             "x-auth-token": apiAuthToken,
           },
         }
       );
-
-      console.log(data);
       if (data.success) {
-        setRestaurantList(data.wallet);
+        setRestaurantList(data.restaurant);
+      } else {
+        setRestaurantList([]);
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   useEffect(() => {
@@ -162,13 +166,9 @@ export default function PaymentManagement() {
             <table className="w-full text-[12px]">
               <thead>
                 <tr>
-                  <td className="text-center px-2 py-1 border">SL</td>
                   <td className="text-center px-2 py-1 border">Name</td>
-                  <td className="text-center px-2 py-1 border">Email</td>
-                  <td className="text-center px-2 py-1 border">ID</td>
-                  <td className="text-center px-2 py-1 border">
-                    Payment Number
-                  </td>
+                  <td className="text-center px-2 py-1 border">Phone</td>
+                  <td className="text-center px-2 py-1 border">Address</td>
                   <td className="text-center px-2 py-1 border">Balance</td>
                   <td className="text-center px-2 py-1 border">Action</td>
                 </tr>
@@ -176,37 +176,13 @@ export default function PaymentManagement() {
 
               <tbody>
                 {restaurantList &&
-                  restaurantList.map((item, index) => {
+                  restaurantList.map((item) => {
                     return (
-                      <tr key={item._id}>
-                        <td className="text-center px-2 py-1 border">
-                          {index + 1}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          {item?.restaurantId?.name}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          {item?.restaurantId?.email}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          {item?.restaurantId?._id}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          {item?.restaurantId?.paymentNumber || "N/A"}
-                        </td>
-                        <td className="text-center font-bold text-lg px-2 py-1 border">
-                          {item.balance}
-                        </td>
-                        {/* <td className="text-center px-2 py-1 border">
-                          {item?.restaurantId?.status}
-                        </td> */}
-                        <td className="text-center px-2 py-1 border">
-                          <PaymentModalRestaurant
-                            restaurantId={item?.restaurantId._id}
-                            getRestaurantWallet={getRestaurantWalletList}
-                          />
-                        </td>
-                      </tr>
+                      <RestaurantCard
+                        key={item._id}
+                        restaurant={item}
+                        getRestaurantWalletList={getRestaurantWalletList}
+                      />
                     );
                   })}
               </tbody>
@@ -215,5 +191,22 @@ export default function PaymentManagement() {
         </div>
       ) : null}
     </Layout>
+  );
+}
+
+function RestaurantCard({ restaurant, getRestaurantWalletList }) {
+  return (
+    <tr>
+      <td className="text-center border-2">{restaurant.name}</td>
+      <td className="text-center border-2">{restaurant.phone}</td>
+      <td className="text-center border-2">{restaurant.address}</td>
+      <td className="text-center border-2">{restaurant.balance}</td>
+      <td className="text-center px-2 py-1 border">
+        <PaymentModalRestaurant
+          restaurantId={restaurant._id}
+          getRestaurantWallet={getRestaurantWalletList}
+        />
+      </td>
+    </tr>
   );
 }

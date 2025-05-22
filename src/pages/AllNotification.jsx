@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { apiAuthToken, apiPath } from "../../secrets";
 import Layout from "./layout";
+import { Button } from "antd";
 
 function AllNotification() {
   const [notifications, setNotifications] = useState([]);
@@ -8,12 +9,15 @@ function AllNotification() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(`${apiPath}/notification/notifications`, {
-        method: "GET",
-        headers: {
-          "x-auth-token": apiAuthToken,
-        },
-      }); // Replace with your real endpoint
+      const response = await fetch(
+        `${import.meta.env.VITE_API_PATH}/notification/notifications?limit=5`,
+        {
+          method: "GET",
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      ); // Replace with your real endpoint
       const data = await response.json();
       if (data.success) {
         setNotifications(data.notifications);
@@ -30,6 +34,8 @@ function AllNotification() {
 
   useEffect(() => {
     fetchNotifications();
+
+    return () => console.log("component unmount.");
   }, []);
 
   if (loading) {
@@ -46,6 +52,26 @@ function AllNotification() {
         No notifications found.
       </div>
     );
+  }
+
+  async function handleDelete(id) {
+    try {
+      setLoading(true);
+      const response = await fetch(`${apiPath}/notification/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        alert(data.message);
+      } else {
+        alert("Failedt to delete notification.");
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      fetchNotifications();
+    }
   }
 
   return (
@@ -71,6 +97,20 @@ function AllNotification() {
             <div className="text-sm text-gray-500 mt-1">
               Type: {item.type} | Promotion: {item.isPromotion ? "Yes" : "No"}
             </div>
+
+            <Button
+              color="danger"
+              onClick={() => {
+                const userConfirm = confirm("Are you sure?");
+                if (userConfirm) {
+                  handleDelete(item._id);
+                } else {
+                  console.log("Cancel delete request.");
+                }
+              }}
+            >
+              Delete
+            </Button>
           </div>
         ))}
       </div>

@@ -20,11 +20,11 @@ export default function OrderCard({ order, slNo, getOrders }) {
       <td className="border text-[14px] ">
         <span
           className={
-            status === "Pending"
+            status === "pending"
               ? "px-2 py-1 bg-gray-400 text-white rounded-sm"
-              : status === "Delivered"
+              : status === "delivered"
               ? "px-2 py-1 bg-blue-400 text-white rounded-sm"
-              : status === "Picked Up"
+              : status === "picked up"
               ? "px-2 py-1 bg-orange-400 text-white rounded-sm"
               : "px-2 py-1 bg-red-400 text-white rounded-sm"
           }

@@ -35,7 +35,6 @@ export default function PaymentFormRestaurant({
   function handleOnChange(e) {
     const { name, value } = e.target;
     setPaymentDetail((prev) => ({ ...prev, [name]: value }));
-    console.log(paymentDetail);
   }
 
   //   handle submit
@@ -43,9 +42,6 @@ export default function PaymentFormRestaurant({
     try {
       const result =
         Number(paymentDetail.firstCode) + Number(paymentDetail.secondCode);
-
-      console.log(paymentDetail);
-      console.log(result);
 
       if (paymentDetail.paymentAmount == 0) {
         toast.error(`payment amount required.`);
@@ -59,7 +55,7 @@ export default function PaymentFormRestaurant({
       }
 
       const { data } = await axios.put(
-        `${apiPath}/restaurant/wallet/payment?id=${restaurantId}`,
+        `${apiPath}/admin/payment/restaurant/update-balance?id=${restaurantId}&amount=${paymentDetail.paymentAmount}`,
         {
           amount: paymentDetail.paymentAmount,
         },
@@ -70,7 +66,6 @@ export default function PaymentFormRestaurant({
         }
       );
 
-      console.log(data);
 
       if (data.success) {
         getRestaurantWallet();

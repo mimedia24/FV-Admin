@@ -46,32 +46,32 @@ export default function ChangeStatus({ order, status, setStatus }) {
       onChange={handleChange}
       options={[
         {
-          value: "Pending",
-          label: "Pending",
+          value: "pending",
+          label: "pending",
         },
         {
-          value: "Delivered",
-          label: "Delivered",
+          value: "accept by rider",
+          label: "accept by rider",
         },
         {
-          value: "Accept By Rider",
-          label: "Accept By Rider",
+          value: "accept by restaurant",
+          label: "accept by restaurant",
         },
         {
-          value: "Ready for Pickup",
-          label: "Ready for Pickup",
+          value: "ready for pickup",
+          label: "ready for pickup",
         },
         {
-          value: "Picked Up",
-          label: "Picked Up",
+          value: "picked up",
+          label: "picked up",
         },
         {
-          value: "Cancelled by Restaurant",
-          label: "Cancelled by Restaurant",
+          value: "cancelled by restaurant",
+          label: "cancelled by restaurant",
         },
         {
-          value: "Cencelled",
-          label: "Cencelled",
+          value: "cencelled",
+          label: "cencelled",
         },
       ]}
     />
