@@ -10,7 +10,7 @@ import { apiAuthToken, apiPath } from "../../../secrets";
 export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
   const [status, setStatus] = useState(menu?.status);
   const [approvalStatus, setApprovalStatus] = useState(menu.isApproved);
-  const [isPopular, setIsPopular] = useState(menu.isPopular)
+  const [isPopular, setIsPopular] = useState(menu.isPopular);
 
   async function handleAdminApproved() {
     try {
@@ -35,7 +35,7 @@ export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
     }
   }
 
-  async function handlePopularItem(){
+  async function handlePopularItem() {
     try {
       const res = await fetch(
         `${apiPath}/menu/update/popular?status=${!menu.isPopular}&menuId=${
@@ -69,7 +69,10 @@ export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
       <td className="text-sm text-center border px-3 py-1 min-w-20">
         <img
           className="w-20 h-20 rounded-full border-2 object-cover"
-          src={menu?.image || "/images/menuIcon.png"}
+          src={
+            import.meta.env.VITE_IMAGE_PATH + menu.image ||
+            "https://placehold.co/600x400"
+          }
           alt="image"
         />
       </td>

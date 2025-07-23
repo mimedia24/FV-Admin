@@ -57,9 +57,12 @@ function AllNotification() {
   async function handleDelete(id) {
     try {
       setLoading(true);
-      const response = await fetch(`${apiPath}/notification/${id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_API_PATH}/notification/${id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       const data = await response.json();
       if (data.success) {
@@ -89,7 +92,7 @@ function AllNotification() {
             <p className="text-gray-700">{item.description}</p>
             {item.image && (
               <img
-                src={`data:image/jpeg;base64,${item.image}`}
+                src={import.meta.env.VITE_IMAGE_PATH + item.image}
                 alt="Notification"
                 className="mt-2 w-full max-h-60 object-cover rounded"
               />

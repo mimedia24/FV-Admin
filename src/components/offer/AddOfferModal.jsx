@@ -27,11 +27,11 @@ function AddOfferModal() {
     form.append("status", formData.status);
 
     if (formData.thumbnail) {
-      form.append("thumbnail", formData.thumbnail);
+      form.append("image", formData.thumbnail);
     }
 
     const response = await axios.post(
-      `${apiPath}/offer/banner/add-banner-offer`,
+      `${apiPath}/v2/carousel/add`,
       form,
       {
         headers: {

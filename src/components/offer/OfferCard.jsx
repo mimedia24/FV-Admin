@@ -38,7 +38,7 @@ export default function OfferCard({ item, setAdvertisement }) {
 
   return (
     <div className="max-w-[300px] border shadow-md p-4 rounded-md relative">
-      <img src={item.thumbnail} alt="" />
+      <img src={import.meta.env.VITE_IMAGE_PATH + item.thumbnail} alt="" />
       <div>
         <h1>{item.title}</h1>
         <h1>{item.link || "currently no link available"}</h1>

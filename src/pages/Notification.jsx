@@ -25,7 +25,7 @@ function Notification() {
     try {
       console.log("response data : ");
       const response = await fetch(
-        `${apiPath}/notification/post/new-notification`,
+        `${apiPath}/v2/notification/promotional-notification`,
         {
           method: "POST",
           body: formData,
