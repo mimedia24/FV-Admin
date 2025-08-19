@@ -1,59 +1,70 @@
 import React, { useState } from "react";
 import Layout from "./layout";
 import ChangePassword from "../components/settings/ChangePassword";
-import { MdAdminPanelSettings } from "react-icons/md";
 import AdminInformation from "../components/settings/AdminInformation";
+import { MdAdminPanelSettings, MdLock } from "react-icons/md";
 
+// Define settings sub-menu items with icons
 const settingsSubMenu = [
   {
     title: "Admin Information",
     href: "personal-information",
-    icon: "",
+    icon: <MdAdminPanelSettings className="text-xl" />,
+    component: <AdminInformation />,
   },
   {
     title: "Security",
     href: "security",
-    icon: "",
+    icon: <MdLock className="text-xl" />,
+    component: <ChangePassword />,
   },
 ];
 
 function Settings() {
-  const [subMenuItems, setSubMenuItems] = useState("personal-information");
+  const [selectedItem, setSelectedItem] = useState("personal-information");
+
+  // Find the selected component based on the current state
+  const renderContent = () => {
+    const item = settingsSubMenu.find((item) => item.href === selectedItem);
+    return item ? item.component : null;
+  };
 
   return (
     <Layout>
-      <div className="w-full py-4">
-        <h1 className="text-3xl text-center font-extrabold text-gray-400 my-8">
-          Settings
-        </h1>
+      <div className="w-full min-h-screen bg-gray-50 text-gray-800">
+        <div className="container mx-auto p-4">
+          <h1 className="text-4xl text-center font-bold text-gray-700 py-8">
+            Settings
+          </h1>
 
-        <div className="flex gap-4">
-          <div className="w-[250px] bg-slate-200">
-            <h1 className="text-center text-2xl text-gray-400 py-3">Options</h1>
-
-            <ul>
-              {settingsSubMenu.map((setting, i) => {
-                return (
+          <div className="flex flex-col md:flex-row gap-6 bg-white rounded-lg shadow-xl overflow-hidden">
+            {/* Left sidebar for navigation */}
+            <div className="md:w-1/4 p-4 border-r border-gray-200">
+              <h2 className="text-2xl font-semibold text-gray-600 mb-4">
+                Options
+              </h2>
+              <ul>
+                {settingsSubMenu.map((setting) => (
                   <li
-                    className={
-                      subMenuItems === setting.href ? "text-md text-white bg-blue-500 px-4 py-2 cursor-pointer" : "text-md text-gray-600 px-4 py-2 cursor-pointer"
-                    }
-                    onClick={() => setSubMenuItems(setting.href)}
-                    key={i}
+                    key={setting.href}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors duration-200 ${
+                      selectedItem === setting.href
+                        ? "bg-blue-600 text-white shadow-md"
+                        : "text-gray-600 hover:bg-gray-100"
+                    }`}
+                    onClick={() => setSelectedItem(setting.href)}
                   >
-                    {setting.title}{" "}
+                    {setting.icon}
+                    <span className="text-lg">{setting.title}</span>
                   </li>
-                );
-              })}
-            </ul>
-          </div>
+                ))}
+              </ul>
+            </div>
 
-          {/* submenu items */}
-          <div className="w-full bg-slate-100">
-            {subMenuItems == "security" ? <ChangePassword /> : null}
-            {subMenuItems == "personal-information" ? (
-              <AdminInformation />
-            ) : null}
+            {/* Main content area */}
+            <div className="flex-1 p-6 overflow-y-auto">
+              {renderContent()}
+            </div>
           </div>
         </div>
       </div>

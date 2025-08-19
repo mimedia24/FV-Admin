@@ -1,12 +1,22 @@
-import { Card } from "antd";
 import React, { useState } from "react";
-import ChangeRestaurantStatus from "./changeRestaurantStatus";
+import { Card, Tag, Popconfirm, Button } from "antd";
 import { Link } from "react-router-dom";
-import { MdDelete } from "react-icons/md";
+import {
+  MdDelete,
+  MdLocationOn,
+  MdPhone,
+  MdPerson,
+  MdAttachMoney,
+} from "react-icons/md";
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../secrets";
+import ChangeRestaurantStatus from "./changeRestaurantStatus";
 
-export default function RestaurantCard({ restaurant, setRestaurant, restaurantList }) {
+export default function RestaurantCard({
+  restaurant,
+  setRestaurant,
+  restaurantList,
+}) {
   const [status, setStatus] = useState(restaurant?.status);
 
   function updateRestaurants(id) {
@@ -17,52 +27,103 @@ export default function RestaurantCard({ restaurant, setRestaurant, restaurantLi
   async function handleDeleteRestaurant(id) {
     try {
       if (!id) return;
-      const alertPrompt = confirm(`Are you sure you want to delete this restaurant?`);
-      if (!alertPrompt) return;
-      const { data } = await axios.delete(`${apiPath}/admin/restaurant/delete/${id}`, {
-        headers: { "x-auth-token": apiAuthToken },
-      });
+      const { data } = await axios.delete(
+        `${apiPath}/admin/restaurant/delete/${id}`,
+        {
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      );
 
-      if (data.success) updateRestaurants(id);
+      if (data.success) {
+        updateRestaurants(id);
+      }
     } catch (error) {
-      console.log("Delete restaurant error:", error);
+      console.error("Delete restaurant error:", error);
     }
   }
 
   return (
-    <Card className="relative w-full max-w-[450px] bg-white rounded-2xl shadow-lg p-6 hover:shadow-2xl transition">
-      <MdDelete
-        className="absolute top-4 right-4 text-2xl text-red-500 cursor-pointer hover:scale-110 transition"
-        onClick={() => handleDeleteRestaurant(restaurant._id)}
-      />
-
-      <div className="w-28 h-28 rounded-full overflow-hidden shadow-md border border-gray-300 mx-auto -mt-14 mb-4 bg-gray-100">
-        <img src={restaurant?.image} alt="Restaurant" className="w-full h-full object-cover" />
+    <Card
+      className="relative w-full max-w-xs bg-white rounded-xl shadow-lg border border-gray-200"
+      bodyStyle={{ padding: 0 }}
+    >
+      {/* Top Section */}
+      <div className="p-4 flex items-center justify-between">
+        <div className="w-16 h-16 rounded-full overflow-hidden shadow-md border-2 border-white bg-gray-100">
+          <img
+            src={restaurant?.image}
+            alt="Restaurant"
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="text-right">
+          <Popconfirm
+            title="Delete this restaurant?"
+            description="Are you sure you want to delete this restaurant?"
+            onConfirm={() => handleDeleteRestaurant(restaurant._id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <Button
+              type="text"
+              icon={<MdDelete className="text-red-500" size={24} />}
+              className="p-0 border-none hover:bg-gray-100"
+            />
+          </Popconfirm>
+        </div>
       </div>
 
-      <div className="text-center">
-        <h2 className="text-lg font-semibold">{restaurant.name}</h2>
-        <p className="text-sm text-gray-500">{restaurant.description}</p>
+      {/* Main Content Section */}
+      <div className="px-4 pb-4 space-y-3">
+        <div className="text-center">
+          <h2 className="text-base font-bold truncate">{restaurant.name}</h2>
+          <p className="text-xs text-gray-500 truncate">
+            {restaurant.description}
+          </p>
+        </div>
 
-        <div className="flex justify-center gap-2 mt-2">
-          <span className="text-xs font-medium bg-gray-200 px-2 py-1 rounded-full">
-            ID: {restaurant._id}
-          </span>
-          <span className={`text-xs font-medium px-2 py-1 rounded-full ${status ? "bg-blue-500 text-white" : "bg-gray-400 text-white"}`}>
+        <div className="flex justify-center gap-2">
+          <Tag color="blue" className="text-xs">
+            ID: {restaurant._id.slice(0, 8)}...
+          </Tag>
+          <Tag
+            color={status ? "green" : "red"}
+            className="text-xs"
+          >
             {status}
-          </span>
+          </Tag>
         </div>
 
-        <div className="text-left mt-4 space-y-1 text-sm">
-          <p><strong>Phone:</strong> {restaurant.phone}</p>
-          <p><strong>Owner:</strong> {restaurant.owner}</p>
-          <p><strong>Address:</strong> {restaurant.address}</p>
-          <p><strong>Balance:</strong> BDT {restaurant.balance}</p>
+        <div className="space-y-2 text-sm text-gray-700">
+          <div className="flex items-center gap-2">
+            <MdPhone className="text-gray-500" />
+            <span className="font-medium">{restaurant.phone}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MdPerson className="text-gray-500" />
+            <span className="font-medium">{restaurant.owner}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MdLocationOn className="text-gray-500" />
+            <span className="font-medium truncate">{restaurant.address}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <MdAttachMoney className="text-gray-500" />
+            <span className="font-medium">BDT {restaurant.balance}</span>
+          </div>
         </div>
+      </div>
 
-        <div className="mt-4 space-y-2">
-          <ChangeRestaurantStatus restaurant={restaurant} status={status} setStatus={setStatus} />
-
+      {/* Actions Section */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="flex flex-col gap-2">
+          <ChangeRestaurantStatus
+            restaurant={restaurant}
+            status={status}
+            setStatus={setStatus}
+          />
           <Link
             className="inline-block w-full text-center py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition"
             to={`/restaurant/menu-list/${restaurant._id}`}

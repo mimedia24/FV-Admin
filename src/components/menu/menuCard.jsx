@@ -1,10 +1,8 @@
 import React, { useState } from "react";
-
-import { Card } from "antd";
+import { Card, Tag, Checkbox } from "antd";
 import ChangeStatus from "./changeStatus";
 import UpdateMenuDiscountRate from "./updateMenuDiscountRate";
 import UpdateMenuPlateFormFee from "./UpdateMenuPlateformFee";
-import { Checkbox } from "antd";
 import { apiAuthToken, apiPath } from "../../../secrets";
 
 export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
@@ -25,13 +23,12 @@ export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
           },
         }
       );
-
       const data = await res.json();
       if (data.success) {
         setApprovalStatus(!approvalStatus);
       }
     } catch (error) {
-      console.log("error: ", error);
+      console.error("Error updating approval status: ", error);
     }
   }
 
@@ -48,81 +45,77 @@ export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
           },
         }
       );
-
       const data = await res.json();
       if (data.success) {
         setIsPopular(!isPopular);
       }
     } catch (error) {
-      console.log("error: ", error);
+      console.error("Error updating popular status: ", error);
     }
   }
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "in stock":
+        return "blue";
+      case "discontinued":
+        return "red";
+      case "out of stock":
+        return "orange";
+      default:
+        return "gray";
+    }
+  };
+
   return (
-    <tr className="w-full border text-center text-sm">
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
+    <tr className="w-full border-b hover:bg-gray-50 transition-colors duration-150">
+      <td className="text-sm text-center px-3 py-2 min-w-[50px] font-medium text-gray-700">
         {slNo + 1}
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
+      <td className="text-sm text-center px-3 py-2 min-w-[120px] text-gray-500 truncate">
         {menu._id}
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
+      <td className="text-sm text-center px-3 py-2">
         <img
-          className="w-20 h-20 rounded-full border-2 object-cover"
+          className="w-16 h-16 mx-auto rounded-full border object-cover shadow"
           src={
             import.meta.env.VITE_IMAGE_PATH + menu.image ||
             "https://placehold.co/600x400"
           }
-          alt="image"
+          alt={menu.name}
         />
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
+      <td className="text-sm text-center px-3 py-2 min-w-[120px] text-gray-500 truncate">
         {menu.restaurantId}
       </td>
-
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="px-3 py-1 text-center bg-blue-500 text-white min-w-16 inline-block">
-          {menu.category}
-        </span>
+      <td className="text-sm text-center px-3 py-2 min-w-[80px]">
+        <Tag color="blue">{menu.category}</Tag>
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span
-          className={
-            status === "in stock"
-              ? "px-4 py-1 text-[11px] min-w-fit text-white bg-blue-500"
-              : status === "discontinued"
-              ? "px-4 py-1 text-[11px] min-w-fit text-white bg-red-500"
-              : status === "out of stock"
-              ? "px-4 py-1 text-[11px] min-w-fit text-white bg-orange-500"
-              : "px-4 py-1 text-[11px] min-w-fit text-white bg-gray-500"
-          }
-        >
-          {status}
-        </span>
+      <td className="text-sm text-center px-3 py-2 min-w-[100px]">
+        <Tag color={getStatusColor(status)}>{status}</Tag>
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span>{menu.name}</span>
+      <td className="text-sm text-center px-3 py-2 min-w-[150px] font-semibold text-gray-800">
+        {menu.name}
       </td>
-      <td className="text-sm text-center border px-3 py-1 overflow-scroll max-w-20">
-        <span>{menu.description}</span>
+      <td className="text-sm text-center px-3 py-2 max-w-[200px] overflow-hidden text-gray-600">
+        <span className="line-clamp-2">{menu.description}</span>
       </td>
-
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="text-[12px] font-bold">BDT {menu.basedPrice}</span>
+      <td className="text-sm text-center px-3 py-2 min-w-[90px] font-bold text-green-600">
+        BDT {menu.basedPrice}
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="text-[12px] font-bold">BDT {menu.plateformFee}</span>
+      <td className="text-sm text-center px-3 py-2 min-w-[90px] font-bold text-gray-600">
+        BDT {menu.plateformFee}
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="text-[12px] font-bold">BDT {menu.sellingPrice}</span>
+      <td className="text-sm text-center px-3 py-2 min-w-[90px] font-bold text-blue-600">
+        BDT {menu.sellingPrice}
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="text-[12px] font-bold">{menu.discountRate}%</span>
+      <td className="text-sm text-center px-3 py-2 min-w-[80px] font-bold text-orange-500">
+        {menu.discountRate}%
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
-        <span className="text-[12px] font-bold">BDT {menu.offerPrice}</span>
+      <td className="text-sm text-center px-3 py-2 min-w-[90px] font-bold text-red-500">
+        BDT {menu.offerPrice}
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
+      <td className="text-sm text-center px-3 py-2 min-w-[120px]">
         <ChangeStatus
           menu={menu}
           setStatus={setStatus}
@@ -130,18 +123,16 @@ export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
           getMenus={getMenus}
         />
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
+      <td className="text-sm text-center px-3 py-2 min-w-[120px]">
         <UpdateMenuDiscountRate menu={menu} getMenus={getMenus} />
       </td>
-
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
+      <td className="text-sm text-center px-3 py-2 min-w-[120px]">
         <UpdateMenuPlateFormFee menu={menu} getMenus={getMenus} />
       </td>
-
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
+      <td className="text-sm text-center px-3 py-2 min-w-[100px]">
         <Checkbox checked={approvalStatus} onChange={handleAdminApproved} />
       </td>
-      <td className="text-sm text-center border px-3 py-1 min-w-20">
+      <td className="text-sm text-center px-3 py-2 min-w-[80px]">
         <Checkbox checked={isPopular} onChange={handlePopularItem} />
       </td>
     </tr>

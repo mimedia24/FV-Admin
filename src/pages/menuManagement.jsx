@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import Layout from "./layout";
-import useFetch from "../useFetch/useFetch";
 import CustomSkeleton from "../components/skeleton";
 import FilterMenu from "../components/menu/filterMenu";
 import MenuCard from "../components/menu/menuCard";
@@ -10,28 +9,63 @@ import axios from "axios";
 
 export default function MenuManagement() {
   const [menus, setMenus] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10;
 
-  //  const { loading, data } = useFetch("/admin/list-of-menus", {});
-
-  async function getMenus() {
+  async function getMenus(page = 1) {
+    setLoading(true);
     try {
-      const { data } = await axios.get(`${apiPath}/admin/list-of-menus`, {
-        headers: {
-          "x-auth-token": apiAuthToken,
-        },
-      });
+      const { data } = await axios.get(
+        `${apiPath}/admin/list-of-menus?page=${page}&limit=${itemsPerPage}`,
+        {
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      );
 
-      console.log(data);
       if (data) {
         setMenus(data.menus);
+        setTotalPages(data.totalPages);
+        setCurrentPage(data.currentPage);
       }
     } catch (error) {
-      throw new Error(error.message);
+      console.error("Error fetching menus:", error.message);
+    } finally {
+      setLoading(false);
     }
   }
+
   useEffect(() => {
-    getMenus();
-  }, []);
+    getMenus(currentPage);
+  }, [currentPage]);
+
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber < 1 || pageNumber > totalPages) return;
+    setCurrentPage(pageNumber);
+  };
+
+  const renderPaginationButtons = () => {
+    const buttons = [];
+    for (let i = 1; i <= totalPages; i++) {
+      buttons.push(
+        <button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`px-4 py-2 mx-1 border rounded ${
+            currentPage === i
+              ? "bg-gray-800 text-white"
+              : "bg-white text-gray-800"
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+    return buttons;
+  };
 
   return (
     <Layout>
@@ -48,7 +82,7 @@ export default function MenuManagement() {
         <FilterMenuByCategory />
       </div>
 
-      <div className="w-[90%] mx-auto overflow-scroll  min-h-[250px]">
+      <div className="w-[90%] mx-auto overflow-scroll min-h-[250px]">
         <table className="w-full text-[12px]">
           <thead>
             <th className="text-center border px-2 text-gray-400">SL No</th>
@@ -94,27 +128,51 @@ export default function MenuManagement() {
           </thead>
 
           <tbody>
-            {menus &&
-              menus.length > 0 &&
+            {loading ? (
+              <tr>
+                <td colSpan="18" className="text-center py-4">
+                  <CustomSkeleton />
+                </td>
+              </tr>
+            ) : menus && menus.length > 0 ? (
               menus.map((menu, index) => (
                 <MenuCard
                   key={menu?._id}
                   menus={menus}
                   setMenus={setMenus}
                   menu={menu}
-                  slNo={index}
+                  slNo={(currentPage - 1) * itemsPerPage + index + 1}
                   getMenus={getMenus}
                 />
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan="18" className="text-center py-4">
+                  No menus found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
 
-      {/* <div className="w-full flex  items-center justify-center mt-12">
-        {loading ? <CustomSkeleton /> : null}
-      </div> */}
-
-      <div className="flex items-center justify-center gap-12  flex-wrap"></div>
+      <div className="flex items-center justify-center gap-2 mt-12 mb-4">
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1 || loading}
+          className="px-4 py-2 mx-1 border rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        {renderPaginationButtons()}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages || loading}
+          className="px-4 py-2 mx-1 border rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
     </Layout>
   );
 }
