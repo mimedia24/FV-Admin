@@ -1,95 +1,83 @@
-import { Card } from "antd";
-import ChangeStatus from "./changeStatus";
-import { useEffect, useState } from "react";
+import { Card, Tag, Divider } from "antd";
+import { UserOutlined, PhoneOutlined, MailOutlined, HomeOutlined, DollarOutlined } from "@ant-design/icons";
 import ChangeRiderStatus from "./changeRiderStatus";
 import ChangeRiderSession from "./changeRiderSession";
+import { IMAGE_PATH } from "../../secrets";
+import { useState } from "react";
+
 export default function RiderCard({ order: rider }) {
   const [status, setStatus] = useState(rider?.riderStatus);
   const [session, setSession] = useState(rider?.session);
 
+  const statusColor = {
+    Active: "blue",
+    Offline: "orange",
+    Busy: "gray",
+    Banned: "red",
+    "Waiting for Approved": "geekblue",
+  };
+
+  const sessionColor = {
+    available: "blue",
+    offline: "orange",
+    break: "purple",
+    "out For Delivery": "cyan",
+  };
+
   return (
-    <Card style={{ width: 450 }}>
-      <div className="absolute top-4 right-8 w-24 h-24 object-cover rounded-full bg-gray-100">
-        <img
-          src={rider?.profileImage}
-          alt=""
-          className="object-cover absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full h-full w-full border-2"
-        />
+    <Card
+      style={{ width: 450 }}
+      className="shadow-lg rounded-xl overflow-hidden hover:shadow-2xl transition-all duration-300"
+      bodyStyle={{ padding: "1.5rem" }}
+    >
+      {/* Profile Section */}
+      <div className="flex items-center gap-4 mb-4">
+        <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 shadow">
+          <img
+            src={`${IMAGE_PATH}${rider?.profileImage}`}
+            alt={rider?.name}
+            className="object-cover w-full h-full"
+          />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold text-gray-800">{rider?.name}</h2>
+          <p className="text-gray-500 text-sm">Rider ID: {rider?._id}</p>
+        </div>
       </div>
-      <p>Rider ID: {rider?._id}</p>
-      <p>
-        Rider Status:{" "}
-        <span
-          className={
-            status === "Active"
-              ? "px-2 py-1 bg-blue-400 text-white rounded-sm"
-              : status === "Offline"
-              ? "px-2 py-1 bg-orange-400 text-white rounded-sm"
-              : status === "Busy"
-              ? "px-2 py-1 bg-gray-400 text-white rounded-sm"
-              : status === "Banned"
-              ? "px-2 py-1 bg-red-600 text-white rounded-sm"
-              : status === "Waiting for Approved"
-              ? "px-2 py-1 bg-sky-600 text-white rounded-sm"
-              : null
-          }
-        >
-          {status}
-        </span>
-      </p>
 
-      <p className="mt-2">
-        Current Session:{" "}
-        <span
-          className={
-            session === "available"
-              ? "px-2 py-1 bg-blue-400 text-white rounded-sm"
-              : session === "offline"
-              ? "px-2 py-1 bg-orange-400 text-white rounded-sm"
-              : session === "break"
-              ? "px-2 py-1 bg-gray-400 text-white rounded-sm"
-              : session === "offline"
-              ? "px-2 py-1 bg-red-600 text-white rounded-sm"
-              : session === "out For Delivery"
-              ? "px-2 py-1 bg-sky-600 text-white rounded-sm"
-              : null
-          }
-        >
-          {session}
-        </span>
-      </p>
+      <Divider />
 
-      <p>
-        Full Name: <span>{rider.name}</span>
-      </p>
-      <p>
-        Phone Number: <span>{rider.phoneNumber}</span>
-      </p>
-      <p>
-        Email: <span>{rider.email}</span>
-      </p>
-      <p>
-        Address: <span>{rider.address}</span>
-      </p>
+      {/* Status */}
+      <div className="mb-3">
+        <p className="font-medium text-gray-700 mb-1">Rider Status:</p>
+        <Tag color={statusColor[status] || "default"}>{status}</Tag>
+      </div>
 
-      <p>
-        Wallet ID: <span>{rider.walletId._id}</span>
-      </p>
-      <p>
-        Wallet Balance <span>BDT {rider.walletId.walletBalance}</span>
-      </p>
+      {/* Session */}
+      <div className="mb-3">
+        <p className="font-medium text-gray-700 mb-1">Current Session:</p>
+        <Tag color={sessionColor[session] || "default"}>{session}</Tag>
+      </div>
 
-      <div>
-        <ChangeRiderStatus
-          rider={rider}
-          status={status}
-          setStatus={setStatus}
-        />
-        <ChangeRiderSession
-          rider={rider}
-          session={session}
-          setSession={setSession}
-        />
+      {/* Rider Info */}
+      <div className="space-y-2 text-sm text-gray-600">
+        <p><PhoneOutlined className="mr-2 text-blue-500" /> {rider.phoneNumber}</p>
+        <p><MailOutlined className="mr-2 text-green-500" /> {rider.email}</p>
+        <p><HomeOutlined className="mr-2 text-purple-500" /> {rider.address}</p>
+      </div>
+
+      <Divider />
+
+      {/* Earnings Section */}
+      <div className="flex justify-between text-gray-800 font-medium mb-4">
+        <span><DollarOutlined className="mr-1 text-yellow-500" /> Earning: BDT {rider?.earning?.toFixed() || 0}</span>
+        <span>Cash: BDT {rider?.cashCollection?.toFixed() || 0}</span>
+      </div>
+
+      {/* Actions */}
+      <div className="flex justify-between gap-2">
+        <ChangeRiderStatus rider={rider} status={status} setStatus={setStatus} />
+        <ChangeRiderSession rider={rider} session={session} setSession={setSession} />
       </div>
     </Card>
   );

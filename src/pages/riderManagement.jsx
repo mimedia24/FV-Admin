@@ -10,6 +10,7 @@ import SearchInput from "../components/searchInput";
 import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { Space, Switch } from "antd";
 import SearchCard from "../components/searchCard";
+import RiderHeader from "../components/rider/RiderHeader";
 
 export default function OrderManagement() {
   const [riders, setRiders] = useState(null);
@@ -23,7 +24,6 @@ export default function OrderManagement() {
     setRiders(data);
   }, [data]);
 
-  console.log(searchResult);
 
   return (
     <Layout>
@@ -61,7 +61,11 @@ export default function OrderManagement() {
           </div>
         </div>
 
-        <div>{searchResult && <SearchCard rider={searchResult?.riders}/>}</div>
+        <div>
+          <RiderHeader />
+        </div>
+
+        <div>{searchResult && <SearchCard rider={searchResult?.riders} />}</div>
 
         <div className="flex items-center justify-center gap-12 flex-wrap">
           {riders === null ? <CustomSkeleton /> : null}

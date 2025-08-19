@@ -21,6 +21,9 @@ import Charges from "./pages/Charges";
 import PaymentManagement from "./pages/PaymentManagement";
 import Notification from "./pages/Notification";
 import AllNotification from "./pages/AllNotification";
+import RegisterNewRider from "./pages/rider/RegisterNewRider";
+import WithdrawList from "./pages/rider/WithdrawList";
+import CollectionPaymentList from "./pages/rider/CollectionPaymentList";
 
 function App() {
   return (
@@ -77,6 +80,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            {/* rider start*/}
             <Route
               path="/rider-management"
               element={
@@ -85,6 +89,31 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route
+              path="/rider-management/register"
+              element={
+                <ProtectedRoute>
+                  <RegisterNewRider />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rider-management/withdraw-list"
+              element={
+                <ProtectedRoute>
+                  <WithdrawList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rider-management/collection-payment-list"
+              element={
+                <ProtectedRoute>
+                  <CollectionPaymentList />
+                </ProtectedRoute>
+              }
+            />
+            {/* rider end */}
             <Route
               path="/category-management"
               element={

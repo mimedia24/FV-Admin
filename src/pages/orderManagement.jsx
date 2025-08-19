@@ -1,126 +1,111 @@
 import React, { useEffect, useState } from "react";
 import Layout from "./layout";
-import useFetch from "../useFetch/useFetch";
 import OrderCard from "../components/orderCard";
-import PaginationContainer from "../components/pagination";
 import CustomSkeleton from "../components/skeleton";
 import SortOrdersList from "../components/sortOrderList";
-import AssignRiderModal from "../components/assignRiderModal";
+import Pagination from "../components/pagination/Pagination";
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../secrets";
-import Pagination from "../components/pagination/Pagination";
 
 export default function OrderManagement() {
-  const [orders, setOrders] = useState(null);
-  // const { data, loading } = useFetch("/admin/list-of-orders");
+  const [orders, setOrders] = useState([]);
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  // loading
-  const [loading, setLoading] = useState(null);
+  const limit = 10;
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-
-  async function getOrders() {
+  const getOrders = async (pageNumber = page) => {
     try {
       setLoading(true);
-      setOrders([]);
       const { data } = await axios.get(
-        `${apiPath}/admin/list-of-orders?page=${page}`,
-        {
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-        }
+        `${apiPath}/admin/list-of-orders?page=${pageNumber}&limit=${limit}`,
+        { headers: { "x-auth-token": apiAuthToken } }
       );
 
-      console.log(data);
-      if (data) {
-        setLoading(false);
+      if (data?.orders) {
         setOrders(data.orders);
+        const totalOrders = data.totalOrders || data.orders.length;
+        setTotalPages(Math.ceil(totalOrders / limit));
       }
     } catch (error) {
+      console.error("Failed to fetch orders:", error);
+    } finally {
       setLoading(false);
-      throw new Error(error.message);
     }
-  }
-  useEffect(() => {
-    getOrders();
-  }, []);
+  };
 
-  // useEffect(() => {
-  //   setOrders(data);
-  // }, [data]);
+  useEffect(() => {
+    getOrders(page);
+  }, [page]);
 
   return (
     <Layout>
-      <div className="w-full py-4">
-        <h1 className="text-3xl text-center font-extrabold text-gray-400 my-8">
+      <div className="w-full py-4 px-6">
+        <h1 className="text-3xl text-center font-extrabold text-gray-700 mb-6">
           Order Management
         </h1>
 
-        <h1 className="text-xl text-center font-extrabold text-gray-400 my-8">
-          List of orders
-        </h1>
-
-        <div className="w-full flex items-center flex-wrap gap-8">
-          <div className="ml-48 my-4">
-            Filter: <SortOrdersList setOrders={setOrders} />
-          </div>
-          <div>
-            
-          </div>
+        {/* Filter */}
+        <div className="w-full flex flex-wrap items-center gap-4 mb-6">
+          <span className="font-semibold text-gray-600">Filter:</span>
+          <SortOrdersList setOrders={setOrders} />
         </div>
 
-        <div>
-          <div className="overflow-x-scroll w-full text-sm">
-            <table className="w-[95%] mx-auto border p-2 ">
-              <thead>
+        {/* Modern Table */}
+        <div className="overflow-x-auto w-full bg-white rounded-xl shadow-md border border-gray-200">
+          <table className="w-full text-sm text-left text-gray-600">
+            <thead className="bg-gray-100 text-gray-700 uppercase text-xs">
+              <tr>
+                <th className="px-4 py-3">SL</th>
+                <th className="px-4 py-3">Order ID</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3">User</th>
+                <th className="px-4 py-3">Restaurant</th>
+                <th className="px-4 py-3">Rider</th>
+                <th className="px-4 py-3">Order Amt</th>
+                <th className="px-4 py-3">Delivery Amt</th>
+                <th className="px-4 py-3">Updated At</th>
+                <th className="px-4 py-3">Change Status</th>
+                <th className="px-4 py-3">Assign Rider</th>
+                <th className="px-4 py-3">Delete</th>
+                <th className="px-4 py-3">View Items</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {loading ? (
                 <tr>
-                  <th className="border py-4 px-1">SL NO</th>
-                  <th className="border py-4 px-1">Order ID</th>
-                  <th className="border py-4 px-1 min-w-32">Status</th>
-                  <th className="border py-4 px-1">User ID</th>
-                  <th className="border py-4 px-1">Restaurant ID</th>
-                  <th className="border py-4 px-1">Rider ID</th>
-                  <th className="border py-4 px-1 max-w-[80px]">
-                    Order Amount
-                  </th>
-                  <th className="border py-4 px-1 ">Delivery amount</th>
-                  <th className="border py-4 px-1 min-w-[150px]">
-                    Update Time
-                  </th>
-                  <th className="border py-4 px-1">Change Status</th>
-                  <th className="border py-4 px-1">Assign Rider</th>
-                  <th className="border py-4 px-1">Delete</th>
-                  <th className="border py-4 px-1"> view items</th>
+                  <td colSpan="13" className="p-6">
+                    <CustomSkeleton />
+                  </td>
                 </tr>
-              </thead>
-
-              <tbody>
-                {loading ? <h1>Loading...Please wait</h1> : null}
-                {orders?.length > 0
-                  ? orders?.map((order, index) => (
-                      <OrderCard
-                        order={order}
-                        key={order._id}
-                        slNo={index}
-                        getOrders={getOrders}
-                      />
-                    ))
-                  : null}
-              </tbody>
-            </table>
-          </div>
+              ) : orders?.length > 0 ? (
+                orders.map((order, index) => (
+                  <OrderCard
+                    key={order._id}
+                    order={order}
+                    slNo={index}
+                    getOrders={getOrders}
+                  />
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="13" className="text-center py-6 text-gray-500">
+                    No orders found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
 
-        <div className="w-full flex items-center justify-center mt-12 mx-auto">
-          {orders === null ? <CustomSkeleton /> : null}
-        </div>
-
-        <div className="flex items-center justify-center gap-12 flex-wrap"></div>
-
-        <div className="w-full flex items-center justify-center mt-5">
-          <Pagination updatePage={setPage} currentPage={page} />
+        <div className="w-full flex justify-center mt-6">
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            updatePage={setPage}
+          />
         </div>
       </div>
     </Layout>

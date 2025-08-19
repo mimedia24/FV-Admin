@@ -29,9 +29,19 @@ export default function ViewOrderItem({ order }) {
               <tr>
                 <td className="py-4 px-2 border text-center">SL No</td>
                 <td className="py-4 px-2 border text-center">Items Name</td>
-                <td className="py-4 px-2 border text-center">Price</td>
+                <td className="py-4 px-2 border text-center">
+                  restaurant price
+                </td>
+                <td className="py-4 px-2 border text-center">
+                  Restaurant total
+                </td>
+                     <td className="py-4 px-2 border text-center">
+                  Selling price
+                </td>
+                <td className="py-4 px-2 border text-center">
+                  Selling total
+                </td>
                 <td className="py-4 px-2 border text-center">Quantity</td>
-                <td className="py-4 px-2 border text-center">Sub total</td>
               </tr>
             </thead>
             <tbody>
@@ -46,13 +56,22 @@ export default function ViewOrderItem({ order }) {
                         {item.name}
                       </td>
                       <td className="border text-center py-3 px-1">
-                        {item.price}
+                        {item.basedPrice}
+                      </td>
+
+                      <td className="border text-center py-3 px-1">
+                        {item.quantity * item.basedPrice}
+                      </td>
+
+                        <td className="border text-center py-3 px-1">
+                        {item.offerPrice}
+                      </td>
+
+                      <td className="border text-center py-3 px-1">
+                        {item.quantity * item.offerPrice}
                       </td>
                       <td className="border text-center py-3 px-1">
                         {item.quantity}
-                      </td>
-                      <td className="border text-center py-3 px-1">
-                        {item.quantity * item.price}
                       </td>
                     </tr>
                   );
