@@ -11,19 +11,22 @@ import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
 import { Space, Switch } from "antd";
 import SearchCard from "../components/searchCard";
 import RiderHeader from "../components/rider/RiderHeader";
+import RiderPagination from "../components/rider/RiderPagination";
 
 export default function OrderManagement() {
   const [riders, setRiders] = useState(null);
   const [searchType, setSearchType] = useState("phone");
   const [searchResult, setSearchResult] = useState(null);
+  const [page, setPage] = useState(1);
+  const [totalPage, setTotalPage] = useState(1);
 
-  const { data, loading } = useFetch("/admin/list-of-riders");
+  const { data, loading } = useFetch(`/admin/list-of-riders?page=${page}`);
 
   useEffect(() => {
     console.log(data);
     setRiders(data);
+    setTotalPage(data?.totalPages);
   }, [data]);
-
 
   return (
     <Layout>
@@ -65,7 +68,7 @@ export default function OrderManagement() {
           <RiderHeader />
         </div>
 
-        <div>{searchResult && <SearchCard rider={searchResult?.riders} />}</div>
+        <div>{searchResult && <RiderCard order={searchResult?.riders} />}</div>
 
         <div className="flex items-center justify-center gap-12 flex-wrap">
           {riders === null ? <CustomSkeleton /> : null}
@@ -73,6 +76,10 @@ export default function OrderManagement() {
             riders?.riders.map((rider) => (
               <RiderCard order={rider} key={rider._id} />
             ))}
+        </div>
+
+        <div className="flex items-center justify-center my-20">
+          <RiderPagination setPage={setPage} totalPage={totalPage} />
         </div>
       </div>
     </Layout>
