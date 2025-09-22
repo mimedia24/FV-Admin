@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button, Input, Modal, Form, Upload, message, Spin } from "antd";
+import { Button, Input, Modal, Form, Upload, Spin } from "antd";
 import { IoMdAdd } from "react-icons/io";
 import { UploadOutlined } from "@ant-design/icons";
 import axios from "axios";
@@ -26,20 +26,29 @@ function AddCategoryModal({ setCategories }) {
   const handleOk = async () => {
     try {
       setLoading(true);
-      const form = new FormData();
-      form.append("name", formData.name);
-      form.append("description", formData.description);
-      form.append("meta", formData.meta);
+
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("description", formData.description);
+      formDataToSend.append("meta", formData.meta);
 
       if (fileList.length > 0) {
-        form.append("thumbnail", fileList[0].originFileObj);
+        formDataToSend.append(
+          "thumbnail",
+          fileList[0].originFileObj || fileList[0]
+        );
       }
 
-      const response = await axios.post(`${apiPath}/category/add`, form, {
-        headers: {
-          "x-auth-token": apiAuthToken,
-        },
-      });
+      const response = await axios.post(
+        `${apiPath}/category/add`,
+        formDataToSend,
+        {
+          headers: {
+            "x-auth-token": apiAuthToken,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       const data = response.data;
       if (data.success) {
@@ -54,7 +63,7 @@ function AddCategoryModal({ setCategories }) {
       }
     } catch (error) {
       console.error("Add category error:", error);
-      toast.error("An error occurred while adding the category.");
+      toast.error(error?.response?.data?.message || "Upload failed");
     } finally {
       setLoading(false);
     }
@@ -81,7 +90,7 @@ function AddCategoryModal({ setCategories }) {
     },
     beforeUpload: (file) => {
       setFileList([file]);
-      return false; // Prevent automatic upload
+      return false; // prevent auto upload
     },
     fileList,
     maxCount: 1,
@@ -90,16 +99,19 @@ function AddCategoryModal({ setCategories }) {
 
   return (
     <>
-      <Button type="primary" onClick={showModal} className="flex items-center gap-1">
+      <Button
+        type="primary"
+        onClick={showModal}
+        className="flex items-center gap-1"
+      >
         <IoMdAdd /> Add Category
       </Button>
       <Modal
         title="Add New Category"
         open={isModalOpen}
-        onOk={handleOk}
         onCancel={handleCancel}
         confirmLoading={loading}
-        okText="Add"
+        footer={null} // use form submit button instead
       >
         <Spin spinning={loading} tip="Adding category...">
           <Form
@@ -111,7 +123,9 @@ function AddCategoryModal({ setCategories }) {
             <Form.Item
               label="Category Name"
               name="name"
-              rules={[{ required: true, message: "Please enter a category name!" }]}
+              rules={[
+                { required: true, message: "Please enter a category name!" },
+              ]}
             >
               <Input
                 placeholder="e.g., Electronics"
@@ -119,10 +133,13 @@ function AddCategoryModal({ setCategories }) {
                 onChange={handleFormChange}
               />
             </Form.Item>
+
             <Form.Item
               label="Description"
               name="description"
-              rules={[{ required: true, message: "Please enter a description!" }]}
+              rules={[
+                { required: true, message: "Please enter a description!" },
+              ]}
             >
               <Input
                 placeholder="A brief description of the category."
@@ -130,10 +147,13 @@ function AddCategoryModal({ setCategories }) {
                 onChange={handleFormChange}
               />
             </Form.Item>
+
             <Form.Item
               label="Meta Keywords"
               name="meta"
-              rules={[{ required: true, message: "Please enter meta keywords!" }]}
+              rules={[
+                { required: true, message: "Please enter meta keywords!" },
+              ]}
             >
               <Input
                 placeholder="e.g., phones, laptops, gadgets"
@@ -141,21 +161,25 @@ function AddCategoryModal({ setCategories }) {
                 onChange={handleFormChange}
               />
             </Form.Item>
+
             <Form.Item
               label="Thumbnail"
               name="thumbnail"
               valuePropName="fileList"
-              getValueFromEvent={(e) => {
-                if (Array.isArray(e)) {
-                  return e;
-                }
-                return e?.fileList;
-              }}
-              rules={[{ required: true, message: "Please upload a thumbnail!" }]}
+              getValueFromEvent={(e) => (Array.isArray(e) ? e : e?.fileList)}
+              rules={[
+                { required: true, message: "Please upload a thumbnail!" },
+              ]}
             >
               <Upload {...uploadProps}>
                 <Button icon={<UploadOutlined />}>Select File</Button>
               </Upload>
+            </Form.Item>
+
+            <Form.Item>
+              <Button type="primary" htmlType="submit" loading={loading}>
+                Add Category
+              </Button>
             </Form.Item>
           </Form>
         </Spin>

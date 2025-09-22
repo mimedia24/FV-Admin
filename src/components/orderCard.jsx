@@ -4,6 +4,7 @@ import AssignRiderModal from "./assignRiderModal";
 import DeleteOrderButton from "./deleteOrderButton";
 import convertDateAsLocalTime from "../helpers/timeStamp";
 import ViewOrderItem from "./order/viewOrderItem";
+import CopyIcon from "./common/CopyIcon";
 
 export default function OrderCard({ order, slNo, getOrders }) {
   const [status, setStatus] = useState(order?.status);
@@ -13,6 +14,11 @@ export default function OrderCard({ order, slNo, getOrders }) {
     convertDateAsLocalTime(order?.updateTime)
   );
 
+  function handleCopyData(text) {
+    navigator.clipboard.writeText(text);
+    alert("Text copied.");
+  }
+
   return (
     <tr className="text-center border text-sm">
       <td>{slNo + 1}</td>
@@ -21,19 +27,29 @@ export default function OrderCard({ order, slNo, getOrders }) {
         <span
           className={
             status === "pending"
-              ? "px-2 py-1 bg-gray-400 text-white rounded-sm"
+              ? "px-2 text-[11px] bg-gray-400 text-white rounded-sm"
               : status === "delivered"
-              ? "px-2 py-1 bg-blue-400 text-white rounded-sm"
+              ? "px-2 text-[11px] bg-blue-400 text-white rounded-sm"
               : status === "picked up"
-              ? "px-2 py-1 bg-orange-400 text-white rounded-sm"
-              : "px-2 py-1 bg-red-400 text-white rounded-sm"
+              ? "px-2 text-[11px] bg-orange-400 text-white rounded-sm"
+              : "px-2 text-[11px] bg-red-400 text-white rounded-sm"
           }
         >
           {status}
         </span>
       </td>
       <td className="text-[13px] border">{order?.userId}</td>
-      <td className="text-[13px] border">{order?.restaurantId}</td>
+
+      <td className="text-[13px] border">{order?.customerPhone}<span onClick={() => handleCopyData(order?.customerPhone)}>
+          <CopyIcon />
+        </span></td>
+      <td className="text-[11px] border">
+        {order?.restaurantId}
+        <span onClick={() => handleCopyData(order?.restaurantId)}>
+          <CopyIcon />
+        </span>
+      </td>
+      <td className="text-[11px] border">{order?.restaurantName}</td>
       <td className="text-[13px] border">{order?.riderId || "N/A"}</td>
       <td className="border p-1">BDT {order?.totalAmount.toFixed()}</td>
       <td className="border p-1">BDT {order?.deliveryAmount.toFixed()}</td>

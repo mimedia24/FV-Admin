@@ -78,9 +78,10 @@ function RegisterNewRider() {
         setFiles({ profileImage: null, nidFront: null, nidBack: null });
         setPreviews({ profileImage: null, nidFront: null, nidBack: null });
       } else {
-        setMessage("Registration failed.");
+        setMessage(`${response.data.message}`);
       }
     } catch (err) {
+      console.log(err);
       setMessage(err.response?.data?.message || "Error registering rider");
     }
 

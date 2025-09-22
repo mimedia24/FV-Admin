@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import Layout from "./layout";
 import RestaurantDetails from "../components/restaurant/restaurantDetails";
 import { useParams } from "react-router-dom";
-import MenuCard from "../components/menu/menuCard";
 import axiosInstance from "../services/axios/axiosInstance";
+import { Spin, Table, Tag, Checkbox, Image } from "antd";
+import { apiAuthToken, apiPath } from "../../secrets";
 
 export default function RestaurantListOfMenu() {
   const [restaurantDetail, setRestaurantDetail] = useState(null);
@@ -21,18 +22,158 @@ export default function RestaurantListOfMenu() {
         );
 
         if (data?.success) {
-          setMenuList(data.menu);
-          setRestaurantDetail(data.restaurant);
+          setMenuList(data.menu || []);
+          setRestaurantDetail(data.restaurant || null);
         }
-        setLoading(false);
       } catch (err) {
         console.error("Error fetching menu: ", err);
+      } finally {
         setLoading(false);
       }
     }
 
     fetchMenu();
   }, [id]);
+
+  // ✅ Table Columns
+  const columns = [
+    {
+      title: "SL No",
+      key: "slNo",
+      render: (_, __, index) => index + 1,
+    },
+    {
+      title: "Thumbnail",
+      dataIndex: "image",
+      render: (img) => (
+        <Image
+          width={60}
+          height={60}
+          className="object-cover rounded-md"
+          src={
+            img
+              ? import.meta.env.VITE_IMAGE_PATH + img
+              : "https://placehold.co/100x100"
+          }
+        />
+      ),
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      render: (text) => text || "-",
+    },
+    {
+      title: "Description",
+      dataIndex: "description",
+      render: (desc) => desc || "-",
+    },
+    {
+      title: "Based Price",
+      dataIndex: "basedPrice",
+      render: (price) => `BDT ${price}`,
+    },
+    {
+      title: "Plateform Fee",
+      dataIndex: "plateformFee",
+      render: (fee) => `BDT ${fee}`,
+    },
+    {
+      title: "Selling Price",
+      dataIndex: "sellingPrice",
+      render: (price) => `BDT ${price}`,
+    },
+    {
+      title: "Discount (%)",
+      dataIndex: "discountRate",
+      render: (rate) => `${rate}%`,
+    },
+    {
+      title: "Offer Price",
+      dataIndex: "offerPrice",
+      render: (price) => `BDT ${price}`,
+    },
+    {
+      title: "Category",
+      dataIndex: "category",
+      render: (cat) => <Tag color="blue">{cat}</Tag>,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      render: (status) => {
+        let color = "gray";
+        if (status === "in stock") color = "blue";
+        if (status === "out of stock") color = "orange";
+        if (status === "discontinued") color = "red";
+        return <Tag color={color}>{status}</Tag>;
+      },
+    },
+    {
+      title: "Admin Approval",
+      dataIndex: "isApproved",
+      render: (_, record) => (
+        <Checkbox
+          checked={record.isApproved}
+          onChange={async () => {
+            try {
+              const res = await fetch(
+                `${apiPath}/menu/update/approval?approvalStatus=${!record.isApproved}&menuId=${record._id}`,
+                {
+                  method: "PUT",
+                  headers: { "x-auth-token": apiAuthToken },
+                }
+              );
+              const data = await res.json();
+              if (data.success) {
+                setMenuList((prev) =>
+                  prev.map((m) =>
+                    m._id === record._id
+                      ? { ...m, isApproved: !record.isApproved }
+                      : m
+                  )
+                );
+              }
+            } catch (err) {
+              console.error("Error updating approval: ", err);
+            }
+          }}
+        />
+      ),
+    },
+    {
+      title: "Popular",
+      dataIndex: "isPopular",
+      render: (_, record) => (
+        <Checkbox
+          checked={record.isPopular}
+          onChange={async () => {
+            try {
+              const res = await fetch(
+                `${apiPath}/menu/update/popular?status=${!record.isPopular}&menuId=${record._id}`,
+                {
+                  method: "PUT",
+                  headers: { "x-auth-token": apiAuthToken },
+                }
+              );
+              const data = await res.json();
+              if (data.success) {
+                setMenuList((prev) =>
+                  prev.map((m) =>
+                    m._id === record._id
+                      ? { ...m, isPopular: !record.isPopular }
+                      : m
+                  )
+                );
+              }
+            } catch (err) {
+              console.error("Error updating popular: ", err);
+            }
+          }}
+        />
+      ),
+    },
+  ];
 
   return (
     <Layout>
@@ -51,27 +192,16 @@ export default function RestaurantListOfMenu() {
           </div>
         )}
 
-        {/* Menu Grid */}
-        {/* <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-          {loading ? (
-            <p className="col-span-full text-center text-gray-500">
-              Loading menus...
-            </p>
-          ) : menuList.length > 0 ? (
-            menuList?.map((menu, index) => (
-              <MenuCard
-                key={menu._id}
-                menu={menu}
-                slNo={index}
-                setMenus={setMenuList}
-              />
-            ))
-          ) : (
-            <p className="col-span-full text-center text-gray-500">
-              No menu items found.
-            </p>
-          )}
-        </div> */}
+        {/* Menu Table */}
+        <Spin spinning={loading} tip="Loading menus...">
+          <Table
+            columns={columns}
+            dataSource={menuList}
+            rowKey="_id"
+            pagination={{ pageSize: 10 }}
+            bordered
+          />
+        </Spin>
       </div>
     </Layout>
   );

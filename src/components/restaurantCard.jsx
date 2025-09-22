@@ -53,7 +53,7 @@ export default function RestaurantCard({
       <div className="p-4 flex items-center justify-between">
         <div className="w-16 h-16 rounded-full overflow-hidden shadow-md border-2 border-white bg-gray-100">
           <img
-            src={restaurant?.image}
+            src={import.meta.env.VITE_IMAGE_PATH + restaurant.image}
             alt="Restaurant"
             className="w-full h-full object-cover"
           />
@@ -88,10 +88,7 @@ export default function RestaurantCard({
           <Tag color="blue" className="text-xs">
             ID: {restaurant._id.slice(0, 8)}...
           </Tag>
-          <Tag
-            color={status ? "green" : "red"}
-            className="text-xs"
-          >
+          <Tag color={status ? "green" : "red"} className="text-xs">
             {status}
           </Tag>
         </div>
