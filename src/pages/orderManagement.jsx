@@ -6,7 +6,8 @@ import SortOrdersList from "../components/sortOrderList";
 import Pagination from "../components/pagination/Pagination";
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../secrets";
-import { Button, Input } from "antd";
+import { Button, Input, Calendar, theme, Modal } from "antd";
+import useFetch from "../useFetch/useFetch";
 
 export default function OrderManagement() {
   const [orders, setOrders] = useState([]);
@@ -14,6 +15,53 @@ export default function OrderManagement() {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
   const [searchRestaurantId, setSearchRestaurantId] = useState("");
+  const { token } = theme.useToken();
+
+  // Calendar modal state
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+
+  const onPanelChange = (value, mode) => {
+    console.log(value.format("YYYY-MM-DD"), mode);
+  };
+
+  async function handleGetOrderByDate(date) {
+    try {
+      const todayTimestamp = new Date(date).getTime();
+
+      console.log("", todayTimestamp);
+
+      const { data } = await axios.get(
+        apiPath + `/admin/today-order?type=order&date=${todayTimestamp}`,
+        {
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      );
+
+
+
+      if (data.success) {
+        setOrders(data.orders);
+      }
+    } catch (error) {
+      setOrders([])
+      console.log("failed to order by date.");
+    }
+  }
+
+  const handleCalendarSelect = (date) => {
+    console.log("Selected date:", date.format("YYYY-MM-DD"));
+    onPanelChange(date, "date");
+    setIsCalendarModalOpen(false);
+    handleGetOrderByDate(date.format("YYYY-MM-DD"));
+  };
+
+  const wrapperStyle = {
+    width: 300,
+    border: `1px solid ${token.colorBorderSecondary}`,
+    borderRadius: token.borderRadiusLG,
+  };
 
   const limit = 10;
 
@@ -54,8 +102,6 @@ export default function OrderManagement() {
       console.log("data : ", data);
       if (data?.order) {
         setOrders(data.order);
-        // const totalOrders = data.totalOrders || data.orders.length;
-        // setTotalPages(Math.ceil(totalOrders / limit));
       }
     } catch (error) {
       console.error("Failed to fetch orders:", error);
@@ -87,6 +133,24 @@ export default function OrderManagement() {
               Search
             </Button>
           </div>
+
+          {/* Calendar Modal Button */}
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setIsCalendarModalOpen(true)}>
+              Select Date
+            </Button>
+
+            <Modal
+              title="Select Date"
+              open={isCalendarModalOpen}
+              onCancel={() => setIsCalendarModalOpen(false)}
+              footer={null}
+            >
+              <div style={wrapperStyle}>
+                <Calendar fullscreen={false} onSelect={handleCalendarSelect} />
+              </div>
+            </Modal>
+          </div>
         </div>
 
         {/* Modern Table */}
@@ -115,7 +179,7 @@ export default function OrderManagement() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan="13" className="p-6">
+                  <td colSpan="15" className="p-6">
                     <CustomSkeleton />
                   </td>
                 </tr>
@@ -130,7 +194,7 @@ export default function OrderManagement() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="13" className="text-center py-6 text-gray-500">
+                  <td colSpan="15" className="text-center py-6 text-gray-500">
                     No orders found.
                   </td>
                 </tr>
