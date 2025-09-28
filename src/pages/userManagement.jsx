@@ -70,6 +70,31 @@ export default function UserManagement() {
     }
   }
 
+  async function handleSearchByUserId(userId) {
+    try {
+      const { data } = await axios.get(
+        `${apiPath}/admin/user/${userId}`,
+        {
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      );
+
+      if (data.success) {
+        const userArr = [];
+        userArr.push(data.user);
+        setUser(userArr);
+      }
+    } catch (error) {
+      console.log("search by phone errro : ", error);
+    }
+  }
+
+  function onSearchByUserId(value, e, info) {
+    handleSearchByUserId(value);
+  }
+
   const onSearch = (value, _e, info) => {
     //  console.log("value is : ", value);
 
@@ -99,13 +124,22 @@ export default function UserManagement() {
           All user list
         </h1>
 
-        <div className="w-4/5 mx-auto my-4">
+        <div className="flex items-center justify-center gap-8 w-4/5 mx-auto mt-5">
           <Search
             placeholder="search user by phone"
             allowClear
             enterButton="Search"
             size="medium"
             onSearch={onSearch}
+            className="flex-1"
+          />
+          <Search
+            placeholder="search user by user id"
+            allowClear
+            enterButton="user id"
+            size="medium"
+            onSearch={onSearchByUserId}
+            className="flex-1"
           />
         </div>
         <div className="w-[90%] mx-auto my-2">
