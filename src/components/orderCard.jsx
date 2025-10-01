@@ -5,6 +5,7 @@ import DeleteOrderButton from "./deleteOrderButton";
 import convertDateAsLocalTime from "../helpers/timeStamp";
 import ViewOrderItem from "./order/viewOrderItem";
 import CopyIcon from "./common/CopyIcon";
+import { Tag } from "antd";
 
 export default function OrderCard({ order, slNo, getOrders }) {
   const [status, setStatus] = useState(order?.status);
@@ -40,9 +41,12 @@ export default function OrderCard({ order, slNo, getOrders }) {
       </td>
       <td className="text-[13px] border">{order?.userId}</td>
 
-      <td className="text-[13px] border">{order?.customerPhone}<span onClick={() => handleCopyData(order?.customerPhone)}>
+      <td className="text-[13px] border">
+        {order?.customerPhone}
+        <span onClick={() => handleCopyData(order?.customerPhone)}>
           <CopyIcon />
-        </span></td>
+        </span>
+      </td>
       <td className="text-[11px] border">
         {order?.restaurantId}
         <span onClick={() => handleCopyData(order?.restaurantId)}>
@@ -76,6 +80,11 @@ export default function OrderCard({ order, slNo, getOrders }) {
       </td>
       <td>
         <ViewOrderItem order={order} />
+      </td>
+      <td>
+        <Tag color={order?.platform === "web" ? "lime" : "geekblue"}>
+          {order?.platform === "web" ? "web" : "android"}
+        </Tag>
       </td>
     </tr>
   );

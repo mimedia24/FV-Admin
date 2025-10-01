@@ -39,13 +39,11 @@ export default function OrderManagement() {
         }
       );
 
-
-
       if (data.success) {
         setOrders(data.orders);
       }
     } catch (error) {
-      setOrders([])
+      setOrders([]);
       console.log("failed to order by date.");
     }
   }
@@ -173,6 +171,7 @@ export default function OrderManagement() {
                 <th className="px-4 py-3">Assign Rider</th>
                 <th className="px-4 py-3">Delete</th>
                 <th className="px-4 py-3">View Items</th>
+                <th className="px-4 py-3">Platform</th>
               </tr>
             </thead>
 
