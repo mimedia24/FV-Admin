@@ -17,14 +17,15 @@ export default function PaymentFormRestaurant({
     result: 0,
   });
 
+  const [loading, setLoading] = useState(false); 
+
   function randomCode() {
     const num1 = Math.random() * 10;
-    const numb2 = Math.random() * 10;
-    // console.log(num1.toFixed(), numb2.toFixed());
+    const num2 = Math.random() * 10;
     setPaymentDetail((prev) => ({
       ...prev,
       firstCode: num1.toFixed(),
-      secondCode: numb2.toFixed(),
+      secondCode: num2.toFixed(),
     }));
   }
 
@@ -37,20 +38,25 @@ export default function PaymentFormRestaurant({
     setPaymentDetail((prev) => ({ ...prev, [name]: value }));
   }
 
-  //   handle submit
+  // handle submit
   async function handleSubmitPayment() {
+    if (loading) return; // prevent multiple clicks
     try {
+      setLoading(true);
+
       const result =
         Number(paymentDetail.firstCode) + Number(paymentDetail.secondCode);
 
-      if (paymentDetail.paymentAmount == 0) {
-        toast.error(`payment amount required.`);
+      if (!paymentDetail.paymentAmount || paymentDetail.paymentAmount == 0) {
+        toast.error(`Payment amount required.`);
+        setLoading(false);
         return;
       }
 
       if (result != paymentDetail.result) {
-        toast.error(`incorrect result.`);
+        toast.error(`Incorrect result.`);
         randomCode();
+        setLoading(false);
         return;
       }
 
@@ -66,12 +72,12 @@ export default function PaymentFormRestaurant({
         }
       );
 
-
       if (data.success) {
         getRestaurantWallet();
-        toast.success(`payment successful.`);
+        toast.success(`Payment successful.`);
         setPaymentDetail({
-          paymentAmount: 0,
+          restaurantId: restaurantId,
+          paymentAmount: "",
           firstCode: 0,
           secondCode: 0,
           result: 0,
@@ -79,21 +85,22 @@ export default function PaymentFormRestaurant({
         setIsModalOpen(false);
       }
     } catch (error) {
-      console.log(error.response.data);
-      toast.error(error.response.data.message);
-      throw new Error(error.message);
+      console.log(error.response?.data);
+      toast.error(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false); // stop loading
     }
   }
 
   return (
     <div>
       <div>
-        <label htmlFor="riderId" className="inline-block">
+        <label htmlFor="restaurantId" className="inline-block">
           Restaurant ID
         </label>
         <input
           type="text"
-          className="block px-2 py-2 rounded-lg border disabled:bg-gray-100 w-full "
+          className="block px-2 py-2 rounded-lg border disabled:bg-gray-100 w-full"
           name="restaurantId"
           id="restaurantId"
           placeholder="restaurant id"
@@ -102,26 +109,25 @@ export default function PaymentFormRestaurant({
         />
       </div>
       <div>
-        <label htmlFor="riderId">Payment amount</label>
+        <label htmlFor="paymentAmount">Payment amount</label>
         <input
           type="text"
-          className="block px-2 py-2 rounded-lg border w-full "
+          className="block px-2 py-2 rounded-lg border w-full"
           name="paymentAmount"
           id="paymentAmount"
           placeholder="payment amount"
           onChange={handleOnChange}
+          value={paymentDetail.paymentAmount}
         />
       </div>
-
       <div>
         <label htmlFor="firstCode">First number</label>
         <input
           type="number"
-          className="block px-2  disabled:bg-gray-100 py-2 rounded-lg border w-full "
+          className="block px-2 py-2 rounded-lg border w-full disabled:bg-gray-100"
           name="firstCode"
-          disabled
           id="firstCode"
-          placeholder="first number"
+          disabled
           value={paymentDetail.firstCode}
         />
       </div>
@@ -129,19 +135,18 @@ export default function PaymentFormRestaurant({
         <label htmlFor="secondCode">Second number</label>
         <input
           type="number"
-          className="block px-2  disabled:bg-gray-100 py-2 rounded-lg border w-full "
-          disabled
+          className="block px-2 py-2 rounded-lg border w-full disabled:bg-gray-100"
           name="secondCode"
           id="secondCode"
-          placeholder="second number"
+          disabled
           value={paymentDetail.secondCode}
         />
       </div>
       <div>
-        <label htmlFor="secondCode">Result</label>
+        <label htmlFor="result">Result</label>
         <input
           type="number"
-          className="block px-2 py-2 rounded-lg border w-full "
+          className="block px-2 py-2 rounded-lg border w-full"
           name="result"
           id="result"
           placeholder="result"
@@ -151,16 +156,20 @@ export default function PaymentFormRestaurant({
       </div>
       <div className="flex items-center justify-center gap-4">
         <button
-          className="w-full bg-blue-500 text-white px-4 py-2 rounded-md mt-3 "
+          className={`w-full px-4 py-2 rounded-md mt-3 text-white ${
+            loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-500"
+          }`}
           onClick={handleSubmitPayment}
+          disabled={loading}
         >
-          submit
+          {loading ? "Processing..." : "Submit"}
         </button>
         <button
-          className="w-full bg-orange-500 text-white px-4 py-2 rounded-md mt-3 "
+          className="w-full bg-orange-500 text-white px-4 py-2 rounded-md mt-3"
           onClick={() => setIsModalOpen(false)}
+          disabled={loading}
         >
-          cancel
+          Cancel
         </button>
       </div>
     </div>

@@ -73,6 +73,10 @@ export default function ChangeStatus({ order, status, setStatus }) {
           value: "cencelled",
           label: "cencelled",
         },
+        {
+          value: "delivered",
+          label: "delivered",
+        },
       ]}
     />
   );
