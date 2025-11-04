@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import Cookies from "js-cookie";
+import { MenuUnfoldOutlined } from "@ant-design/icons";
 
 const useLocation = () => {
   return { pathname: window.location.pathname };
@@ -146,6 +147,8 @@ export default function SiderBar() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
 
+  const [isFullScreen, setIsFullScreen] = useState(true);
+
   const handleLogOut = async () => {
     Cookies.remove("accessToken");
     navigate("/login");
@@ -154,6 +157,22 @@ export default function SiderBar() {
   const toggleSidebar = () => {
     setIsOpen(!isOpen);
   };
+
+  if (isFullScreen) {
+    return (
+      <div className="w-full absolute top-4 left-0">
+        <button onClick={() => setIsFullScreen(!isFullScreen)}>
+          <MenuUnfoldOutlined
+            style={{
+              fontSize: 32,
+              fontWeight: "bold",
+              margin: "40px",
+            }}
+          />
+        </button>
+      </div>
+    );
+  }
 
   return (
     <>

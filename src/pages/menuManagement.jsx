@@ -18,7 +18,7 @@ export default function MenuManagement() {
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `${apiPath}/admin/list-of-menus?page=${page}&limit=${itemsPerPage}`,
+        `${apiPath}/admin/list-of-menus?page=${page}&limit=20`,
         {
           headers: {
             "x-auth-token": apiAuthToken,

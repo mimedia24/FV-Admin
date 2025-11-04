@@ -70,7 +70,7 @@ export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
   return (
     <tr className="w-full border-b hover:bg-gray-50 transition-colors duration-150">
       <td className="text-sm text-center px-3 py-2 min-w-[50px] font-medium text-gray-700">
-        {slNo + 1}
+        {slNo}
       </td>
       <td className="text-sm text-center px-3 py-2 min-w-[120px] text-gray-500 truncate">
         {menu._id}
