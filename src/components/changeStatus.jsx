@@ -70,8 +70,8 @@ export default function ChangeStatus({ order, status, setStatus }) {
           label: "cancelled by restaurant",
         },
         {
-          value: "cencelled",
-          label: "cencelled",
+          value: "cancelled",
+          label: "cancelled",
         },
         {
           value: "delivered",
