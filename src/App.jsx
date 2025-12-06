@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import "./App.css";
+import "./map.css";
 import Login from "./pages/login";
 import Dashboard from "./pages/dashboard";
 import "react-toastify/dist/ReactToastify.css";
@@ -24,6 +25,7 @@ import AllNotification from "./pages/AllNotification";
 import RegisterNewRider from "./pages/rider/RegisterNewRider";
 import WithdrawList from "./pages/rider/WithdrawList";
 import CollectionPaymentList from "./pages/rider/CollectionPaymentList";
+import OrderMap from "./pages/OrderMap";
 
 function App() {
   return (
@@ -177,12 +179,20 @@ function App() {
                   <Notification />
                 </ProtectedRoute>
               }
-            />{" "}
+            />
             <Route
               path="/notification/all"
               element={
                 <ProtectedRoute>
                   <AllNotification />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order-map"
+              element={
+                <ProtectedRoute>
+                  <OrderMap />
                 </ProtectedRoute>
               }
             />

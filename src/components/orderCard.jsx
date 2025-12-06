@@ -55,7 +55,8 @@ export default function OrderCard({ order, slNo, getOrders }) {
       </td>
       <td className="text-[11px] border">{order?.restaurantName}</td>
       <td className="text-[13px] border">{order?.riderId || "N/A"}</td>
-      <td className="border p-1">BDT {order?.totalAmount.toFixed()}</td>
+      <td className="border p-1">BDT {order?.totalAmount.toFixed()} </td>
+      <td className="border p-1">{order?.peymentMethod}</td>
       <td className="border p-1">BDT {order?.deliveryAmount.toFixed()}</td>
       <td className="border p-1 text-[12px]">{updateTime}</td>
       <td className="border p-1">

@@ -165,6 +165,7 @@ export default function OrderManagement() {
                 <th className="px-4 py-3">RS Name</th>
                 <th className="px-4 py-3">Rider</th>
                 <th className="px-4 py-3">Order Amt</th>
+                <th className="px-4 py-3">Payment method</th>
                 <th className="px-4 py-3">Delivery Amt</th>
                 <th className="px-4 py-3">Updated At</th>
                 <th className="px-4 py-3">Change Status</th>

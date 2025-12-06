@@ -71,30 +71,33 @@ export default function PaymentManagement() {
           Payment management
         </h1>
       </div>
-      <div className="w-full flex items-center justify-center mt-5">
-        <div>
-          <Link
-            to={"/payment/rider"}
-            className={`text-sm px-4 py-2 ${
-              payment === "rider"
-                ? "bg-blue-400 text-white"
-                : "bg-gray-200 text-black "
-            } rounded-md mr-4`}
-          >
-            Rider Payment
-          </Link>
-          <Link
-            to={"/payment/restaurant"}
-            className={`text-sm px-4 py-2 ${
-              payment === "restaurant"
-                ? "bg-blue-400 text-white"
-                : "bg-gray-200 text-black "
-            } bg-blue-400 rounded-md mr-4 `}
-          >
-            Restaurant Payment
-          </Link>
+      {/* <div className="w-full flex items-center justify-center mt-5">
+        <div className="w-full flex items-center justify-center mt-5">
+          <div>
+            <Link
+              to={"/payment/rider"}
+              
+            >
+              Rider Payment
+            </Link>
+            <Link
+              to={"/payment/restaurant"}
+              
+            >
+              Restaurant Payment
+            </Link>
+          </div>
         </div>
-      </div>{" "}
+      </div> */}
+    <div className="pl-20 " >
+      <Link className=" mx-3 text-center px-4 py-2 bg-purple-500 text-white rounded-md" to={"/payment/rider"}>
+        Rider payment
+    </Link>
+      <Link className="mx-3 text-center px-4 py-2 bg-purple-500 text-white rounded-md" to={"/payment/restaurant"}>
+        Restaurant payment
+    </Link>
+    </div>
+
       {payment === "rider" ? (
         <div className="px-2 md:px-12 py-12">
           <hr />

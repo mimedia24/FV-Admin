@@ -119,9 +119,63 @@ const SettingsIcon = () => (
   </svg>
 );
 
+const MapsIcon = () => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      xmlSpace="preserve"
+      width="32"
+      height="32"
+      style={{
+        shapeRendering: "geometricPrecision",
+        textRendering: "geometricPrecision",
+        imageRendering: "optimizeQuality",
+        fillRule: "evenodd",
+        clipRule: "evenodd",
+      }}
+      viewBox="0 0 6.827 6.827"
+    >
+      <defs>
+        <style>{".fil2{fill:none}"}</style>
+      </defs>
+      <g id="Layer_x0020_1">
+        <path
+          style={{ fill: "#00897b", fillRule: "nonzero" }}
+          d="M3.413 3.764H5.07l.024.084.581 1.976.044.15H3.414z"
+        />
+        <path
+          style={{ fill: "#26a69a", fillRule: "nonzero" }}
+          d="M1.844 3.764h1.569v2.21H1.107l.626-2.126.024-.084z"
+        />
+        <g id="_490154376">
+          <path id="_490154424" className="fil2" d="M0 0h6.827v6.827H0z" />
+          <path
+            id="_490154760"
+            className="fil2"
+            d="M.853.853h5.12v5.12H.853z"
+          />
+        </g>
+        <path
+          d="M4.808 2.357c0 .612-.587 1.418-1.027 2.021-.102.14-.196.27-.272.381l-.096.142-.096-.142c-.075-.112-.168-.24-.27-.381-.438-.607-1.029-1.424-1.029-2.03 0-.411.156-.781.405-1.05.254-.273.606-.44.99-.44.385 0 .736.169.99.443.25.27.405.643.405 1.056z"
+          style={{ fill: "#ffcc80" }}
+        />
+        <path
+          d="M3.413 2.872a.666.666 0 0 1-.665-.658.666.666 0 0 1 1.33 0 .666.666 0 0 1-.665.658z"
+          style={{ fill: "#ffa726" }}
+        />
+      </g>
+    </svg>
+  );
+};
+
 const navigation = [
   { title: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
   { title: "Order management", href: "/order-management", icon: <OrderIcon /> },
+  {
+    title: "View order maps",
+    href: "/order-map",
+    icon: <MapsIcon />,
+  },
   { title: "Rider management", href: "/rider-management", icon: <RiderIcon /> },
   {
     title: "Restaurant management",
