@@ -179,11 +179,9 @@ function OrderModal({
               {modalData.riderId}
             </span>
 
-            {modalData.riderId === "" ? (
-              <Button className="mx-4" onClick={() => setRiderModal(true)}>
-                Assign Rider
-              </Button>
-            ) : null}
+            <Button className="mx-4" onClick={() => setRiderModal(true)}>
+              Assign Rider
+            </Button>
           </Descriptions.Item>
           <Descriptions.Item label="Restaurant">
             {modalData.restaurantName}
@@ -222,7 +220,7 @@ function OrderModal({
             {new Date(modalData.orderDate).toLocaleString()}
           </Descriptions.Item>
         </Descriptions>
-        
+
         {modalData.userRestaurantChat?.length > 0 && (
           <Collapse className="mt-4">
             <h1 className="p-2">User & Restaurant Chat</h1>
@@ -240,8 +238,6 @@ function OrderModal({
           </Collapse>
         )}
 
-   
-            
         {modalData.userRiderChat?.length > 0 && (
           <Collapse className="mt-4">
             <h1 className="p-2">User & Rider Chat</h1>
