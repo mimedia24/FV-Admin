@@ -17,7 +17,7 @@ export default function AssignRiderModal({
 
     // assign new rider
     const { result, loading } = await handleApiRequest(
-      `/rider/assign-rider?orderId=${order._id}&riderId=${riderId}`,
+      `/admin/delivery/assign-rider?orderId=${order._id}&riderId=${riderId}`,
       {
         method: "PUT",
       }
