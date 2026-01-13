@@ -1,215 +1,177 @@
 import { useEffect, useState } from "react";
 import Layout from "./layout";
 import axios from "axios";
-import { RiSecurePaymentLine } from "react-icons/ri";
-import PaymentModal from "../components/payment/rider/PaymentModal";
 import { apiAuthToken, apiPath } from "../../secrets";
 import { Link, useParams } from "react-router-dom";
+import { Table, Tag, Typography, Card, Space, Empty, Spin } from "antd";
+import PaymentModalRider from "../components/payment/rider/PaymentModal";
 import PaymentModalRestaurant from "../components/payment/restaurant/PaymentModal";
+import { WalletOutlined, ShopOutlined, UserOutlined } from "@ant-design/icons";
+
+const { Title, Text } = Typography;
 
 export default function PaymentManagement() {
-  const [riderList, setRiderList] = useState(null);
-  const [restaurantList, setRestaurantList] = useState(null);
-
-  // payment from
+  const [riderList, setRiderList] = useState([]);
+  const [restaurantList, setRestaurantList] = useState([]);
+  const [loading, setLoading] = useState(false);
   const { payment } = useParams();
 
-  //   get rider list with wallet
   async function getRiderWalletList() {
+    setLoading(true);
     try {
-      const { data } = await axios.get(
-        `${apiPath}/wallet/walletList/list-wallet`,
-        {
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-        }
-      );
-
-      // console.log(data);
-      if (data.success) {
-        setRiderList(data.wallet);
-      }
+      const { data } = await axios.get(`${apiPath}/wallet/walletList/list-wallet`, {
+        headers: { "x-auth-token": apiAuthToken },
+      });
+      if (data.success) setRiderList(data.wallet);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   }
 
-  // get restauarnt wallet list
   async function getRestaurantWalletList() {
+    setLoading(true);
     try {
-      const { data } = await axios.get(
-        `${apiPath}/admin/payment/restaurant/wallet`,
-        {
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-        }
-      );
-      if (data.success) {
-        setRestaurantList(data.restaurant);
-      } else {
-        setRestaurantList([]);
-      }
+      const { data } = await axios.get(`${apiPath}/admin/payment/restaurant/wallet`, {
+        headers: { "x-auth-token": apiAuthToken },
+      });
+      if (data.success) setRestaurantList(data.restaurant);
     } catch (error) {
       console.error(error);
+    } finally {
+      setLoading(false);
     }
   }
 
   useEffect(() => {
     getRiderWalletList();
-  }, []);
-
-  useEffect(() => {
     getRestaurantWalletList();
   }, []);
 
-  return (
-    <Layout>
-      <div>
-        <h1 className="text-center mt-8 text-3xl text-gray-500">
-          Payment management
-        </h1>
-      </div>
-      {/* <div className="w-full flex items-center justify-center mt-5">
-        <div className="w-full flex items-center justify-center mt-5">
-          <div>
-            <Link
-              to={"/payment/rider"}
-              
-            >
-              Rider Payment
-            </Link>
-            <Link
-              to={"/payment/restaurant"}
-              
-            >
-              Restaurant Payment
-            </Link>
-          </div>
-        </div>
-      </div> */}
-    <div className="pl-20 " >
-      <Link className=" mx-3 text-center px-4 py-2 bg-purple-500 text-white rounded-md" to={"/payment/rider"}>
-        Rider payment
-    </Link>
-      <Link className="mx-3 text-center px-4 py-2 bg-purple-500 text-white rounded-md" to={"/payment/restaurant"}>
-        Restaurant payment
-    </Link>
-    </div>
+  // Columns for Rider Table
+  const riderColumns = [
+    { title: "SL", render: (text, record, index) => index + 1, width: 60 },
+    {
+      title: "Rider Info",
+      render: (_, item) => (
+        <Space direction="vertical" size={0}>
+          <Text strong>{item?.riderId?.name}</Text>
+          <Text type="secondary" style={{ fontSize: "12px" }}>{item?.riderId?.email}</Text>
+        </Space>
+      ),
+    },
+    { title: "ID", dataIndex: ["riderId", "_id"], className: "font-mono text-xs" },
+    { title: "Payment No", dataIndex: ["riderId", "paymentNumber"], render: (val) => val || "N/A" },
+    {
+      title: "Balance",
+      dataIndex: "walletBalance",
+      render: (val) => <Text strong className="text-lg text-green-600">৳{val}</Text>,
+    },
+    {
+      title: "Status",
+      dataIndex: ["riderId", "riderStatus"],
+      render: (status) => (
+        <Tag color={status === "active" ? "blue" : "red"}>{status?.toUpperCase()}</Tag>
+      ),
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, item) => (
+        <PaymentModalRider
+          riderId={item?.riderId?._id}
+          getRiderWalletList={getRiderWalletList}
+        />
+      ),
+    },
+  ];
 
-      {payment === "rider" ? (
-        <div className="px-2 md:px-12 py-12">
-          <hr />
-          <h1 className="text-center py-2">Rider Wallet List</h1>
-          <hr />
-          <div>
-            <table className="w-full text-[12px]">
-              <thead>
-                <tr>
-                  <td className="text-center px-2 py-1 border">SL</td>
-                  <td className="text-center px-2 py-1 border">Name</td>
-                  <td className="text-center px-2 py-1 border">Email</td>
-                  <td className="text-center px-2 py-1 border">ID</td>
-                  <td className="text-center px-2 py-1 border">
-                    Payment Number
-                  </td>
-                  <td className="text-center px-2 py-1 border">Balance</td>
-                  <td className="text-center px-2 py-1 border">status</td>
-                  <td className="text-center px-2 py-1 border">Action</td>
-                </tr>
-              </thead>
-
-              <tbody>
-                {riderList &&
-                  riderList.map((item, index) => {
-                    return (
-                      <tr key={item._id}>
-                        <td className="text-center px-2 py-1 border">
-                          {index + 1}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          {item?.riderId?.name}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          {item?.riderId?.email}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          {item?.riderId?._id}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          {item?.riderId?.paymentNumber || "N/A"}
-                        </td>
-                        <td className="text-center font-bold text-lg px-2 py-1 border">
-                          {item.walletBalance}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          {item?.riderId?.riderStatus}
-                        </td>
-                        <td className="text-center px-2 py-1 border">
-                          <PaymentModal
-                            riderId={item?.riderId._id}
-                            getRiderWalletList={getRiderWalletList}
-                          />
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : null}
-      {payment === "restaurant" ? (
-        <div className="px-2 md:px-12 py-12">
-          <hr />
-          <h1 className="text-center py-2">Restaurant wallet List</h1>
-          <hr />
-          <div>
-            <table className="w-full text-[12px]">
-              <thead>
-                <tr>
-                  <td className="text-center px-2 py-1 border">Name</td>
-                  <td className="text-center px-2 py-1 border">Phone</td>
-                  <td className="text-center px-2 py-1 border">Address</td>
-                  <td className="text-center px-2 py-1 border">Balance</td>
-                  <td className="text-center px-2 py-1 border">Action</td>
-                </tr>
-              </thead>
-
-              <tbody>
-                {restaurantList &&
-                  restaurantList.map((item) => {
-                    return (
-                      <RestaurantCard
-                        key={item._id}
-                        restaurant={item}
-                        getRestaurantWalletList={getRestaurantWalletList}
-                      />
-                    );
-                  })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      ) : null}
-    </Layout>
-  );
-}
-
-function RestaurantCard({ restaurant, getRestaurantWalletList }) {
-  return (
-    <tr>
-      <td className="text-center border-2">{restaurant.name}</td>
-      <td className="text-center border-2">{restaurant.phone}</td>
-      <td className="text-center border-2">{restaurant.address}</td>
-      <td className="text-center border-2">{restaurant.balance}</td>
-      <td className="text-center px-2 py-1 border">
+  // Columns for Restaurant Table
+  const restaurantColumns = [
+    { title: "Restaurant Name", dataIndex: "name", render: (text) => <Text strong>{text}</Text> },
+    { title: "Phone", dataIndex: "phone" },
+    { title: "Address", dataIndex: "address", ellipsis: true },
+    {
+      title: "Balance",
+      dataIndex: "balance",
+      render: (val) => <Text strong className="text-lg text-blue-600">৳{val}</Text>,
+    },
+    {
+      title: "Action",
+      key: "action",
+      render: (_, item) => (
         <PaymentModalRestaurant
-          restaurantId={restaurant._id}
+          restaurantId={item._id}
           getRestaurantWallet={getRestaurantWalletList}
         />
-      </td>
-    </tr>
+      ),
+    },
+  ];
+
+  return (
+    <Layout>
+      <div className="p-6 md:p-10 bg-gray-50 min-h-screen">
+        <header className="text-center mb-8">
+          <Title level={2} style={{ color: "#4b5563" }}>
+            <WalletOutlined /> Payment Management
+          </Title>
+          <Text type="secondary">Process payouts and monitor wallet balances</Text>
+        </header>
+
+        {/* Navigation Switcher */}
+        <div className="flex justify-center mb-10">
+          <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 inline-flex">
+            <Link
+              to="/payment/rider"
+              className={`px-8 py-2 rounded-lg transition-all ${
+                payment === "rider" ? "bg-purple-600 text-white shadow-md" : "text-gray-500 hover:bg-gray-100"
+              }`}
+            >
+              <UserOutlined /> Rider Payouts
+            </Link>
+            <Link
+              to="/payment/restaurant"
+              className={`px-8 py-2 rounded-lg transition-all ${
+                payment === "restaurant" ? "bg-purple-600 text-white shadow-md" : "text-gray-500 hover:bg-gray-100"
+              }`}
+            >
+              <ShopOutlined /> Restaurant Payouts
+            </Link>
+          </div>
+        </div>
+
+        <Card className="shadow-xl rounded-2xl border-0">
+          {!payment ? (
+            <div className="py-20 text-center">
+              <Empty description="Select a payment category to manage payouts" />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <div className="flex items-center justify-between mb-6">
+                <Title level={4} className="!m-0 capitalize">
+                  {payment} Wallet List
+                </Title>
+                <Tag color="purple">Total: {payment === "rider" ? riderList.length : restaurantList.length}</Tag>
+              </div>
+
+              {loading ? (
+                <div className="py-20 text-center">
+                  <Spin size="large" tip="Fetching Wallet Data..." />
+                </div>
+              ) : (
+                <Table
+                  dataSource={payment === "rider" ? riderList : restaurantList}
+                  columns={payment === "rider" ? riderColumns : restaurantColumns}
+                  rowKey="_id"
+                  pagination={{ pageSize: 10 }}
+                  className="modern-table"
+                />
+              )}
+            </div>
+          )}
+        </Card>
+      </div>
+    </Layout>
   );
 }

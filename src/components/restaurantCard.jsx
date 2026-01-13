@@ -11,6 +11,8 @@ import {
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../secrets";
 import ChangeRestaurantStatus from "./changeRestaurantStatus";
+import UpdateCakeRestaurant from "./restaurant/UpdateCakeRestaurant";
+import UpdateIsHomeMade from "./restaurant/UpdateHome";
 
 export default function RestaurantCard({
   restaurant,
@@ -110,6 +112,12 @@ export default function RestaurantCard({
             <MdAttachMoney className="text-gray-500" />
             <span className="font-medium">BDT {restaurant.balance}</span>
           </div>
+          <div className="flex items-center gap-2">
+            <MdAttachMoney className="text-gray-500" />
+            <span className="font-medium">
+              Total sales {restaurant.totalSales}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -127,6 +135,24 @@ export default function RestaurantCard({
           >
             View Menu
           </Link>
+          <Link
+            className="inline-block w-full text-center py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition"
+            to={`/restaurant/transactions?id=${restaurant._id}`}
+          >
+            Transactions
+          </Link>
+          <div className="flex gap-2 items-center ">
+            <UpdateCakeRestaurant
+              isCake={restaurant?.isCake}
+              restaurantId={restaurant._id}
+              setRestaurant={setRestaurant}
+            />
+            <UpdateIsHomeMade
+              isHomeMade={restaurant?.isHomeMade}
+              restaurantId={restaurant._id}
+              setRestaurant={setRestaurant}
+            />
+          </div>
         </div>
       </div>
     </Card>

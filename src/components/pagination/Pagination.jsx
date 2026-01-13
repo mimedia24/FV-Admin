@@ -1,10 +1,8 @@
 import React from "react";
 
-export default function Pagination({ currentPage, updatePage }) {
+export default function Pagination({ currentPage, updatePage, total = 50 }) {
   function nextPage() {
     updatePage(currentPage + 1);
-
-    console.log("update page : ", currentPage);
   }
 
   function prevPage() {

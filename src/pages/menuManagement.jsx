@@ -6,6 +6,9 @@ import MenuCard from "../components/menu/menuCard";
 import FilterMenuByCategory from "../components/menu/FilterMenuByCategory";
 import { apiAuthToken, apiPath } from "../../secrets";
 import axios from "axios";
+import SearchMenuById from "../components/menu/SearchMenuById";
+import axiosInstance from "../services/axios/axiosInstance";
+import SearchMenuByRestaurantId from "../components/menu/SearchMenuByRestaurantId";
 
 export default function MenuManagement() {
   const [menus, setMenus] = useState(null);
@@ -35,6 +38,43 @@ export default function MenuManagement() {
       console.error("Error fetching menus:", error.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // handle search menu
+  async function handleSearchMenu(menuId) {
+    try {
+      const { data } = await axiosInstance.get(`/admin/search-menu/by-id`, {
+        params: {
+          id: menuId,
+        },
+      });
+
+      if (data.success) {
+        setMenus([data.result]);
+        setTotalPages(1);
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+  } // end of serach by menu
+
+  async function handleSearchByRestaurantId(restaurantId) {
+    try {
+      const { data } = await axiosInstance.get(
+        `/admin/search-menu/by-restaurant-id`,
+        {
+          params: {
+            id: restaurantId,
+          },
+        }
+      );
+
+      if (data.success) {
+        setMenus(data.result);
+      }
+    } catch (error) {
+      alert(error.message);
     }
   }
 
@@ -80,6 +120,10 @@ export default function MenuManagement() {
       <div className="w-4/5 mx-auto my-4 flex items-center gap-8">
         <FilterMenu setMenus={setMenus} />
         <FilterMenuByCategory />
+        {/* search menu by id*/}
+        <SearchMenuById onSearch={handleSearchMenu} />
+        {/* search by restaurant id */}
+        <SearchMenuByRestaurantId onSearch={handleSearchByRestaurantId} />
       </div>
 
       <div className="w-[90%] mx-auto overflow-scroll min-h-[250px]">

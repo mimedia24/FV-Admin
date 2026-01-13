@@ -6,7 +6,6 @@ import { useState } from "react";
 
 export default function ChangeStatus({ order, status, setStatus }) {
   const handleChange = async (value) => {
-    
     const body = {
       status: value,
     };
@@ -15,13 +14,12 @@ export default function ChangeStatus({ order, status, setStatus }) {
       `${apiPath}/admin/change-order-status?id=${order._id}`,
       {
         method: "POST",
-        
+
         headers: {
           "x-auth-token": apiAuthToken,
           "Content-Type": "application/json",
-          
         },
-        
+
         credentials: "include",
         body: JSON.stringify(body),
       }
@@ -40,8 +38,8 @@ export default function ChangeStatus({ order, status, setStatus }) {
       className="mr-4"
       defaultValue={status}
       style={{
-        width: "100px",
-        margin: "0 auto"
+        width: "100%",
+        margin: "0 auto",
       }}
       onChange={handleChange}
       options={[

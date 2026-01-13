@@ -26,6 +26,7 @@ import RegisterNewRider from "./pages/rider/RegisterNewRider";
 import WithdrawList from "./pages/rider/WithdrawList";
 import CollectionPaymentList from "./pages/rider/CollectionPaymentList";
 import OrderMap from "./pages/OrderMap";
+import RestaurantTransaction from "./pages/RestaurantTransaction";
 
 function App() {
   return (
@@ -145,6 +146,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UserManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/restaurant/transactions"
+              element={
+                <ProtectedRoute>
+                  <RestaurantTransaction />
                 </ProtectedRoute>
               }
             />

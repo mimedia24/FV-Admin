@@ -40,7 +40,7 @@ export default function ChangeRestaurantStatus({
       className="mr-4"
       defaultValue={status}
       style={{
-        width: "40%",
+        width: "100%",
       }}
       onChange={handleChange}
       options={[
@@ -61,8 +61,8 @@ export default function ChangeRestaurantStatus({
           label: "banned",
         },
         {
-          value: "closed",
-          label: "closed",
+          value: "close",
+          label: "Parmenantly close",
         },
       ]}
     />
