@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, Tag, Popconfirm, Button } from "antd";
+import { Card, Tag, Popconfirm, Button, message } from "antd";
 import { Link } from "react-router-dom";
 import {
   MdDelete,
@@ -13,6 +13,9 @@ import { apiAuthToken, apiPath } from "../../secrets";
 import ChangeRestaurantStatus from "./changeRestaurantStatus";
 import UpdateCakeRestaurant from "./restaurant/UpdateCakeRestaurant";
 import UpdateIsHomeMade from "./restaurant/UpdateHome";
+import { CopyFilled } from "@ant-design/icons";
+import UpdateOpenClose from "./restaurant/UpdateOpenClose";
+import OpenCloseTime from "./restaurant/OpenCloseTime";
 
 export default function RestaurantCard({
   restaurant,
@@ -45,6 +48,12 @@ export default function RestaurantCard({
       console.error("Delete restaurant error:", error);
     }
   }
+
+  // copy restaurant id
+  const handleCopy = (text) => {
+    navigator.clipboard.writeText(text);
+    message.success("ID copied to clipboard!");
+  };
 
   return (
     <Card
@@ -86,10 +95,16 @@ export default function RestaurantCard({
           </p>
         </div>
 
-        <div className="flex justify-center gap-2">
-          <Tag color="blue" className="text-xs">
+        <div className="flex justify-center items-center gap-2">
+          <Tag
+            color="blue"
+            className="text-xs flex items-center gap-1 cursor-pointer hover:opacity-80 transition"
+            onClick={() => handleCopy(restaurant._id)}
+          >
             ID: {restaurant._id.slice(0, 8)}...
+            <CopyFilled size={12} className="ml-1" />
           </Tag>
+
           <Tag color={status ? "green" : "red"} className="text-xs">
             {status}
           </Tag>
@@ -141,15 +156,33 @@ export default function RestaurantCard({
           >
             Transactions
           </Link>
-          <div className="flex gap-2 items-center ">
+          <div className="flex gap-2 items-center flex-wrap ">
+            {/* update is ckae or not */}
             <UpdateCakeRestaurant
               isCake={restaurant?.isCake}
               restaurantId={restaurant._id}
               setRestaurant={setRestaurant}
             />
+            {/* update is home moda */}
             <UpdateIsHomeMade
               isHomeMade={restaurant?.isHomeMade}
               restaurantId={restaurant._id}
+              setRestaurant={setRestaurant}
+            />
+
+            {/* handle open and close */}
+            <UpdateOpenClose
+              isOpen={restaurant?.isOpen}
+              restaurantId={restaurant._id}
+              setRestaurant={setRestaurant}
+            />
+          </div>
+
+          <div>
+            <OpenCloseTime
+              restaurantId={restaurant._id}
+              openingTime={restaurant.openingTime}
+              closingTime={restaurant.closingTime}
               setRestaurant={setRestaurant}
             />
           </div>

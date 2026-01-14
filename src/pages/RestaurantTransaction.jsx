@@ -29,17 +29,18 @@ function RestaurantTransaction() {
   }
 
   const filteredData = useMemo(() => {
-    return transactions.filter((item) => {
+    const result = transactions.filter((item) => {
       if (filter === "All") return true;
       if (!item?.type) return false;
 
       const type = item.type.toLowerCase();
-
       if (filter === "Sale") return type.includes("sale");
       if (filter === "Deduction") return type.includes("deduction");
 
       return false;
     });
+
+    return [...result].sort((a, b) => new Date(b.date) - new Date(a.date));
   }, [transactions, filter]);
 
   const totalAmount = filteredData.reduce(
@@ -50,7 +51,6 @@ function RestaurantTransaction() {
   return (
     <Layout>
       <div className="p-6 max-w-5xl mx-auto">
-        {/* HEADER */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">
@@ -62,48 +62,27 @@ function RestaurantTransaction() {
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilter("All")}
-            className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all ${
-              filter === "All"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-            }`}
-          >
-            All
-          </button>
-
-          <button
-            onClick={() => setFilter("Sale")}
-            className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all ${
-              filter === "Sale"
-                ? "bg-green-600 text-white shadow-md"
-                : "bg-green-100 text-green-700 hover:bg-green-200"
-            }`}
-          >
-            Sale
-          </button>
-
-          <button
-            onClick={() => setFilter("Deduction")}
-            className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all ${
-              filter === "Deduction"
-                ? "bg-red-600 text-white shadow-md"
-                : "bg-red-100 text-red-700 hover:bg-red-200"
-            }`}
-          >
-            Deduction
-          </button>
+        <div className="flex gap-2 mb-6">
+          {["All", "Sale", "Deduction"].map((type) => (
+            <button
+              key={type}
+              onClick={() => setFilter(type)}
+              className={`px-6 py-2 rounded-xl text-sm font-semibold transition-all ${
+                filter === type
+                  ? "bg-blue-600 text-white shadow-md"
+                  : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+              }`}
+            >
+              {type}
+            </button>
+          ))}
         </div>
 
-        {/* STATS */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <StatCard title="Total Transactions" value={filteredData.length} />
-          <StatCard title="Total Amount" value={`${totalAmount} ৳`} />
+          <StatCard title="Total Net Amount" value={`${totalAmount.toLocaleString()} ৳`} />
         </div>
 
-        {/* LIST */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           {filteredData.length > 0 ? (
             <div className="divide-y divide-gray-100">
@@ -130,7 +109,6 @@ const TransactionRow = ({ trx }) => {
       <div className="flex-1">
         <div className="flex items-center gap-2">
           <p className="font-bold text-gray-800">{trx.trxTitle}</p>
-
           <span
             className={`text-[10px] px-2 py-0.5 rounded-md font-bold uppercase ${
               isSale ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"
@@ -155,8 +133,8 @@ const TransactionRow = ({ trx }) => {
             isSale ? "text-green-600" : "text-red-600"
           }`}
         >
-          {isSale ? "+" : "-"}
-          {trx.amount} ৳
+          {isSale ? "+" : ""}
+          {trx.amount.toLocaleString()} ৳
         </p>
       </div>
     </div>
