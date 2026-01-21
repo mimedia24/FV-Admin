@@ -22,7 +22,7 @@ export default function TodayOrderCard() {
   return (
     <div>
       <Card
-        title="Total Orders"
+        title="Today Orders"
         style={{
           width: 200,
           height: 150,
