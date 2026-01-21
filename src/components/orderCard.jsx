@@ -5,14 +5,17 @@ import DeleteOrderButton from "./deleteOrderButton";
 import convertDateAsLocalTime from "../helpers/timeStamp";
 import ViewOrderItem from "./order/viewOrderItem";
 import CopyIcon from "./common/CopyIcon";
-import { Tag } from "antd";
+import { Button, Tag } from "antd";
+import Modal from "./order/Modal";
+import TimelineContainer from "./order/TimelineContainer";
 
 export default function OrderCard({ order, slNo, getOrders }) {
   const [status, setStatus] = useState(order?.status);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [timelineModalOn, setTimeLineModalOn] = useState(false);
 
   const [updateTime, setUpdateTime] = useState(
-    convertDateAsLocalTime(order?.updateTime)
+    convertDateAsLocalTime(order?.updateTime),
   );
 
   function handleCopyData(text) {
@@ -30,10 +33,10 @@ export default function OrderCard({ order, slNo, getOrders }) {
             status === "pending"
               ? "px-2 text-[11px] bg-gray-400 text-white rounded-sm"
               : status === "delivered"
-              ? "px-2 text-[11px] bg-blue-400 text-white rounded-sm"
-              : status === "picked up"
-              ? "px-2 text-[11px] bg-orange-400 text-white rounded-sm"
-              : "px-2 text-[11px] bg-red-400 text-white rounded-sm"
+                ? "px-2 text-[11px] bg-blue-400 text-white rounded-sm"
+                : status === "picked up"
+                  ? "px-2 text-[11px] bg-orange-400 text-white rounded-sm"
+                  : "px-2 text-[11px] bg-red-400 text-white rounded-sm"
           }
         >
           {status}
@@ -59,6 +62,22 @@ export default function OrderCard({ order, slNo, getOrders }) {
       <td className="border p-1">{order?.peymentMethod}</td>
       <td className="border p-1">BDT {order?.deliveryAmount.toFixed()}</td>
       <td className="border p-1 text-[12px]">{updateTime}</td>
+      <td className="border p-1 text-[12px]">
+        <Button onClick={() => setTimeLineModalOn(!timelineModalOn)}>
+          View
+        </Button>
+        <Modal isActive={timelineModalOn}>
+          <TimelineContainer
+            timeline={{
+              riderAssignTime: order?.riderAssignTime || 0,
+              pickupTime: order?.pickupTime || 0,
+              deliveredTime: order?.deliveredTime || 0,
+              restaurantAcceptTime: order?.restaurantAcceptTime || 0,
+            }}
+            handleClose={() => setTimeLineModalOn(!timelineModalOn)}
+          />
+        </Modal>
+      </td>
       <td className="border p-1">
         <ChangeStatus order={order} status={status} setStatus={setStatus} />
       </td>

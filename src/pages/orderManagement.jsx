@@ -168,6 +168,7 @@ export default function OrderManagement() {
                 <th className="px-4 py-3">Payment method</th>
                 <th className="px-4 py-3">Delivery Amt</th>
                 <th className="px-4 py-3">Updated At</th>
+                <th className="px-4 py-3">Timeline</th>
                 <th className="px-4 py-3">Change Status</th>
                 <th className="px-4 py-3">Assign Rider</th>
                 <th className="px-4 py-3">Delete</th>
