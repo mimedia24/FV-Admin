@@ -8,6 +8,7 @@ import CopyIcon from "./common/CopyIcon";
 import { Button, Tag } from "antd";
 import Modal from "./order/Modal";
 import TimelineContainer from "./order/TimelineContainer";
+import { Link } from "react-router-dom";
 
 export default function OrderCard({ order, slNo, getOrders }) {
   const [status, setStatus] = useState(order?.status);
@@ -105,6 +106,12 @@ export default function OrderCard({ order, slNo, getOrders }) {
         <Tag color={order?.platform === "web" ? "lime" : "geekblue"}>
           {order?.platform === "web" ? "web" : "android"}
         </Tag>
+      </td>
+
+      <td>
+        <Button>
+          <Link to={`/order-history?id=${order.userId}`}>View history</Link>
+        </Button>
       </td>
     </tr>
   );

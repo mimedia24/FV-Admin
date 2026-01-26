@@ -36,7 +36,7 @@ export default function OrderManagement() {
           headers: {
             "x-auth-token": apiAuthToken,
           },
-        }
+        },
       );
 
       if (data.success) {
@@ -68,7 +68,7 @@ export default function OrderManagement() {
       setLoading(true);
       const { data } = await axios.get(
         `${apiPath}/admin/list-of-orders?page=${pageNumber}&limit=${limit}`,
-        { headers: { "x-auth-token": apiAuthToken } }
+        { headers: { "x-auth-token": apiAuthToken } },
       );
 
       if (data?.orders) {
@@ -94,7 +94,7 @@ export default function OrderManagement() {
       setLoading(true);
       const { data } = await axios.get(
         `${apiPath}/admin/restaurant/search-order/${id}?page=${page}&limit=${25}`,
-        { headers: { "x-auth-token": apiAuthToken } }
+        { headers: { "x-auth-token": apiAuthToken } },
       );
 
       console.log("data : ", data);
@@ -174,6 +174,7 @@ export default function OrderManagement() {
                 <th className="px-4 py-3">Delete</th>
                 <th className="px-4 py-3">View Items</th>
                 <th className="px-4 py-3">Platform</th>
+                <th className="px-4 py-3">Order history</th>
               </tr>
             </thead>
 

@@ -27,6 +27,7 @@ import WithdrawList from "./pages/rider/WithdrawList";
 import CollectionPaymentList from "./pages/rider/CollectionPaymentList";
 import OrderMap from "./pages/OrderMap";
 import RestaurantTransaction from "./pages/RestaurantTransaction";
+import OrderHistoryScreen from "./pages/OrdeHistoryScreen";
 
 function App() {
   return (
@@ -202,6 +203,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <OrderMap />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order-history"
+              element={
+                <ProtectedRoute>
+                  <OrderHistoryScreen />
                 </ProtectedRoute>
               }
             />
