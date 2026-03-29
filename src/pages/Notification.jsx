@@ -1,256 +1,246 @@
 import React, { useState } from "react";
+import { 
+  Form, 
+  Input, 
+  Button, 
+  Select, 
+  Switch, 
+  Upload, 
+  Card, 
+  Tabs, 
+  message, 
+  Typography, 
+  Space 
+} from "antd";
+import { 
+  UploadOutlined, 
+  NotificationOutlined, 
+  PictureOutlined, 
+  SendOutlined,
+  EyeOutlined
+} from "@ant-design/icons";
 import Layout from "./layout";
 import { apiAuthToken, apiPath } from "../../secrets";
 import { Link } from "react-router-dom";
 
+const { Title, Text } = Typography;
+const { TextArea } = Input;
+const { Option } = Select;
+
 function Notification() {
-  // State for Promotional Notification form (with image)
-  const [promoTitle, setPromoTitle] = useState("");
-  const [promoDescription, setPromoDescription] = useState("");
-  const [promoImage, setPromoImage] = useState(null);
-  const [promoIsPromotion, setPromoIsPromotion] = useState(true); // Always true for this form
-  const [promoType, setPromoType] = useState("public");
+  const [promoForm] = Form.useForm();
+  const [generalForm] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [fileList, setFileList] = useState([]);
 
-  // State for General Post form (without image)
-  const [generalTitle, setGeneralTitle] = useState("");
-  const [generalDescription, setGeneralDescription] = useState("");
-  const [generalIsPromotion, setGeneralIsPromotion] = useState(false); // Always false for this form
-  const [generalType, setGeneralType] = useState("public");
-
-  // --- Handle Submit for Promotional Notification (with Image) ---
-  const handlePromotionalSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!promoImage) {
-      alert("Please select an image for promotional notifications.");
+  // --- Handle Promotional Submit ---
+  const handlePromotionalSubmit = async (values) => {
+    if (fileList.length === 0) {
+      message.error("Please upload a promotional image.");
       return;
     }
 
+    setLoading(true);
     const formData = new FormData();
-    formData.append("title", promoTitle);
-    formData.append("description", promoDescription);
-    formData.append("isPromotion", promoIsPromotion);
-    formData.append("type", promoType);
-    formData.append("image", promoImage); // Image is required for this form
+    formData.append("title", values.title);
+    formData.append("description", values.description);
+    formData.append("isPromotion", values.isPromotion ?? true);
+    formData.append("type", values.type);
+    formData.append("image", fileList[0].originFileObj);
 
     try {
-      const path = "/v2/notification/promotional-notification"; // Fixed path for promotional
-      const response = await fetch(`${apiPath}${path}`, {
+      const response = await fetch(`${apiPath}/v2/notification/promotional-notification`, {
         method: "POST",
-        headers: {
-          "x-auth-token": apiAuthToken,
-          // Content-Type handled automatically for FormData
-        },
+        headers: { "x-auth-token": apiAuthToken },
         body: formData,
       });
 
       const data = await response.json();
-
-      if (response.ok && (data.success || data.message)) {
-        alert("Promotional Notification posted successfully!");
-        setPromoTitle("");
-        setPromoDescription("");
-        setPromoImage(null);
-        // setPromoIsPromotion(true); // Reset to default
-        // setPromoType("public"); // Reset to default
+      if (response.ok) {
+        message.success("Promotional Notification posted successfully!");
+        promoForm.resetFields();
+        setFileList([]);
       } else {
-        alert(data.message || "Failed to post promotional notification.");
+        message.error(data.message || "Failed to post notification.");
       }
     } catch (error) {
-      console.error("Error posting promotional notification:", error);
-      alert("Something went wrong with promotional notification.");
+      message.error("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // --- Handle Submit for General Post (without Image) ---
-  const handleGeneralSubmit = async (e) => {
-    e.preventDefault();
-
-    // For simplicity, we'll send JSON for text-only posts if the backend expects it.
-    // If your backend for "/v2/notification/post-with-out-image"
-    // can handle FormData without files, you could use FormData here too.
+  // --- Handle General Submit ---
+  const handleGeneralSubmit = async (values) => {
+    setLoading(true);
     const postData = {
-      title: generalTitle,
-      description: generalDescription,
-      isPromotion: generalIsPromotion,
-      type: generalType,
+      ...values,
+      isPromotion: values.isPromotion ?? false,
     };
 
     try {
-      const path = "/v2/notification/post-with-out-image"; // Fixed path for no-image posts
-      const response = await fetch(`${apiPath}${path}`, {
+      const response = await fetch(`${apiPath}/v2/notification/post-with-out-image`, {
         method: "POST",
         headers: {
           "x-auth-token": apiAuthToken,
-          "Content-Type": "application/json", // Explicitly set Content-Type for JSON
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(postData),
       });
 
       const data = await response.json();
-
-      if (response.ok && (data.success || data.message)) {
-        alert("General Post notification sent successfully!");
-        setGeneralTitle("");
-        setGeneralDescription("");
-        // setGeneralIsPromotion(false); // Reset to default
-        // setGeneralType("public"); // Reset to default
+      if (response.ok) {
+        message.success("General Post sent successfully!");
+        generalForm.resetFields();
       } else {
-        alert(data.message || "Failed to send general post notification.");
+        message.error(data.message || "Failed to send notification.");
       }
     } catch (error) {
-      console.error("Error sending general post notification:", error);
-      alert("Something went wrong with general post.");
+      message.error("Network error. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const uploadProps = {
+    onRemove: () => setFileList([]),
+    beforeUpload: (file) => {
+      setFileList([file]);
+      return false;
+    },
+    fileList,
+    maxCount: 1,
+  };
+
+  const tabItems = [
+    {
+      key: '1',
+      label: <span className="px-2"><PictureOutlined /> Promotional (with Image)</span>,
+      children: (
+        <Form 
+          form={promoForm} 
+          layout="vertical" 
+          onFinish={handlePromotionalSubmit}
+          initialValues={{ type: 'public', isPromotion: true }}
+        >
+          <Form.Item name="title" label="Notification Title" rules={[{ required: true }]}>
+            <Input placeholder="Enter catchy title..." size="large" />
+          </Form.Item>
+          
+          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
+            <TextArea rows={4} placeholder="Detailed promotional message..." />
+          </Form.Item>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Form.Item name="type" label="Visibility Type">
+              <Select size="large">
+                <Option value="public">🌍 Public</Option>
+                <Option value="private">🔒 Private</Option>
+              </Select>
+            </Form.Item>
+            <Form.Item name="isPromotion" label="Promotion Status" valuePropName="checked">
+              <Switch checkedChildren="ON" unCheckedChildren="OFF" />
+            </Form.Item>
+          </div>
+
+          <Form.Item label="Upload Banner (Required)">
+            <Upload.Dragger {...uploadProps} listType="picture" className="bg-gray-50">
+              <p className="ant-upload-drag-icon"><PictureOutlined className="text-blue-400" /></p>
+              <p className="ant-upload-text">Click or drag image to this area</p>
+              <p className="ant-upload-hint">Support for a single image upload only.</p>
+            </Upload.Dragger>
+          </Form.Item>
+
+          <Button 
+            type="primary" 
+            htmlType="submit" 
+            icon={<SendOutlined />} 
+            loading={loading} 
+            block 
+            size="large"
+            className="h-12 font-bold bg-blue-600"
+          >
+            Post Promotional Notification
+          </Button>
+        </Form>
+      ),
+    },
+    {
+      key: '2',
+      label: <span className="px-2"><NotificationOutlined /> General Post (No Image)</span>,
+      children: (
+        <Form 
+          form={generalForm} 
+          layout="vertical" 
+          onFinish={handleGeneralSubmit}
+          initialValues={{ type: 'public', isPromotion: false }}
+        >
+          <Form.Item name="title" label="Notification Title" rules={[{ required: true }]}>
+            <Input placeholder="Enter notification title..." size="large" />
+          </Form.Item>
+          
+          <Form.Item name="description" label="Description" rules={[{ required: true }]}>
+            <TextArea rows={4} placeholder="Type your message here..." />
+          </Form.Item>
+
+          <Form.Item name="type" label="Visibility Type">
+            <Select size="large">
+              <Option value="public">🌍 Public</Option>
+              <Option value="private">🔒 Private</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item name="isPromotion" label="Is this a Promotion?" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+
+          <Button 
+            type="primary" 
+            htmlType="submit" 
+            icon={<SendOutlined />} 
+            loading={loading} 
+            block 
+            size="large"
+            className="h-12 font-bold bg-indigo-600"
+          >
+            Send General Notification
+          </Button>
+        </Form>
+      ),
+    },
+  ];
+
   return (
     <Layout>
-      <h1 className="text-center text-3xl font-bold py-10">
-        Post Notifications
-      </h1>
-
-      <div className="mb-8">
-        <Link
-          to={"/notification/all"}
-          className="px-5 py-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200"
-        >
-          View All Notifications
-        </Link>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
-        {/* --- Form for Promotional Notification (with Image) --- */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-2xl font-semibold mb-4 text-center">
-            Promotional Notification (with Image)
-          </h2>
-          <form
-            onSubmit={handlePromotionalSubmit}
-            className="space-y-4"
-            encType="multipart/form-data"
-          >
-            <div>
-              <label className="block font-medium">Title</label>
-              <input
-                type="text"
-                value={promoTitle}
-                onChange={(e) => setPromoTitle(e.target.value)}
-                required
-                className="w-full border p-2 rounded focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Description</label>
-              <textarea
-                value={promoDescription}
-                onChange={(e) => setPromoDescription(e.target.value)}
-                required
-                className="w-full border p-2 rounded focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Image (Required)</label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setPromoImage(e.target.files[0])}
-                required
-                className="w-full border p-2 rounded file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Type</label>
-              <select
-                value={promoType}
-                onChange={(e) => setPromoType(e.target.value)}
-                className="w-full border p-2 rounded focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={promoIsPromotion}
-                onChange={(e) => setPromoIsPromotion(e.target.checked)}
-                className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-              />
-              <label className="text-gray-700">Is Promotion?</label>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition duration-200"
-            >
-              Post Promotional Notification
-            </button>
-          </form>
+      <div className="max-w-4xl mx-auto py-10 px-4">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <Title level={2} className="m-0 flex items-center gap-2">
+              <NotificationOutlined className="text-blue-600" /> Post Notifications
+            </Title>
+            <Text type="secondary">Create and broadcast notifications to your users</Text>
+          </div>
+          <Link to="/notification/all">
+            <Button icon={<EyeOutlined />} size="large">View History</Button>
+          </Link>
         </div>
 
-        {/* --- Form for General Post (without Image) --- */}
-        <div className="bg-white p-6 rounded-xl shadow-md">
-          <h2 className="text-2xl font-semibold mb-4 text-center">
-            General Post (No Image)
-          </h2>
-          <form onSubmit={handleGeneralSubmit} className="space-y-4">
-            <div>
-              <label className="block font-medium">Title</label>
-              <input
-                type="text"
-                value={generalTitle}
-                onChange={(e) => setGeneralTitle(e.target.value)}
-                required
-                className="w-full border p-2 rounded focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Description</label>
-              <textarea
-                value={generalDescription}
-                onChange={(e) => setGeneralDescription(e.target.value)}
-                required
-                className="w-full border p-2 rounded focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block font-medium">Type</label>
-              <select
-                value={generalType}
-                onChange={(e) => setGeneralType(e.target.value)}
-                className="w-full border p-2 rounded focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="public">Public</option>
-                <option value="private">Private</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={generalIsPromotion}
-                onChange={(e) => setGeneralIsPromotion(e.target.checked)}
-                className="form-checkbox h-4 w-4 text-blue-600 transition duration-150 ease-in-out"
-              />
-              <label className="text-gray-700">Is Promotion?</label>
-            </div>
-
-            <button
-              type="submit"
-              className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition duration-200"
-            >
-              Send General Post
-            </button>
-          </form>
-        </div>
+        <Card className="shadow-xl border-0 rounded-2xl overflow-hidden">
+          <Tabs 
+            defaultActiveKey="1" 
+            items={tabItems} 
+            centered 
+            size="large"
+            className="custom-tabs"
+          />
+        </Card>
       </div>
+
+      <style>{`
+        .custom-tabs .ant-tabs-nav::before { border-bottom: 1px solid #f0f0f0; }
+        .ant-card-body { padding: 32px !important; }
+        .ant-form-item-label label { font-weight: 600; color: #374151; }
+      `}</style>
     </Layout>
   );
 }

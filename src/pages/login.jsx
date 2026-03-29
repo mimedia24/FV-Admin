@@ -39,6 +39,7 @@ export default function Login() {
         setAdmin(true);
         Cookies.set("accessToken", result.accessToken);
         localStorage.setItem("id", result.id);
+        localStorage.setItem("AccessToken", result.accessToken);
         navigate("/dashboard");
       }
     } catch (error) {

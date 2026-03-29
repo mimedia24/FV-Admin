@@ -28,6 +28,7 @@ import CollectionPaymentList from "./pages/rider/CollectionPaymentList";
 import OrderMap from "./pages/OrderMap";
 import RestaurantTransaction from "./pages/RestaurantTransaction";
 import OrderHistoryScreen from "./pages/OrdeHistoryScreen";
+import ZoneManagementScreen from "./pages/ZoneManagement";
 
 function App() {
   return (
@@ -213,7 +214,18 @@ function App() {
                   <OrderHistoryScreen />
                 </ProtectedRoute>
               }
+                        />
+
+
+            <Route
+              path="/zone-management"
+              element={
+                <ProtectedRoute>
+                  <ZoneManagementScreen />
+                </ProtectedRoute>
+              }
             />
+
             {/* not found page */}
             <Route path="/*" element={<NotFound />} />
           </Routes>
