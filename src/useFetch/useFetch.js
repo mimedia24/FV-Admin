@@ -1,10 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { apiAuthToken } from "../../secrets";
 
 const useFetch = (url, options = {}) => {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [refetchIndex, setRefetchIndex] = useState(0); // Trigger state
+
+  // Function to manually trigger a refresh
+  const refetch = useCallback(() => {
+    setRefetchIndex((prev) => prev + 1);
+  }, []);
 
   const defaultHeaders = {
     "x-auth-token": apiAuthToken,
@@ -12,7 +18,7 @@ const useFetch = (url, options = {}) => {
   };
 
   useEffect(() => {
-    async function fetchData() {
+    const fetchData = async () => {
       setLoading(true);
       try {
         const apiResponse = await fetch(
@@ -29,16 +35,18 @@ const useFetch = (url, options = {}) => {
 
         const result = await apiResponse.json();
         setData(result);
-        setLoading(false);
-      } catch (error) {
-        setError(error);
+      } catch (err) {
+        setError(err);
+      } finally {
         setLoading(false);
       }
-    }
-    fetchData();
-  }, [url]);
+    };
 
-  return { data, loading, error };
+    fetchData();
+    // Added refetchIndex to the dependency array
+  }, [url, refetchIndex]); 
+
+  return { data, loading, error, refetch };
 };
 
 export default useFetch;

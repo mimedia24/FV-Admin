@@ -56,7 +56,6 @@ function RegisterNewRestaurant({ visible, onCancel, onSuccess }) {
 
     setLoading(true);
 
-    console.log("[filelist]", fileList[0]);
     const formData = new FormData();
     formData.append("image", fileList[0].originFileObj);
     formData.append("name", values.name);

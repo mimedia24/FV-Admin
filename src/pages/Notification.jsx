@@ -9,11 +9,9 @@ import {
   Card, 
   Tabs, 
   message, 
-  Typography, 
-  Space 
+  Typography 
 } from "antd";
 import { 
-  UploadOutlined, 
   NotificationOutlined, 
   PictureOutlined, 
   SendOutlined,
@@ -33,7 +31,6 @@ function Notification() {
   const [loading, setLoading] = useState(false);
   const [fileList, setFileList] = useState([]);
 
-  // --- Handle Promotional Submit ---
   const handlePromotionalSubmit = async (values) => {
     if (fileList.length === 0) {
       message.error("Please upload a promotional image.");
@@ -44,14 +41,18 @@ function Notification() {
     const formData = new FormData();
     formData.append("title", values.title);
     formData.append("description", values.description);
-    formData.append("isPromotion", values.isPromotion ?? true);
+    formData.append("isPromotion", String(values.isPromotion ?? true));
     formData.append("type", values.type);
-    formData.append("image", fileList[0].originFileObj);
+    
+    const fileToUpload = fileList[0].originFileObj || fileList[0];
+    formData.append("image", fileToUpload);
 
     try {
       const response = await fetch(`${apiPath}/v2/notification/promotional-notification`, {
         method: "POST",
-        headers: { "x-auth-token": apiAuthToken },
+        headers: { 
+          "x-auth-token": apiAuthToken,
+        },
         body: formData,
       });
 
@@ -70,7 +71,6 @@ function Notification() {
     }
   };
 
-  // --- Handle General Submit ---
   const handleGeneralSubmit = async (values) => {
     setLoading(true);
     const postData = {
@@ -158,7 +158,7 @@ function Notification() {
             loading={loading} 
             block 
             size="large"
-            className="h-12 font-bold bg-blue-600"
+            className="h-12 font-bold bg-blue-600 hover:bg-blue-700"
           >
             Post Promotional Notification
           </Button>
@@ -201,7 +201,7 @@ function Notification() {
             loading={loading} 
             block 
             size="large"
-            className="h-12 font-bold bg-indigo-600"
+            className="h-12 font-bold bg-indigo-600 hover:bg-indigo-700"
           >
             Send General Notification
           </Button>

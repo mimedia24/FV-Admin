@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Layout from "./layout";
 import useFetch from "../useFetch/useFetch";
-import OrderCard from "../components/orderCard";
-import PaginationContainer from "../components/pagination";
 import CustomSkeleton from "../components/skeleton";
 import SortOrdersList from "../components/sortOrderList";
 import RiderCard from "../components/riderCard";
 import SearchInput from "../components/searchInput";
-import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
-import { Space, Switch } from "antd";
-import SearchCard from "../components/searchCard";
+import {  Switch } from "antd";
 import RiderHeader from "../components/rider/RiderHeader";
 import RiderPagination from "../components/rider/RiderPagination";
 
@@ -20,7 +16,7 @@ export default function OrderManagement() {
   const [page, setPage] = useState(1);
   const [totalPage, setTotalPage] = useState(1);
 
-  const { data, loading } = useFetch(`/admin/list-of-riders?page=${page}`);
+  const { data, loading, refetch } = useFetch(`/admin/list-of-riders?page=${page}`);
 
   useEffect(() => {
     console.log(data);
@@ -74,7 +70,7 @@ export default function OrderManagement() {
           {riders === null ? <CustomSkeleton /> : null}
           {riders &&
             riders?.riders.map((rider) => (
-              <RiderCard order={rider} key={rider._id} />
+              <RiderCard order={rider} key={rider._id} refreshData={refetch}/>
             ))}
         </div>
 

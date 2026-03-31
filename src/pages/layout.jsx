@@ -20,15 +20,40 @@ export default function Layout({ children }) {
       />
 
       {/* Main Content Area */}
+      {/* Main Content Area */}
       <main
-        className={`flex-1 flex flex-col min-w-0 h-screen relative ${isCollapsed ? "ml-20" : "ml-72"}`}
+        className={`flex-1 flex flex-col min-w-0 h-screen relative transition-all duration-300
+          /* Mobile: No margin because sidebar is a floating drawer */
+          ml-0 
+          /* Desktop: Margin matches the sidebar width */
+          ${isCollapsed ? "lg:ml-20" : "lg:ml-72"}`}
       >
-        {/* Optional: Top Header for Page Title/Profile could go here */}
+        {/* MOBILE TOP BAR (Important: This gives users a way to open the sidebar) */}
+        <div className="lg:hidden h-16 flex items-center px-4 bg-gray-950 border-b border-gray-800 shrink-0">
+          <button
+            onClick={() => setIsOpen(true)}
+            className="p-2 text-gray-400 hover:text-white"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </button>
+          <span className="ml-4 font-bold text-blue-500 uppercase tracking-wider text-sm">
+            Foodverse Admin
+          </span>
+        </div>
 
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 custom-content-scrollbar">
-          {/* Content Wrapper: 
-              Adds a subtle fade-in animation and max-width for better readability 
-          */}
           <div className="max-w-[1600px] mx-auto animate-in fade-in duration-500">
             {children}
           </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import {
@@ -10,7 +10,6 @@ import {
 } from "@ant-design/icons";
 import { GiFireZone } from "react-icons/gi";
 
-// Modernized Navigation Data
 const navigation = [
   { title: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
   { title: "Order Management", href: "/order-management", icon: <OrderIcon /> },
@@ -37,7 +36,6 @@ const navigation = [
 ];
 
 export default function Sidebar({
-  width = "w-72",
   isOpen,
   setIsOpen,
   isCollapsed,
@@ -46,97 +44,124 @@ export default function Sidebar({
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Close sidebar automatically when screen size increases to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) setIsOpen(false);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [setIsOpen]);
+
   const handleLogOut = () => {
     Cookies.remove("accessToken");
+    setIsOpen(false);
     navigate("/login");
   };
 
   return (
     <>
-      {/* Mobile Toggle Button */}
-      <div className="lg:hidden fixed top-4 left-4 z-[60]">
+      {/* 1. FIXED MOBILE HEADER (Optional but looks much cleaner) */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-gray-950 border-b border-gray-800 flex items-center px-4 z-[55] backdrop-blur-md bg-opacity-80">
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="p-3 rounded-xl bg-gray-900 text-white shadow-2xl border border-gray-700 active:scale-95 transition-all"
+          onClick={() => setIsOpen(true)}
+          className="p-2 text-gray-400 hover:text-white"
         >
-          {isOpen ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+          <MenuUnfoldOutlined className="text-2xl" />
         </button>
+        <div className="ml-4 flex items-center gap-2">
+          <GiFireZone className="text-blue-500 text-xl" />
+          <span className="font-bold text-white text-lg">Foodverse</span>
+        </div>
       </div>
 
-      {/* Mobile Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[40] lg:hidden transition-opacity"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      {/* 2. MOBILE OVERLAY (Darkened background) */}
+      <div
+        className={`fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] lg:hidden transition-opacity duration-300 ${
+          isOpen ? "opacity-100 visible" : "opacity-0 invisible"
+        }`}
+        onClick={() => setIsOpen(false)}
+      />
 
-      {/* Sidebar Container */}
+      {/* 3. SIDEBAR CONTAINER */}
       <aside
-        className={`fixed inset-y-0 left-0 z-[50] flex flex-col bg-gray-950 text-gray-300 border-r border-gray-800 transition-all duration-300 ease-in-out
-        ${isOpen ? `translate-x-0 ${width}` : "-translate-x-full lg:translate-x-0"} 
+        className={`fixed inset-y-0 left-0 z-[70] flex flex-col bg-gray-950 text-gray-300 border-r border-gray-800 transition-all duration-300 ease-in-out
+        ${isOpen ? "translate-x-0 w-80 shadow-[20px_0_60px_-15px_rgba(0,0,0,0.7)]" : "-translate-x-full lg:translate-x-0"} 
         ${isCollapsed ? "lg:w-20" : "lg:w-72"}`}
       >
-        {/* Header / Brand */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-gray-900/50">
-          {!isCollapsed && (
+        {/* BRAND SECTION */}
+        <div className="h-20 flex items-center justify-between px-6 border-b border-gray-900/50 flex-shrink-0">
+          {(!isCollapsed || isOpen) && (
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <GiFireZone className="text-white text-xl" />
-              </div>
-              <span className="text-xl font-bold text-white tracking-tight">
+              <img
+                src={"/public/foodverse.png"}
+                alt={"foodverse"}
+                width={40}
+                height={40}
+              />
+
+              <span className="text-xl font-extrabold text-white tracking-tight">
                 Foodverse<span className="text-blue-500"> Admin</span>
               </span>
             </div>
           )}
-          {isCollapsed && (
-            <GiFireZone className="text-blue-500 text-2xl mx-auto" />
-          )}
 
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="hidden lg:block text-gray-500 hover:text-white transition-colors"
-          >
-            {isCollapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-          </button>
+          {/* Close/Collapse Buttons */}
+          <div className="flex items-center">
+            {/* Desktop Collapse */}
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="hidden lg:block text-gray-500 hover:text-white transition-colors p-2"
+            >
+              {isCollapsed ? (
+                <MenuUnfoldOutlined className="text-lg" />
+              ) : (
+                <MenuFoldOutlined className="text-lg" />
+              )}
+            </button>
+            {/* Mobile Close */}
+            <button
+              onClick={() => setIsOpen(false)}
+              className="lg:hidden text-gray-400 hover:text-white p-2"
+            >
+              <MenuFoldOutlined className="text-2xl" />
+            </button>
+          </div>
         </div>
 
-        {/* Navigation - Scrollable Area */}
-        <nav className="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3 custom-scrollbar">
+        {/* NAVIGATION AREA */}
+        <nav className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar space-y-2">
           <ul className="space-y-1.5">
             {navigation.map((item) => {
-              const isActive = location.pathname.startsWith(item.href);
+              const isActive = location.pathname === item.href;
               return (
                 <li key={item.title}>
                   <Link
                     to={item.href}
-                    onClick={() => setIsOpen(false)}
-                    className={`flex items-center gap-4 p-3 rounded-xl transition-all duration-200 group relative
+                    onClick={() => setIsOpen(false)} // Important for mobile
+                    className={`flex items-center gap-4 p-3.5 rounded-xl transition-all duration-200 group relative
                       ${
                         isActive
-                          ? "bg-blue-600/10 text-blue-500 font-semibold"
+                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
                           : "hover:bg-gray-900 text-gray-400 hover:text-gray-100"
                       }`}
                   >
-                    {/* Active Indicator */}
-                    {isActive && (
-                      <div className="absolute left-0 w-1 h-6 bg-blue-500 rounded-r-full" />
-                    )}
-
                     <span
-                      className={`text-xl transition-transform duration-200 group-hover:scale-110 ${isActive ? "text-blue-500" : ""}`}
+                      className={`text-xl transition-transform ${isActive ? "scale-110" : "group-hover:scale-110 text-gray-500"}`}
                     >
                       {item.icon}
                     </span>
 
-                    {!isCollapsed && (
-                      <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis">
+                    {(!isCollapsed || isOpen) && (
+                      <span
+                        className={`text-sm font-medium ${isActive ? "text-white" : ""}`}
+                      >
                         {item.title}
                       </span>
                     )}
 
-                    {/* Tooltip for Collapsed Mode */}
-                    {isCollapsed && (
+                    {/* Tooltip (Only for Desktop Collapsed) */}
+                    {isCollapsed && !isOpen && (
                       <div className="lg:group-hover:flex hidden absolute left-20 bg-gray-800 text-white text-xs py-2 px-3 rounded-md z-[100] whitespace-nowrap shadow-xl border border-gray-700">
                         {item.title}
                       </div>
@@ -148,17 +173,17 @@ export default function Sidebar({
           </ul>
         </nav>
 
-        {/* Footer / Logout */}
-        <div className="p-4 border-t border-gray-900 bg-gray-950/50 backdrop-blur-md">
+        {/* LOGOUT AREA */}
+        <div className="p-4 border-t border-gray-900 bg-gray-950/80">
           <button
             onClick={handleLogOut}
-            className={`flex items-center gap-4 w-full p-3 rounded-xl transition-all duration-200
-              ${isCollapsed ? "justify-center" : ""}
-              bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white group`}
+            className={`flex items-center gap-4 w-full p-4 rounded-xl transition-all duration-200
+              ${isCollapsed && !isOpen ? "justify-center" : ""}
+              bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white group`}
           >
-            <LogoutOutlined className="text-xl group-hover:rotate-12 transition-transform" />
-            {!isCollapsed && (
-              <span className="font-bold text-sm tracking-wide uppercase">
+            <LogoutOutlined className="text-xl" />
+            {(!isCollapsed || isOpen) && (
+              <span className="font-bold text-xs tracking-widest uppercase">
                 Sign Out
               </span>
             )}
@@ -166,23 +191,11 @@ export default function Sidebar({
         </div>
       </aside>
 
-      {/* Custom Scrollbar CSS */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: #1f2937;
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #3b82f6;
-        }
+        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
       `,
         }}
       />
@@ -190,6 +203,7 @@ export default function Sidebar({
   );
 }
 
+// Icons kept as per your original logic...
 // Minimal Icons (Dashboard, etc remain same as your code but ensured consistency)
 function DashboardIcon() {
   return (
