@@ -1,6 +1,6 @@
 
 
-const mode = 'DEV'  // or PRO // DEV
+const mode = 'PRO'  // or PRO // DEV
 
 export const apiPath = mode === 'DEV' ? 'http://localhost:3000/api' : import.meta.env.VITE_API_PATH;
 export const apiAuthToken = import.meta.env.VITE_API_TOKEN;
