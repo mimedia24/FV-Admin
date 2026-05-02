@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Card, Tag, Popconfirm, Button, message } from "antd";
+import React, { useMemo, useState } from "react";
+import { Card, Tag, Popconfirm, Button, message, InputNumber } from "antd";
 import { Link } from "react-router-dom";
 import {
   MdDelete,
@@ -7,6 +7,7 @@ import {
   MdPhone,
   MdPerson,
   MdAttachMoney,
+  MdPercent,
 } from "react-icons/md";
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../secrets";
@@ -23,10 +24,21 @@ export default function RestaurantCard({
   restaurantList,
 }) {
   const [status, setStatus] = useState(restaurant?.status);
+  const [commissionRate, setCommissionRate] = useState(
+    Number(restaurant?.commissionRate || 0)
+  );
+  const [savingCommission, setSavingCommission] = useState(false);
 
   function updateRestaurants(id) {
     const filterItem = restaurantList.filter((item) => item._id !== id);
     setRestaurant(filterItem);
+  }
+
+  function updateSingleRestaurant(updatedRestaurant) {
+    const updatedList = restaurantList.map((item) =>
+      item._id === updatedRestaurant._id ? { ...item, ...updatedRestaurant } : item
+    );
+    setRestaurant(updatedList);
   }
 
   async function handleDeleteRestaurant(id) {
@@ -49,24 +61,63 @@ export default function RestaurantCard({
     }
   }
 
-  // copy restaurant id
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
     message.success("ID copied to clipboard!");
   };
 
+  const handleSaveCommission = async () => {
+    try {
+      setSavingCommission(true);
+
+      const parsedRate = Number(commissionRate);
+
+      if (!Number.isFinite(parsedRate) || parsedRate < 0) {
+        message.error("Please enter a valid commission rate");
+        return;
+      }
+
+      const { data } = await axios.put(
+        `${apiPath}/restaurant/update-commission/${restaurant._id}`,
+        { commissionRate: parsedRate },
+        {
+          headers: {
+            "x-auth-token": apiAuthToken,
+          },
+        }
+      );
+
+      if (data?.success) {
+        updateSingleRestaurant(data.result);
+        message.success("Commission updated successfully");
+      } else {
+        message.error(data?.message || "Failed to update commission");
+      }
+    } catch (error) {
+      console.error("Update commission error:", error);
+      message.error(
+        error?.response?.data?.message || "Failed to update commission"
+      );
+    } finally {
+      setSavingCommission(false);
+    }
+  };
+
+  const shortId = useMemo(() => {
+    return restaurant?._id ? `${restaurant._id.slice(0, 8)}...` : "N/A";
+  }, [restaurant?._id]);
+
   return (
     <Card
-      className="relative w-full max-w-xs bg-white rounded-xl shadow-lg border border-gray-200"
+      className="relative w-full max-w-xs rounded-xl border border-gray-200 bg-white shadow-lg"
       bodyStyle={{ padding: 0 }}
     >
-      {/* Top Section */}
-      <div className="p-4 flex items-center justify-between">
-        <div className="w-16 h-16 rounded-full overflow-hidden shadow-md border-2 border-white bg-gray-100">
+      <div className="flex items-center justify-between p-4">
+        <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-white bg-gray-100 shadow-md">
           <img
             src={import.meta.env.VITE_IMAGE_PATH + restaurant.image}
             alt="Restaurant"
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
           />
         </div>
         <div className="text-right">
@@ -80,28 +131,27 @@ export default function RestaurantCard({
             <Button
               type="text"
               icon={<MdDelete className="text-red-500" size={24} />}
-              className="p-0 border-none hover:bg-gray-100"
+              className="border-none p-0 hover:bg-gray-100"
             />
           </Popconfirm>
         </div>
       </div>
 
-      {/* Main Content Section */}
-      <div className="px-4 pb-4 space-y-3">
+      <div className="space-y-3 px-4 pb-4">
         <div className="text-center">
-          <h2 className="text-base font-bold truncate">{restaurant.name}</h2>
-          <p className="text-xs text-gray-500 truncate">
+          <h2 className="truncate text-base font-bold">{restaurant.name}</h2>
+          <p className="truncate text-xs text-gray-500">
             {restaurant.description}
           </p>
         </div>
 
-        <div className="flex justify-center items-center gap-2">
+        <div className="flex items-center justify-center gap-2">
           <Tag
             color="blue"
-            className="text-xs flex items-center gap-1 cursor-pointer hover:opacity-80 transition"
+            className="flex cursor-pointer items-center gap-1 text-xs transition hover:opacity-80"
             onClick={() => handleCopy(restaurant._id)}
           >
-            ID: {restaurant._id.slice(0, 8)}...
+            ID: {shortId}
             <CopyFilled size={12} className="ml-1" />
           </Tag>
 
@@ -121,7 +171,7 @@ export default function RestaurantCard({
           </div>
           <div className="flex items-center gap-2">
             <MdLocationOn className="text-gray-500" />
-            <span className="font-medium truncate">{restaurant.address}</span>
+            <span className="truncate font-medium">{restaurant.address}</span>
           </div>
           <div className="flex items-center gap-2">
             <MdAttachMoney className="text-gray-500" />
@@ -134,43 +184,75 @@ export default function RestaurantCard({
             </span>
           </div>
         </div>
+
+        <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+          <div className="mb-2 flex items-center gap-2">
+            <MdPercent className="text-blue-600" />
+            <span className="text-xs font-bold uppercase tracking-wide text-blue-700">
+              Restaurant Commission
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <InputNumber
+              min={0}
+              max={100}
+              value={commissionRate}
+              onChange={(value) => setCommissionRate(Number(value || 0))}
+              className="!h-10 !w-full"
+              placeholder="Commission %"
+            />
+            <Button
+              type="primary"
+              loading={savingCommission}
+              onClick={handleSaveCommission}
+              className="!h-10 !rounded-lg !bg-blue-600 !px-4"
+            >
+              Save
+            </Button>
+          </div>
+
+          <p className="mt-2 text-xs text-slate-500">
+            Current: <span className="font-bold">{Number(restaurant?.commissionRate || 0)}%</span>
+          </p>
+        </div>
       </div>
 
-      {/* Actions Section */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="border-t border-gray-200 p-4">
         <div className="flex flex-col gap-2">
           <ChangeRestaurantStatus
             restaurant={restaurant}
             status={status}
             setStatus={setStatus}
           />
+
           <Link
-            className="inline-block w-full text-center py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition"
+            className="inline-block w-full rounded-lg bg-blue-600 px-4 py-2 text-center font-medium text-white transition hover:bg-blue-700"
             to={`/restaurant/menu-list/${restaurant._id}`}
           >
             View Menu
           </Link>
+
           <Link
-            className="inline-block w-full text-center py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition"
+            className="inline-block w-full rounded-lg bg-blue-600 px-4 py-2 text-center font-medium text-white transition hover:bg-blue-700"
             to={`/restaurant/transactions?id=${restaurant._id}`}
           >
             Transactions
           </Link>
-          <div className="flex gap-2 items-center flex-wrap ">
-            {/* update is ckae or not */}
+
+          <div className="flex flex-wrap items-center gap-2">
             <UpdateCakeRestaurant
               isCake={restaurant?.isCake}
               restaurantId={restaurant._id}
               setRestaurant={setRestaurant}
             />
-            {/* update is home moda */}
+
             <UpdateIsHomeMade
               isHomeMade={restaurant?.isHomeMade}
               restaurantId={restaurant._id}
               setRestaurant={setRestaurant}
             />
 
-            {/* handle open and close */}
             <UpdateOpenClose
               isOpen={restaurant?.isOpen}
               restaurantId={restaurant._id}

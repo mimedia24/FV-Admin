@@ -2,37 +2,44 @@ import React, { useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import {
-  MenuUnfoldOutlined,
   MenuFoldOutlined,
   LogoutOutlined,
-  BellOutlined,
-  CreditCardOutlined,
 } from "@ant-design/icons";
-import { GiFireZone } from "react-icons/gi";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  MapPinned,
+  Bike,
+  Store,
+  Users,
+  UtensilsCrossed,
+  Shapes,
+  Tags,
+  ReceiptText,
+  WalletCards,
+  BellRing,
+  Flame,
+  Settings,
+  PanelLeftOpen,
+  BadgeDollarSign,
+} from "lucide-react";
 
 const navigation = [
-  { title: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
-  { title: "Order Management", href: "/order-management", icon: <OrderIcon /> },
-  { title: "Live Order Maps", href: "/order-map", icon: <MapsIcon /> },
-  { title: "Rider Management", href: "/rider-management", icon: <RiderIcon /> },
-  {
-    title: "Restaurant Registry",
-    href: "/restaurant-management",
-    icon: <RestaurantIcon />,
-  },
-  { title: "User Database", href: "/user-management", icon: <UserIcon /> },
-  { title: "Menu Catalog", href: "/menu-management", icon: <FoodIcon /> },
-  { title: "Categories", href: "/category-management", icon: <CategoryIcon /> },
-  {
-    title: "Promotions & Offers",
-    href: "/offer-management",
-    icon: <OfferIcon />,
-  },
-  { title: "Service Charges", href: "/charges", icon: <ChargesIcon /> },
-  { title: "Payouts", href: "/payment/rider", icon: <CreditCardOutlined /> },
-  { title: "Broadcasts", href: "/notification", icon: <BellOutlined /> },
-  { title: "Zone Control", href: "/zone-management", icon: <GiFireZone /> },
-  { title: "System Settings", href: "/settings", icon: <SettingsIcon /> },
+  { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "Order Management", href: "/order-management", icon: ClipboardList },
+  { title: "Live Order Maps", href: "/order-map", icon: MapPinned },
+  { title: "Rider Management", href: "/rider-management", icon: Bike },
+  { title: "Restaurant Registry", href: "/restaurant-management", icon: Store },
+  { title: "User Database", href: "/user-management", icon: Users },
+  { title: "Menu Catalog", href: "/menu-management", icon: UtensilsCrossed },
+  { title: "Categories", href: "/category-management", icon: Shapes },
+  { title: "Promotions & Offers", href: "/offer-management", icon: Tags },
+  { title: "Service Charges", href: "/charges", icon: ReceiptText },
+  { title: "Manual Discounts", href: "/manual-discounts", icon: BadgeDollarSign,},
+  { title: "Payouts", href: "/payment/rider", icon: WalletCards },
+  { title: "Broadcasts", href: "/notification", icon: BellRing },
+  { title: "Zone Control", href: "/zone-management", icon: Flame },
+  { title: "System Settings", href: "/settings", icon: Settings },
 ];
 
 export default function Sidebar({
@@ -44,7 +51,6 @@ export default function Sidebar({
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close sidebar automatically when screen size increases to desktop
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) setIsOpen(false);
@@ -61,108 +67,122 @@ export default function Sidebar({
 
   return (
     <>
-      {/* 1. FIXED MOBILE HEADER (Optional but looks much cleaner) */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-gray-950 border-b border-gray-800 flex items-center px-4 z-[55] backdrop-blur-md bg-opacity-80">
-        <button
-          onClick={() => setIsOpen(true)}
-          className="p-2 text-gray-400 hover:text-white"
-        >
-          <MenuUnfoldOutlined className="text-2xl" />
-        </button>
-        <div className="ml-4 flex items-center gap-2">
-          <GiFireZone className="text-blue-500 text-xl" />
-          <span className="font-bold text-white text-lg">Foodverse</span>
-        </div>
-      </div>
-
-      {/* 2. MOBILE OVERLAY (Darkened background) */}
       <div
-        className={`fixed inset-0 bg-black/70 backdrop-blur-sm z-[60] lg:hidden transition-opacity duration-300 ${
-          isOpen ? "opacity-100 visible" : "opacity-0 invisible"
+        className={`fixed inset-0 z-[60] bg-black/45 backdrop-blur-sm transition-all duration-300 lg:hidden ${
+          isOpen ? "visible opacity-100" : "invisible opacity-0"
         }`}
         onClick={() => setIsOpen(false)}
       />
 
-      {/* 3. SIDEBAR CONTAINER */}
       <aside
-        className={`fixed inset-y-0 left-0 z-[70] flex flex-col bg-gray-950 text-gray-300 border-r border-gray-800 transition-all duration-300 ease-in-out
-        ${isOpen ? "translate-x-0 w-80 shadow-[20px_0_60px_-15px_rgba(0,0,0,0.7)]" : "-translate-x-full lg:translate-x-0"} 
-        ${isCollapsed ? "lg:w-20" : "lg:w-72"}`}
+        className={`fixed inset-y-0 left-0 z-[70] flex flex-col border-r border-white/5 bg-[#020817] text-slate-300 transition-all duration-300 ease-in-out
+        ${
+          isOpen
+            ? "translate-x-0 w-80 shadow-[20px_0_60px_-15px_rgba(0,0,0,0.7)]"
+            : "-translate-x-full lg:translate-x-0"
+        }
+        ${isCollapsed ? "lg:w-24" : "lg:w-72"}`}
       >
-        {/* BRAND SECTION */}
-        <div className="h-20 flex items-center justify-between px-6 border-b border-gray-900/50 flex-shrink-0">
-          {(!isCollapsed || isOpen) && (
-            <div className="flex items-center gap-3">
-              <img
-                src={"/public/foodverse.png"}
-                alt={"foodverse"}
-                width={40}
-                height={40}
-              />
+        <div
+          className={`relative flex h-20 items-center border-b border-white/5 bg-white/[0.02] flex-shrink-0 ${
+            isCollapsed && !isOpen
+              ? "justify-center px-3"
+              : "justify-between px-5"
+          }`}
+        >
+          {isCollapsed && !isOpen ? (
+            <button
+              onClick={() => setIsCollapsed(false)}
+              className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/[0.04] text-slate-400 transition hover:bg-white/[0.08] hover:text-white"
+              title="Open sidebar"
+            >
+              <PanelLeftOpen className="h-5 w-5" />
+            </button>
+          ) : (
+            <>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-600 to-cyan-500 shadow-lg shadow-blue-600/20">
+                  <img
+                    src="/foodverse.png"
+                    alt="foodverse"
+                    className="h-7 w-7 object-contain"
+                  />
+                </div>
 
-              <span className="text-xl font-extrabold text-white tracking-tight">
-                Foodverse<span className="text-blue-500"> Admin</span>
-              </span>
-            </div>
+                <div className="min-w-0">
+                  <p className="truncate text-[11px] font-bold uppercase tracking-[0.22em] text-blue-300/80">
+                    Food Verse
+                  </p>
+                  <h2 className="truncate text-[18px] font-black tracking-tight text-white">
+                    Main Admin
+                  </h2>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsCollapsed(!isCollapsed)}
+                  className="hidden lg:flex h-10 w-10 items-center justify-center rounded-xl text-slate-500 transition hover:bg-white/[0.06] hover:text-white"
+                  title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                >
+                  <MenuFoldOutlined className="text-[18px]" />
+                </button>
+
+                <button
+                  onClick={() => setIsOpen(false)}
+                  className="flex h-10 w-10 items-center justify-center rounded-xl text-slate-400 transition hover:bg-white/[0.06] hover:text-white lg:hidden"
+                >
+                  <MenuFoldOutlined className="text-[20px]" />
+                </button>
+              </div>
+            </>
           )}
-
-          {/* Close/Collapse Buttons */}
-          <div className="flex items-center">
-            {/* Desktop Collapse */}
-            <button
-              onClick={() => setIsCollapsed(!isCollapsed)}
-              className="hidden lg:block text-gray-500 hover:text-white transition-colors p-2"
-            >
-              {isCollapsed ? (
-                <MenuUnfoldOutlined className="text-lg" />
-              ) : (
-                <MenuFoldOutlined className="text-lg" />
-              )}
-            </button>
-            {/* Mobile Close */}
-            <button
-              onClick={() => setIsOpen(false)}
-              className="lg:hidden text-gray-400 hover:text-white p-2"
-            >
-              <MenuFoldOutlined className="text-2xl" />
-            </button>
-          </div>
         </div>
 
-        {/* NAVIGATION AREA */}
-        <nav className="flex-1 overflow-y-auto py-6 px-4 custom-scrollbar space-y-2">
-          <ul className="space-y-1.5">
+        <nav className="custom-scrollbar flex-1 overflow-y-auto px-3 py-5">
+          <ul className="space-y-2">
             {navigation.map((item) => {
               const isActive = location.pathname === item.href;
+              const Icon = item.icon;
+
               return (
                 <li key={item.title}>
                   <Link
                     to={item.href}
-                    onClick={() => setIsOpen(false)} // Important for mobile
-                    className={`flex items-center gap-4 p-3.5 rounded-xl transition-all duration-200 group relative
-                      ${
-                        isActive
-                          ? "bg-blue-600 text-white shadow-lg shadow-blue-600/20"
-                          : "hover:bg-gray-900 text-gray-400 hover:text-gray-100"
-                      }`}
+                    onClick={() => setIsOpen(false)}
+                    className={`group relative flex items-center rounded-2xl transition-all duration-200
+                    ${isCollapsed && !isOpen ? "justify-center px-3 py-3.5" : "gap-4 px-4 py-3.5"}
+                    ${
+                      isActive
+                        ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-600/25"
+                        : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+                    }`}
                   >
                     <span
-                      className={`text-xl transition-transform ${isActive ? "scale-110" : "group-hover:scale-110 text-gray-500"}`}
+                      className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all duration-200
+                      ${
+                        isActive
+                          ? "bg-white/15 text-white"
+                          : "text-slate-500 group-hover:bg-white/[0.05] group-hover:text-slate-200"
+                      }`}
                     >
-                      {item.icon}
+                      <Icon className="h-5 w-5" strokeWidth={2.2} />
                     </span>
 
                     {(!isCollapsed || isOpen) && (
-                      <span
-                        className={`text-sm font-medium ${isActive ? "text-white" : ""}`}
-                      >
-                        {item.title}
-                      </span>
+                      <div className="min-w-0">
+                        <span
+                          className={`block truncate text-sm font-semibold ${
+                            isActive ? "text-white" : "text-slate-300"
+                          }`}
+                        >
+                          {item.title}
+                        </span>
+                      </div>
                     )}
 
-                    {/* Tooltip (Only for Desktop Collapsed) */}
                     {isCollapsed && !isOpen && (
-                      <div className="lg:group-hover:flex hidden absolute left-20 bg-gray-800 text-white text-xs py-2 px-3 rounded-md z-[100] whitespace-nowrap shadow-xl border border-gray-700">
+                      <div className="absolute left-[76px] top-1/2 z-[100] hidden -translate-y-1/2 whitespace-nowrap rounded-xl border border-white/10 bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-2xl lg:group-hover:block">
                         {item.title}
                       </div>
                     )}
@@ -173,19 +193,26 @@ export default function Sidebar({
           </ul>
         </nav>
 
-        {/* LOGOUT AREA */}
-        <div className="p-4 border-t border-gray-900 bg-gray-950/80">
+        <div className="border-t border-white/5 bg-white/[0.02] p-3">
           <button
             onClick={handleLogOut}
-            className={`flex items-center gap-4 w-full p-4 rounded-xl transition-all duration-200
-              ${isCollapsed && !isOpen ? "justify-center" : ""}
-              bg-red-500/10 text-red-500 hover:bg-red-600 hover:text-white group`}
+            className={`group flex w-full items-center rounded-2xl transition-all duration-200
+            ${isCollapsed && !isOpen ? "justify-center p-3.5" : "gap-4 px-4 py-3.5"}
+            bg-red-500/10 text-red-400 hover:bg-red-600 hover:text-white`}
           >
-            <LogoutOutlined className="text-xl" />
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/[0.04] group-hover:bg-white/10">
+              <LogoutOutlined className="text-[18px]" />
+            </span>
+
             {(!isCollapsed || isOpen) && (
-              <span className="font-bold text-xs tracking-widest uppercase">
-                Sign Out
-              </span>
+              <div className="text-left">
+                <span className="block text-sm font-bold tracking-wide">
+                  Sign Out
+                </span>
+                <span className="block text-[11px] text-red-300/80 group-hover:text-white/80">
+                  End admin session
+                </span>
+              </div>
             )}
           </button>
         </div>
@@ -194,211 +221,22 @@ export default function Sidebar({
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #374151; border-radius: 10px; }
-      `,
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(148, 163, 184, 0.25);
+            border-radius: 999px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.45);
+          }
+        `,
         }}
       />
     </>
-  );
-}
-
-// Icons kept as per your original logic...
-// Minimal Icons (Dashboard, etc remain same as your code but ensured consistency)
-function DashboardIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
-      />
-    </svg>
-  );
-}
-function OrderIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-      />
-    </svg>
-  );
-}
-function MapsIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-      />
-    </svg>
-  );
-}
-function RiderIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M13 10V3L4 14h7v7l9-11h-7z"
-      />
-    </svg>
-  );
-}
-function RestaurantIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-      />
-    </svg>
-  );
-}
-function UserIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-      />
-    </svg>
-  );
-}
-function FoodIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-      />
-    </svg>
-  );
-}
-function CategoryIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-      />
-    </svg>
-  );
-}
-function OfferIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-      />
-    </svg>
-  );
-}
-function ChargesIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-      />
-    </svg>
-  );
-}
-function SettingsIcon() {
-  return (
-    <svg
-      className="h-5 w-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-      />
-    </svg>
   );
 }

@@ -29,6 +29,7 @@ import OrderMap from "./pages/OrderMap";
 import RestaurantTransaction from "./pages/RestaurantTransaction";
 import OrderHistoryScreen from "./pages/OrdeHistoryScreen";
 import ZoneManagementScreen from "./pages/ZoneManagement";
+import ManualDiscountRequests from "./pages/ManualDiscountRequests";
 
 function App() {
   return (
@@ -222,6 +223,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ZoneManagementScreen />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/manual-discounts"
+              element={
+                <ProtectedRoute>
+                <ManualDiscountRequests />
                 </ProtectedRoute>
               }
             />

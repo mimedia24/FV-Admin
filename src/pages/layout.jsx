@@ -3,14 +3,10 @@ import Sidebar from "../components/sidebar";
 
 export default function Layout({ children }) {
   const [isOpen, setIsOpen] = useState(false);
-
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
 
   return (
-    <div className="flex min-h-screen bg-gray-950 text-gray-100 overflow-hidden">
-      {/* The Sidebar handles its own width (w-72 or w-20). 
-          On mobile, it's 'fixed', on desktop it's 'relative'.
-      */}
+    <div className="min-h-screen bg-slate-50 text-slate-900 overflow-x-hidden">
       <Sidebar
         width={"w-72"}
         isOpen={isOpen}
@@ -19,20 +15,15 @@ export default function Layout({ children }) {
         setIsCollapsed={setIsCollapsed}
       />
 
-      {/* Main Content Area */}
-      {/* Main Content Area */}
       <main
-        className={`flex-1 flex flex-col min-w-0 h-screen relative transition-all duration-300
-          /* Mobile: No margin because sidebar is a floating drawer */
-          ml-0 
-          /* Desktop: Margin matches the sidebar width */
-          ${isCollapsed ? "lg:ml-20" : "lg:ml-72"}`}
+        className={`min-h-screen transition-all duration-300 ${
+          isCollapsed ? "lg:pl-20" : "lg:pl-72"
+        }`}
       >
-        {/* MOBILE TOP BAR (Important: This gives users a way to open the sidebar) */}
-        <div className="lg:hidden h-16 flex items-center px-4 bg-gray-950 border-b border-gray-800 shrink-0">
+        <div className="lg:hidden h-16 flex items-center px-4 bg-white border-b border-slate-200 sticky top-0 z-40">
           <button
             onClick={() => setIsOpen(true)}
-            className="p-2 text-gray-400 hover:text-white"
+            className="p-2 text-slate-500 hover:text-slate-900"
           >
             <svg
               className="w-6 h-6"
@@ -48,19 +39,17 @@ export default function Layout({ children }) {
               />
             </svg>
           </button>
-          <span className="ml-4 font-bold text-blue-500 uppercase tracking-wider text-sm">
+
+          <span className="ml-4 font-bold text-blue-600 uppercase tracking-wider text-sm">
             Foodverse Admin
           </span>
         </div>
 
-        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 custom-content-scrollbar">
-          <div className="max-w-[1600px] mx-auto animate-in fade-in duration-500">
-            {children}
-          </div>
+        <div className="overflow-y-auto overflow-x-hidden p-3 md:p-6 custom-content-scrollbar">
+          <div className="mx-auto max-w-[1600px]">{children}</div>
         </div>
       </main>
 
-      {/* Internal CSS for the content area scrollbar to match the sidebar */}
       <style
         dangerouslySetInnerHTML={{
           __html: `
@@ -68,14 +57,14 @@ export default function Layout({ children }) {
           width: 6px;
         }
         .custom-content-scrollbar::-webkit-scrollbar-track {
-          background: #030712; 
+          background: #f1f5f9;
         }
         .custom-content-scrollbar::-webkit-scrollbar-thumb {
-          background: #1f2937;
+          background: #cbd5e1;
           border-radius: 10px;
         }
         .custom-content-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: #3b82f6;
+          background: #94a3b8;
         }
       `,
         }}

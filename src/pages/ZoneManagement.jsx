@@ -8,6 +8,7 @@ import {
   Tooltip,
   message,
   Popconfirm,
+  Empty,
 } from "antd";
 import {
   PlusOutlined,
@@ -17,6 +18,9 @@ import {
   ReloadOutlined,
   EnvironmentOutlined,
   SettingOutlined,
+  ThunderboltOutlined,
+  BorderOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import Layout from "./layout";
 import AddZoneForm from "../components/zone/AddZoneForm";
@@ -26,17 +30,35 @@ import UpdateZoneResource from "../components/zone/UpdateZoneResource";
 
 const { Title, Text } = Typography;
 
+const statThemes = {
+  blue: {
+    iconBg: "bg-blue-500/10",
+    iconText: "text-blue-600",
+    border: "border-blue-200",
+    glow: "shadow-[0_10px_40px_rgba(37,99,235,0.10)]",
+  },
+  emerald: {
+    iconBg: "bg-emerald-500/10",
+    iconText: "text-emerald-600",
+    border: "border-emerald-200",
+    glow: "shadow-[0_10px_40px_rgba(16,185,129,0.10)]",
+  },
+  amber: {
+    iconBg: "bg-amber-500/10",
+    iconText: "text-amber-600",
+    border: "border-amber-200",
+    glow: "shadow-[0_10px_40px_rgba(245,158,11,0.10)]",
+  },
+};
+
 function ZoneManagementScreen() {
   const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Modal States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false); // New state for Resource Modal
+  const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [selectedZone, setSelectedZone] = useState(null);
-
-  // --- API Actions ---
 
   const fetchZones = async () => {
     setLoading(true);
@@ -64,25 +86,37 @@ function ZoneManagementScreen() {
     fetchZones();
   }, []);
 
-  // --- Table Configuration ---
+  const totalZones = zones.length;
+  const activeZones = zones.filter((zone) => zone?.isActive).length;
+  const totalVertices = zones.reduce(
+    (sum, zone) => sum + (zone?.polygon?.length || 0),
+    0
+  );
 
   const columns = [
     {
       title: "Zone ID",
       dataIndex: "id",
       key: "id",
-      render: (id) => <Text className="text-blue-500 font-mono">#{id}</Text>,
+      width: 110,
+      render: (id) => (
+        <Text className="font-mono font-semibold text-blue-600">#{id}</Text>
+      ),
     },
     {
       title: "Name",
       dataIndex: "name",
       key: "name",
+      width: 260,
       render: (name) => (
-        <Space>
-          <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center border border-gray-700">
-            <EnvironmentOutlined className="text-blue-500" />
+        <Space size="middle">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+            <EnvironmentOutlined />
           </div>
-          <Text className="text-white font-medium">{name}</Text>
+          <div className="flex flex-col">
+            <Text className="font-semibold text-slate-800">{name}</Text>
+            <Text className="text-xs text-slate-400">Operational service zone</Text>
+          </div>
         </Space>
       ),
     },
@@ -90,9 +124,10 @@ function ZoneManagementScreen() {
       title: "Vertices",
       dataIndex: "polygon",
       key: "polygon",
+      width: 170,
       render: (poly) => (
-        <Tag className="bg-gray-800 border-gray-700 text-gray-400">
-          {poly?.length || 0} Points
+        <Tag className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-slate-600">
+          {(poly?.length || 0).toLocaleString("en-BD")} Points
         </Tag>
       ),
     },
@@ -100,10 +135,11 @@ function ZoneManagementScreen() {
       title: "Visibility",
       dataIndex: "isActive",
       key: "isActive",
+      width: 150,
       render: (active) => (
         <Tag
           color={active ? "blue" : "default"}
-          className="rounded-full border-none px-3 uppercase text-[10px]"
+          className="rounded-full border-none px-3 py-1 uppercase text-[10px] font-bold"
         >
           {active ? "Online" : "Offline"}
         </Tag>
@@ -112,26 +148,26 @@ function ZoneManagementScreen() {
     {
       title: "Actions",
       align: "right",
+      key: "actions",
+      width: 170,
       render: (_, record) => (
         <Space size="middle">
-          {/* Update Resource Button */}
           <Tooltip title="Update Resource">
             <Button
               type="text"
-              className="text-gray-400 hover:text-amber-500"
+              className="!text-slate-400 hover:!text-amber-500"
               icon={<SettingOutlined />}
               onClick={() => {
                 setSelectedZone(record);
-                setIsResourceModalOpen(true); // Open Resource Modal
+                setIsResourceModalOpen(true);
               }}
             />
           </Tooltip>
 
-          {/* Edit Geometry Button */}
           <Tooltip title="Edit Geometry">
             <Button
               type="text"
-              className="text-gray-400 hover:text-blue-500"
+              className="!text-slate-400 hover:!text-blue-500"
               icon={<EditOutlined />}
               onClick={() => {
                 setSelectedZone(record);
@@ -159,50 +195,139 @@ function ZoneManagementScreen() {
 
   return (
     <Layout>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-gray-900/40 p-6 rounded-2xl border border-gray-800 backdrop-blur-md">
-        <div>
-          <Space align="center">
-            <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center border border-blue-500/20">
-              <GlobalOutlined className="text-blue-500 text-2xl" />
+      <div className="mx-auto max-w-[1450px] px-4 py-6 md:px-6 md:py-8">
+        {/* Header */}
+        <div className="relative mb-8 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-50 via-white to-slate-50" />
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
+          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-cyan-500/10 blur-3xl" />
+
+          <div className="relative z-10 flex flex-col gap-6 p-6 md:flex-row md:items-center md:justify-between md:p-8">
+            <div className="flex items-start gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-200/50">
+                <GlobalOutlined className="text-[28px]" />
+              </div>
+
+              <div>
+                <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.20em] text-slate-500">
+                  <ThunderboltOutlined />
+                  Operational Service Zones
+                </div>
+
+                <Title
+                  level={2}
+                  style={{
+                    margin: 0,
+                    color: "#0f172a",
+                    fontWeight: 800,
+                    lineHeight: 1.15,
+                  }}
+                >
+                  Geofencing Management
+                </Title>
+
+                <Text className="text-slate-500 text-sm md:text-base">
+                  Manage service areas, geometry updates and zone resources from
+                  one clean interface.
+                </Text>
+              </div>
             </div>
-            <div>
-              <Title level={3} style={{ margin: 0, color: "#fff" }}>
-                Geofencing
-              </Title>
-              <Text className="text-gray-500 text-xs uppercase tracking-widest font-bold">
-                Operational Service Zones
-              </Text>
-            </div>
-          </Space>
+
+            <Space wrap size="middle">
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={fetchZones}
+                className="!h-11 !rounded-xl !border-slate-200 !text-slate-600 !font-semibold"
+              >
+                Refresh
+              </Button>
+
+              <Button
+                type="primary"
+                size="large"
+                icon={<PlusOutlined />}
+                onClick={() => setIsAddModalOpen(true)}
+                className="!h-11 !rounded-xl !px-6 !font-bold !border-none !bg-gradient-to-r !from-blue-600 !to-cyan-500 hover:!from-blue-700 hover:!to-cyan-600 shadow-md"
+              >
+                Create New Zone
+              </Button>
+            </Space>
+          </div>
         </div>
 
-        <Space>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={fetchZones}
-            className="bg-gray-800 border-gray-700 text-gray-400 hover:text-white"
+        {/* Stats */}
+        <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <StatCard
+            icon={<GlobalOutlined />}
+            label="Total Zones"
+            value={totalZones}
+            helper="All configured service zones"
+            color="blue"
           />
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => setIsAddModalOpen(true)}
-            className="bg-blue-600 border-none h-12 px-8 rounded-xl font-bold shadow-lg shadow-blue-500/20"
-          >
-            Create New Zone
-          </Button>
-        </Space>
-      </div>
+          <StatCard
+            icon={<EyeOutlined />}
+            label="Active Zones"
+            value={activeZones}
+            helper="Currently visible operational areas"
+            color="emerald"
+          />
+          <StatCard
+            icon={<BorderOutlined />}
+            label="Total Vertices"
+            value={totalVertices}
+            helper="Combined geometry points"
+            color="amber"
+          />
+        </div>
 
-      <div className="bg-gray-900/40 rounded-3xl border border-gray-800 overflow-hidden shadow-2xl backdrop-blur-sm">
-        <Table
-          dataSource={zones}
-          columns={columns}
-          loading={loading}
-          rowKey="_id"
-          pagination={{ pageSize: 7, className: "p-4" }}
-          className="custom-dark-table"
-        />
+        {/* Table */}
+        <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-white to-slate-50 px-5 py-4 md:px-6">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h3 className="m-0 text-xl font-extrabold text-slate-900">
+                  Zone Directory
+                </h3>
+                <p className="m-0 mt-1 text-sm text-slate-500">
+                  Review all zone ids, geometry points, status and controls.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <div className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600">
+                  Zones: {totalZones}
+                </div>
+                <div className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-600">
+                  Active: {activeZones}
+                </div>
+                <div className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-600">
+                  Vertices: {totalVertices}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-2 pb-4 md:px-4 md:pb-6">
+            <Table
+              dataSource={zones}
+              columns={columns}
+              loading={loading}
+              rowKey="_id"
+              pagination={{
+                pageSize: 7,
+                className: "p-4",
+              }}
+              locale={{
+                emptyText: (
+                  <div className="py-14">
+                    <Empty description="No zone found" />
+                  </div>
+                ),
+              }}
+              className="zone-light-table"
+            />
+          </div>
+        </div>
       </div>
 
       <AddZoneForm
@@ -227,8 +352,7 @@ function ZoneManagementScreen() {
         }}
       />
 
-      {/* Resource Update Modal Integration */}
-      <UpdateZoneResource 
+      <UpdateZoneResource
         isVisible={isResourceModalOpen}
         onClose={() => {
           setIsResourceModalOpen(false);
@@ -236,20 +360,96 @@ function ZoneManagementScreen() {
         }}
         zoneData={selectedZone}
         onUpdateSuccess={() => {
-          fetchZones(); // Refresh table after update
+          fetchZones();
         }}
       />
 
       <style>{`
-        .custom-dark-table .ant-table { background: transparent !important; color: #9ca3af !important; }
-        .custom-dark-table .ant-table-thead > tr > th { background: #0e121d !important; color: #4b5563 !important; border-bottom: 1px solid #1f2937 !important; font-size: 10px; text-transform: uppercase; font-weight: 800; }
-        .custom-dark-table .ant-table-tbody > tr > td { border-bottom: 1px solid #1f2937 !important; padding: 16px !important; }
-        .custom-dark-table .ant-table-tbody > tr:hover > td { background: rgba(59, 130, 246, 0.03) !important; }
-        .ant-popover-inner { background-color: #111827 !important; border: 1px solid #374151 !important; color: white !important; }
-        .ant-popconfirm-title, .ant-popconfirm-description { color: white !important; }
+        .zone-light-table .ant-table {
+          background: transparent !important;
+        }
+
+        .zone-light-table .ant-table-container {
+          border-radius: 0 !important;
+        }
+
+        .zone-light-table .ant-table-thead > tr > th {
+          background: #f8fafc !important;
+          color: #475569 !important;
+          border-bottom: 1px solid #e2e8f0 !important;
+          font-size: 12px !important;
+          text-transform: uppercase !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.04em !important;
+        }
+
+        .zone-light-table .ant-table-tbody > tr > td {
+          border-bottom: 1px solid #eef2f7 !important;
+          padding: 16px !important;
+          background: #ffffff !important;
+        }
+
+        .zone-light-table .ant-table-tbody > tr:hover > td {
+          background: #f8fbff !important;
+        }
+
+        .zone-light-table .ant-pagination {
+          padding-top: 10px !important;
+        }
+
+        .zone-light-table .ant-pagination-item {
+          border-radius: 10px !important;
+          border-color: #dbe2ea !important;
+        }
+
+        .zone-light-table .ant-pagination-item-active {
+          border-color: #2563eb !important;
+        }
+
+        .zone-light-table .ant-pagination-item-active a {
+          color: #2563eb !important;
+          font-weight: 700 !important;
+        }
+
+        .ant-popover-inner {
+          border: 1px solid #e2e8f0 !important;
+        }
+
+        .ant-popconfirm-title,
+        .ant-popconfirm-description {
+          color: #0f172a !important;
+        }
       `}</style>
     </Layout>
   );
 }
+
+const StatCard = ({ icon, label, value, helper, color = "blue" }) => {
+  const theme = statThemes[color] || statThemes.blue;
+
+  return (
+    <div
+      className={`rounded-[24px] border bg-white p-5 md:p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md ${theme.border} ${theme.glow}`}
+    >
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+            {label}
+          </div>
+          <div className="text-3xl font-black leading-none text-slate-900">
+            {value || 0}
+          </div>
+          <div className="mt-3 text-sm text-slate-500">{helper}</div>
+        </div>
+
+        <div
+          className={`flex h-14 w-14 items-center justify-center rounded-2xl text-2xl ${theme.iconBg} ${theme.iconText}`}
+        >
+          {icon}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default ZoneManagementScreen;

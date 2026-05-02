@@ -20,62 +20,50 @@ function TimelineContainer({ timeline, handleClose }) {
   };
 
   return (
-    <div className="w-full max-w-sm p-6 bg-white rounded-xl shadow-lg relative">
-      {/* Close Button */}
-      <button 
+    <div className="relative mx-auto w-full max-w-md rounded-[28px] bg-white p-6 shadow-2xl">
+      <button
         onClick={handleClose}
-        className="absolute top-4 right-4 p-1 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+        className="absolute right-4 top-4 rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700"
         aria-label="Close"
       >
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-6 w-6" 
-          fill="none" 
-          viewBox="0 0 24 24" 
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        ✕
       </button>
 
-      <h2 className="text-gray-800 font-bold mb-6 border-b pb-2 text-lg">
+      <h2 className="mb-6 border-b border-slate-100 pb-3 text-lg font-black text-slate-900">
         Order Timeline
       </h2>
 
-      <div className="flex flex-col">
+      <div className="space-y-1">
         {steps.map((step, index) => {
           const isCompleted = step.time > 0;
           const isLast = index === steps.length - 1;
 
           return (
-            <div key={index} className="flex min-h-[64px]">
-              <div className="flex flex-col items-center mr-4">
+            <div key={index} className="flex min-h-[72px] gap-4">
+              <div className="flex flex-col items-center">
                 <div
-                  className={`w-3.5 h-3.5 rounded-full border-2 z-10 ${
+                  className={`z-10 h-4 w-4 rounded-full border-2 ${
                     isCompleted
-                      ? "bg-green-500 border-green-500 shadow-[0_0_8px_rgba(34,197,94,0.4)]"
-                      : "bg-white border-gray-300"
+                      ? "border-green-500 bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.35)]"
+                      : "border-slate-300 bg-white"
                   }`}
                 />
                 {!isLast && (
-                  <div
-                    className={`w-0.5 flex-grow ${
-                      isCompleted ? "bg-green-500" : "bg-gray-200"
-                    }`}
-                  />
+                  <div className={`w-0.5 flex-1 ${isCompleted ? "bg-green-500" : "bg-slate-200"}`} />
                 )}
               </div>
 
-              <div className="-mt-1 pb-6">
-                <p className={`text-sm font-bold ${isCompleted ? "text-gray-800" : "text-gray-400"}`}>
+              <div className="pb-5">
+                <p className={`text-sm font-bold ${isCompleted ? "text-slate-800" : "text-slate-400"}`}>
                   {step.label}
                 </p>
+
                 {isCompleted ? (
-                  <p className="text-xs text-gray-500 font-medium mt-0.5">
+                  <p className="mt-1 text-xs font-medium text-slate-500">
                     {formatUnixTime(step.time)}
                   </p>
                 ) : (
-                  <p className="text-xs text-gray-300 italic mt-0.5">Pending</p>
+                  <p className="mt-1 text-xs italic text-slate-300">Pending</p>
                 )}
               </div>
             </div>

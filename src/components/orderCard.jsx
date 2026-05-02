@@ -1,5 +1,5 @@
 import ChangeStatus from "./changeStatus";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import AssignRiderModal from "./assignRiderModal";
 import DeleteOrderButton from "./deleteOrderButton";
 import convertDateAsLocalTime from "../helpers/timeStamp";
@@ -10,14 +10,101 @@ import Modal from "./order/Modal";
 import TimelineContainer from "./order/TimelineContainer";
 import { Link } from "react-router-dom";
 
+const toNumber = (value) => {
+  const n = Number(value || 0);
+  return Number.isFinite(n) ? n : 0;
+};
+
+const formatMoney = (value) =>
+  `BDT ${toNumber(value).toLocaleString("en-BD", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+  })}`;
+
+function normalizeStatus(status) {
+  return String(status || "pending").trim().toLowerCase();
+}
+
+function getStatusClass(status) {
+  const value = normalizeStatus(status);
+
+  if (value === "pending") return "bg-amber-100 text-amber-700";
+  if (value === "accept by rider") return "bg-blue-100 text-blue-700";
+  if (value === "accept by restaurant") return "bg-cyan-100 text-cyan-700";
+  if (value === "ready for pickup") return "bg-violet-100 text-violet-700";
+  if (value === "picked up") return "bg-indigo-100 text-indigo-700";
+  if (value === "delivered") return "bg-emerald-100 text-emerald-700";
+  if (value.includes("cancelled")) return "bg-rose-100 text-rose-700";
+  return "bg-slate-100 text-slate-700";
+}
+
+function getAddonTotal(order) {
+  const items = Array.isArray(order?.items) ? order.items : [];
+
+  return items.reduce((sum, item) => {
+    const addons = Array.isArray(item?.addons)
+      ? item.addons
+      : Array.isArray(item?.addOns)
+      ? item.addOns
+      : Array.isArray(item?.extraItems)
+      ? item.extraItems
+      : [];
+
+    const quantity = toNumber(item?.quantity || 1);
+
+    const addonTotal = addons.reduce((addonSum, addon) => {
+      const addonPrice =
+        toNumber(addon?.price) ||
+        toNumber(addon?.amount) ||
+        toNumber(addon?.basedPrice) ||
+        toNumber(addon?.offerPrice);
+
+      const addonQty = toNumber(addon?.quantity || 1);
+      return addonSum + addonPrice * addonQty;
+    }, 0);
+
+    return sum + addonTotal * quantity;
+  }, 0);
+}
+
+function getDisplayOrderAmount(order) {
+  const explicitTotal =
+    order?.totalAmount ??
+    order?.orderAmount ??
+    order?.grandTotal ??
+    order?.payableAmount;
+
+  if (explicitTotal !== undefined && explicitTotal !== null) {
+    return toNumber(explicitTotal);
+  }
+
+  const itemTotal = (Array.isArray(order?.items) ? order.items : []).reduce(
+    (sum, item) => {
+      const price =
+        toNumber(item?.offerPrice) ||
+        toNumber(item?.sellingPrice) ||
+        toNumber(item?.price) ||
+        toNumber(item?.basedPrice);
+
+      return sum + price * toNumber(item?.quantity || 1);
+    },
+    0
+  );
+
+  return itemTotal + getAddonTotal(order) + toNumber(order?.deliveryAmount);
+}
+
 export default function OrderCard({ order, slNo, getOrders }) {
   const [status, setStatus] = useState(order?.status);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [timelineModalOn, setTimeLineModalOn] = useState(false);
 
-  const [updateTime, setUpdateTime] = useState(
-    convertDateAsLocalTime(order?.updateTime),
+  const updateTime = useMemo(
+    () => convertDateAsLocalTime(order?.updateTime),
+    [order?.updateTime]
   );
+
+  const displayTotal = useMemo(() => getDisplayOrderAmount(order), [order]);
 
   function handleCopyData(text) {
     navigator.clipboard.writeText(text);
@@ -25,48 +112,81 @@ export default function OrderCard({ order, slNo, getOrders }) {
   }
 
   return (
-    <tr className="text-center border text-sm">
-      <td>{slNo + 1}</td>
-      <td className="text-[13px] border">{order?._id}</td>
-      <td className="border text-[14px] ">
+    <tr className="border-b border-slate-100 text-center text-sm hover:bg-slate-50/70 transition">
+      <td className="px-4 py-4 font-medium">{slNo + 1}</td>
+
+      <td className="px-4 py-4 text-[13px] font-medium text-slate-700">
+        <div className="flex items-center justify-center gap-1">
+          <span>{order?._id}</span>
+          <span onClick={() => handleCopyData(order?._id)} className="cursor-pointer">
+            <CopyIcon />
+          </span>
+        </div>
+      </td>
+
+      <td className="px-4 py-4">
         <span
-          className={
-            status === "pending"
-              ? "px-2 text-[11px] bg-gray-400 text-white rounded-sm"
-              : status === "delivered"
-                ? "px-2 text-[11px] bg-blue-400 text-white rounded-sm"
-                : status === "picked up"
-                  ? "px-2 text-[11px] bg-orange-400 text-white rounded-sm"
-                  : "px-2 text-[11px] bg-red-400 text-white rounded-sm"
-          }
+          className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold capitalize ${getStatusClass(
+            status
+          )}`}
         >
           {status}
         </span>
       </td>
-      <td className="text-[13px] border">{order?.userId}</td>
 
-      <td className="text-[13px] border">
-        {order?.customerPhone}
-        <span onClick={() => handleCopyData(order?.customerPhone)}>
-          <CopyIcon />
-        </span>
+      <td className="px-4 py-4 text-[13px] text-slate-700">{order?.userId}</td>
+
+      <td className="px-4 py-4 text-[13px] text-slate-700">
+        <div className="flex items-center justify-center gap-1">
+          <span>{order?.customerPhone}</span>
+          <span onClick={() => handleCopyData(order?.customerPhone)} className="cursor-pointer">
+            <CopyIcon />
+          </span>
+        </div>
       </td>
-      <td className="text-[11px] border">
-        {order?.restaurantId}
-        <span onClick={() => handleCopyData(order?.restaurantId)}>
-          <CopyIcon />
-        </span>
+
+      <td className="px-4 py-4 text-[11px] text-slate-700">
+        <div className="flex items-center justify-center gap-1">
+          <span>{order?.restaurantId}</span>
+          <span onClick={() => handleCopyData(order?.restaurantId)} className="cursor-pointer">
+            <CopyIcon />
+          </span>
+        </div>
       </td>
-      <td className="text-[11px] border">{order?.restaurantName}</td>
-      <td className="text-[13px] border">{order?.riderId || "N/A"}</td>
-      <td className="border p-1">BDT {order?.totalAmount.toFixed()} </td>
-      <td className="border p-1">{order?.peymentMethod}</td>
-      <td className="border p-1">BDT {order?.deliveryAmount.toFixed()}</td>
-      <td className="border p-1 text-[12px]">{updateTime}</td>
-      <td className="border p-1 text-[12px]">
-        <Button onClick={() => setTimeLineModalOn(!timelineModalOn)}>
+
+      <td className="px-4 py-4 text-[12px] font-medium text-slate-700">
+        {order?.restaurantName}
+      </td>
+
+      <td className="px-4 py-4 text-[13px] text-slate-700">{order?.riderId || "N/A"}</td>
+
+      <td className="px-4 py-4">
+        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-left min-w-[110px]">
+          <p className="text-[10px] uppercase tracking-wide text-slate-400">Total</p>
+          <p className="text-sm font-black text-slate-800">{formatMoney(displayTotal)}</p>
+        </div>
+      </td>
+
+      <td className="px-4 py-4 text-[12px] text-slate-700 capitalize">
+        {order?.peymentMethod || order?.paymentMethod || "N/A"}
+      </td>
+
+      <td className="px-4 py-4">
+        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-left min-w-[105px]">
+          <p className="text-[10px] uppercase tracking-wide text-slate-400">Fee</p>
+          <p className="text-sm font-bold text-slate-700">
+            {formatMoney(order?.deliveryAmount)}
+          </p>
+        </div>
+      </td>
+
+      <td className="px-4 py-4 text-[12px] text-slate-600">{updateTime}</td>
+
+      <td className="px-4 py-4">
+        <Button size="small" onClick={() => setTimeLineModalOn(!timelineModalOn)}>
           View
         </Button>
+
         <Modal isActive={timelineModalOn}>
           <TimelineContainer
             timeline={{
@@ -79,15 +199,17 @@ export default function OrderCard({ order, slNo, getOrders }) {
           />
         </Modal>
       </td>
-      <td className="border p-1">
+
+      <td className="px-4 py-4 min-w-[180px]">
         <ChangeStatus order={order} status={status} setStatus={setStatus} />
       </td>
-      <td className="border p-1 flex items-center justify-center">
+
+      <td className="px-4 py-4">
         <button
-          className="p-1 text-sm  bg-blue-500 text-white  me-4 rounded-sm mt-3 capitalize"
+          className="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
           onClick={() => setIsModalOpen(true)}
         >
-          assign rider
+          Assign Rider
         </button>
 
         <AssignRiderModal
@@ -96,20 +218,23 @@ export default function OrderCard({ order, slNo, getOrders }) {
           setIsModalOpen={setIsModalOpen}
         />
       </td>
-      <td className="border p-1">
+
+      <td className="px-4 py-4">
         <DeleteOrderButton order={order} getOrders={getOrders} />
       </td>
-      <td>
+
+      <td className="px-4 py-4">
         <ViewOrderItem order={order} />
       </td>
-      <td>
+
+      <td className="px-4 py-4">
         <Tag color={order?.platform === "web" ? "lime" : "geekblue"}>
           {order?.platform === "web" ? "web" : "android"}
         </Tag>
       </td>
 
-      <td>
-        <Button>
+      <td className="px-4 py-4">
+        <Button size="small">
           <Link to={`/order-history?id=${order.userId}`}>View history</Link>
         </Button>
       </td>
