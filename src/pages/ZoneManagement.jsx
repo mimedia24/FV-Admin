@@ -54,6 +54,7 @@ const statThemes = {
 function ZoneManagementScreen() {
   const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [statusUpdatingId, setStatusUpdatingId] = useState(null);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -62,11 +63,21 @@ function ZoneManagementScreen() {
 
   const fetchZones = async () => {
     setLoading(true);
+
     try {
       const response = await axiosInstance.get("/v3/master-admin/zone/list");
-      setZones(response.data.result.data || []);
+
+      const zoneList =
+        response?.data?.result?.data ||
+        response?.data?.data ||
+        response?.data?.zones ||
+        [];
+
+      setZones(Array.isArray(zoneList) ? zoneList : []);
     } catch (error) {
+      console.log("Zone list error:", error?.response?.data || error);
       message.error("Failed to load zone list");
+      setZones([]);
     } finally {
       setLoading(false);
     }
@@ -79,6 +90,43 @@ function ZoneManagementScreen() {
       fetchZones();
     } catch (error) {
       message.error(error.response?.data?.message || "Failed to delete zone");
+    }
+  };
+
+  const handleToggleZoneStatus = async (record) => {
+    const nextStatus = !Boolean(record?.isActive);
+    const oldZones = [...zones];
+
+    try {
+      setStatusUpdatingId(record.id);
+
+      setZones((prev) =>
+        prev.map((zone) =>
+          zone.id === record.id ? { ...zone, isActive: nextStatus } : zone
+        )
+      );
+
+      await axiosInstance.put(`/v3/master-admin/zone/status/${record.id}`, {
+        isActive: nextStatus,
+      });
+
+      message.success(
+        nextStatus
+          ? `${record.name} is now online`
+          : `${record.name} is now offline`
+      );
+
+      await fetchZones();
+    } catch (error) {
+      console.log("Zone status update error:", error?.response?.data || error);
+
+      setZones(oldZones);
+
+      message.error(
+        error.response?.data?.message || "Failed to update zone status"
+      );
+    } finally {
+      setStatusUpdatingId(null);
     }
   };
 
@@ -113,9 +161,12 @@ function ZoneManagementScreen() {
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
             <EnvironmentOutlined />
           </div>
+
           <div className="flex flex-col">
             <Text className="font-semibold text-slate-800">{name}</Text>
-            <Text className="text-xs text-slate-400">Operational service zone</Text>
+            <Text className="text-xs text-slate-400">
+              Operational service zone
+            </Text>
           </div>
         </Space>
       ),
@@ -135,14 +186,26 @@ function ZoneManagementScreen() {
       title: "Visibility",
       dataIndex: "isActive",
       key: "isActive",
-      width: 150,
-      render: (active) => (
-        <Tag
-          color={active ? "blue" : "default"}
-          className="rounded-full border-none px-3 py-1 uppercase text-[10px] font-bold"
-        >
-          {active ? "Online" : "Offline"}
-        </Tag>
+      width: 230,
+      render: (active, record) => (
+        <Space>
+          <Tag
+            color={active ? "blue" : "default"}
+            className="rounded-full border-none px-3 py-1 uppercase text-[10px] font-bold"
+          >
+            {active ? "Online" : "Offline"}
+          </Tag>
+
+          <Button
+            size="small"
+            type={active ? "default" : "primary"}
+            loading={statusUpdatingId === record.id}
+            onClick={() => handleToggleZoneStatus(record)}
+            className="!rounded-lg !font-semibold"
+          >
+            {active ? "Make Offline" : "Make Online"}
+          </Button>
+        </Space>
       ),
     },
     {
@@ -196,7 +259,6 @@ function ZoneManagementScreen() {
   return (
     <Layout>
       <div className="mx-auto max-w-[1450px] px-4 py-6 md:px-6 md:py-8">
-        {/* Header */}
         <div className="relative mb-8 overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
           <div className="absolute inset-0 bg-gradient-to-r from-slate-50 via-white to-slate-50" />
           <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-blue-500/10 blur-3xl" />
@@ -255,7 +317,6 @@ function ZoneManagementScreen() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className="mb-8 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           <StatCard
             icon={<GlobalOutlined />}
@@ -264,6 +325,7 @@ function ZoneManagementScreen() {
             helper="All configured service zones"
             color="blue"
           />
+
           <StatCard
             icon={<EyeOutlined />}
             label="Active Zones"
@@ -271,6 +333,7 @@ function ZoneManagementScreen() {
             helper="Currently visible operational areas"
             color="emerald"
           />
+
           <StatCard
             icon={<BorderOutlined />}
             label="Total Vertices"
@@ -280,7 +343,6 @@ function ZoneManagementScreen() {
           />
         </div>
 
-        {/* Table */}
         <div className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-100 bg-gradient-to-r from-white to-slate-50 px-5 py-4 md:px-6">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -288,6 +350,7 @@ function ZoneManagementScreen() {
                 <h3 className="m-0 text-xl font-extrabold text-slate-900">
                   Zone Directory
                 </h3>
+
                 <p className="m-0 mt-1 text-sm text-slate-500">
                   Review all zone ids, geometry points, status and controls.
                 </p>
@@ -297,9 +360,11 @@ function ZoneManagementScreen() {
                 <div className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-600">
                   Zones: {totalZones}
                 </div>
+
                 <div className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-600">
                   Active: {activeZones}
                 </div>
+
                 <div className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-600">
                   Vertices: {totalVertices}
                 </div>
@@ -312,7 +377,7 @@ function ZoneManagementScreen() {
               dataSource={zones}
               columns={columns}
               loading={loading}
-              rowKey="_id"
+              rowKey={(record) => record?._id || record?.id}
               pagination={{
                 pageSize: 7,
                 className: "p-4",
@@ -369,10 +434,6 @@ function ZoneManagementScreen() {
           background: transparent !important;
         }
 
-        .zone-light-table .ant-table-container {
-          border-radius: 0 !important;
-        }
-
         .zone-light-table .ant-table-thead > tr > th {
           background: #f8fafc !important;
           color: #475569 !important;
@@ -393,10 +454,6 @@ function ZoneManagementScreen() {
           background: #f8fbff !important;
         }
 
-        .zone-light-table .ant-pagination {
-          padding-top: 10px !important;
-        }
-
         .zone-light-table .ant-pagination-item {
           border-radius: 10px !important;
           border-color: #dbe2ea !important;
@@ -409,15 +466,6 @@ function ZoneManagementScreen() {
         .zone-light-table .ant-pagination-item-active a {
           color: #2563eb !important;
           font-weight: 700 !important;
-        }
-
-        .ant-popover-inner {
-          border: 1px solid #e2e8f0 !important;
-        }
-
-        .ant-popconfirm-title,
-        .ant-popconfirm-description {
-          color: #0f172a !important;
         }
       `}</style>
     </Layout>
@@ -436,9 +484,11 @@ const StatCard = ({ icon, label, value, helper, color = "blue" }) => {
           <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
             {label}
           </div>
+
           <div className="text-3xl font-black leading-none text-slate-900">
             {value || 0}
           </div>
+
           <div className="mt-3 text-sm text-slate-500">{helper}</div>
         </div>
 

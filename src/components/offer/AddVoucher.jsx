@@ -89,7 +89,7 @@ function AddVoucher({ isVisible, onClose, onSuccess }) {
           <Form.Item name="type" label="Voucher Type" rules={[{ required: true }]}>
             <Select>
               <Select.Option value="PERCENTAGE">Percentage (%)</Select.Option>
-              <Select.Option value="FIXED">Fixed Amount</Select.Option>
+              <Select.Option value="FLAT">Fixed Amount</Select.Option>
             </Select>
           </Form.Item>
 

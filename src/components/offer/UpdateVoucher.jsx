@@ -123,7 +123,7 @@ export default function UpdateVoucher({ isVisible, onClose, onSuccess, editingVo
             <Form.Item name="type" label="Voucher Type" rules={[{ required: true }]}>
               <Select className="h-10">
                 <Option value="PERCENTAGE">Percentage (%)</Option>
-                <Option value="FIXED">Fixed Amount</Option>
+                <Option value="FLAT">Fixed Amount</Option>
               </Select>
             </Form.Item>
           </Col>

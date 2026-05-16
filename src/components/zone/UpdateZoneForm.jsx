@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useMemo, useRef, useState} from "react";
 import {
   Modal,
   Form,
@@ -9,6 +9,7 @@ import {
   Divider,
   message,
   Switch,
+  Card,
 } from "antd";
 import {
   EditOutlined,
@@ -18,60 +19,206 @@ import {
   CloseOutlined,
   CheckCircleOutlined,
   StopOutlined,
+  AimOutlined,
+  GlobalOutlined,
 } from "@ant-design/icons";
 import axiosInstance from "../../services/axios/axiosInstance";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polygon,
+  useMapEvents,
+} from "react-leaflet";
+import L from "leaflet";
 
-const { Text, Title } = Typography;
+const {Text, Title} = Typography;
 
-const UpdateZoneForm = ({ visible, onCancel, onSuccess, zoneData }) => {
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
+
+const defaultCenter = [23.8103, 90.4125];
+
+function ClickHandler({onAddPoint}) {
+  useMapEvents({
+    click(e) {
+      onAddPoint({
+        latitude: Number(e.latlng.lat.toFixed(6)),
+        longitude: Number(e.latlng.lng.toFixed(6)),
+      });
+    },
+  });
+
+  return null;
+}
+
+function FlyToPolygon({points}) {
+  const map = useMapEvents({});
+
+  useEffect(() => {
+    if (!points?.length) return;
+
+    const valid = points.filter(
+      p =>
+        p?.latitude !== "" &&
+        p?.longitude !== "" &&
+        !Number.isNaN(Number(p.latitude)) &&
+        !Number.isNaN(Number(p.longitude)),
+    );
+
+    if (valid.length === 1) {
+      map.setView([Number(valid[0].latitude), Number(valid[0].longitude)], 14);
+      return;
+    }
+
+    if (valid.length >= 2) {
+      const bounds = L.latLngBounds(
+        valid.map(p => [Number(p.latitude), Number(p.longitude)]),
+      );
+      map.fitBounds(bounds, {padding: [30, 30]});
+    }
+  }, [points, map]);
+
+  return null;
+}
+
+const UpdateZoneForm = ({visible, onCancel, onSuccess, zoneData}) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-
   const [isActive, setIsActive] = useState(false);
+  const mapRef = useRef(null);
+
+  const watchedPoints = Form.useWatch("points", form) || [];
 
   useEffect(() => {
     if (visible && zoneData) {
-      // Logic to ensure isActive is a strict boolean for the Switch
+      const activeValue = Boolean(zoneData?.isActive);
+
+      setIsActive(activeValue);
 
       form.setFieldsValue({
-        name: zoneData.name,
-        isActive: isActive,
-        points: zoneData.polygon,
+        name: zoneData?.name || "",
+        isActive: activeValue,
+        points: Array.isArray(zoneData?.polygon) ? zoneData.polygon : [],
       });
-
-      setIsActive(zoneData.isActive);
     }
   }, [visible, zoneData, form]);
 
-  const onFinish = async (values) => {
-    // values.isActive will now correctly be true/false thanks to valuePropName="checked"
-    const { name, points, isActive } = values;
+  useEffect(() => {
+    if (visible) {
+      const timer = setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
+
+  const validPoints = useMemo(() => {
+    return (watchedPoints || []).filter(
+      p =>
+        p &&
+        p.latitude !== undefined &&
+        p.longitude !== undefined &&
+        p.latitude !== "" &&
+        p.longitude !== "" &&
+        !Number.isNaN(Number(p.latitude)) &&
+        !Number.isNaN(Number(p.longitude)),
+    );
+  }, [watchedPoints]);
+
+  const polygonPositions = validPoints.map(p => [
+    Number(p.latitude),
+    Number(p.longitude),
+  ]);
+
+  const handleMapAddPoint = point => {
+    const current = form.getFieldValue("points") || [];
+
+    const updatedPoints = [...current, point];
+
+    form.setFieldsValue({
+      points: updatedPoints,
+    });
+  };
+
+  const handleResetView = () => {
+    if (mapRef.current) {
+      mapRef.current.setView(defaultCenter, 12);
+
+      setTimeout(() => {
+        mapRef.current?.invalidateSize();
+      }, 100);
+    }
+  };
+
+  const handleCancel = () => {
+    form.resetFields();
+    setIsActive(false);
+
+    if (onCancel) {
+      onCancel();
+    }
+  };
+
+  const onFinish = async values => {
+    const {name, points} = values;
+
+    if (!zoneData?.id) {
+      return message.error("Zone ID not found.");
+    }
 
     if (!points || points.length < 3) {
-      return message.error("Zones must have at least 3 points.");
+      return message.error("Zone must have at least 3 points.");
+    }
+
+    const cleanedPoints = points.filter(
+      p =>
+        p &&
+        p.latitude !== undefined &&
+        p.longitude !== undefined &&
+        p.latitude !== "" &&
+        p.longitude !== "" &&
+        !Number.isNaN(Number(p.latitude)) &&
+        !Number.isNaN(Number(p.longitude)),
+    );
+
+    if (cleanedPoints.length < 3) {
+      return message.error("Zone must have at least 3 valid points.");
     }
 
     setLoading(true);
+
     try {
       const payload = {
         name,
-        isActive: !!isActive, // Force to boolean
-        points: points.map((p) => ({
-          latitude: Number(p.latitude),
-          longitude: Number(p.longitude),
+        isActive: Boolean(isActive),
+        points: cleanedPoints.map(point => ({
+          latitude: Number(point.latitude),
+          longitude: Number(point.longitude),
         })),
       };
 
-      // Sending PUT request to your backend controller
       await axiosInstance.put(
         `/v3/master-admin/zone/update/${zoneData.id}`,
         payload,
       );
 
-      message.success("Zone architecture updated!");
-      onSuccess();
+      message.success("Zone updated successfully.");
+
+      if (onSuccess) {
+        onSuccess();
+      }
+
+      handleCancel();
     } catch (error) {
-      message.error(error.response?.data?.message || "Update failed");
+      console.log("Update zone error:", error?.response?.data || error);
+      message.error(error.response?.data?.message || "Zone update failed.");
     } finally {
       setLoading(false);
     }
@@ -80,184 +227,274 @@ const UpdateZoneForm = ({ visible, onCancel, onSuccess, zoneData }) => {
   return (
     <Modal
       title={
-        <Space>
+        <Space className="py-2">
           <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center border border-amber-500/20">
             <EditOutlined className="text-amber-500 text-xl" />
           </div>
+
           <div>
-            <Title level={4} style={{ margin: 0, color: "#fff" }}>
+            <Title level={4} style={{margin: 0}}>
               Update Zone
             </Title>
-            <Text className="text-gray-500 text-[10px] uppercase tracking-widest">
-              Editing ID: {zoneData?.id}
+
+            <Text type="secondary" className="text-xs">
+              Update map boundary and zone information. ID: #{zoneData?.id}
             </Text>
           </div>
         </Space>
       }
       open={visible}
-      onCancel={onCancel}
+      onCancel={handleCancel}
       footer={null}
-      width={600}
+      width={1050}
       centered
-      className="modern-dark-modal"
+      destroyOnHidden
+      className="manual-zone-modal"
     >
       <Form
         form={form}
         layout="vertical"
         onFinish={onFinish}
-        className="mt-6"
+        className="mt-4"
         autoComplete="off"
       >
-        <div className="flex flex-col md:flex-row gap-4">
-          {/* Zone Name */}
-          <Form.Item
-            name="name"
-            label={
-              <Text className="text-gray-400 font-bold text-xs">ZONE NAME</Text>
-            }
-            rules={[{ required: true, message: "Name is required" }]}
-            className="flex-1"
-          >
-            <Input
-              placeholder="Enter zone name..."
-              className="custom-dark-input h-12 rounded-xl"
-            />
-          </Form.Item>
-
-          {/* CRITICAL FIX: valuePropName="checked" tells AntD to use the 'checked' prop of Switch */}
-          <Form.Item
-            name="isActive"
-            label={
-              <Text className="text-gray-400 font-bold text-xs">STATUS</Text>
-            }
-            valuePropName="checked"
-          >
-            <div className="h-12 flex items-center bg-gray-900/50 px-4 rounded-xl border border-gray-800 transition-all">
-              <Switch
-                checkedChildren={<CheckCircleOutlined />}
-                unCheckedChildren={<StopOutlined />}
-                className="bg-gray-700"
-                value={isActive}
-                onChange={() => setIsActive(!isActive)}
-              />
-              <Text
-                className={`ml-3 text-[10px] uppercase font-black tracking-tight w-14 ${isActive ? "text-amber-500" : "text-gray-500"}`}
-              >
-                {isActive ? "Active" : "Disabled"}
-              </Text>
-            </div>
-          </Form.Item>
-        </div>
-
-        <Divider orientation="left">
-          <Text className="text-[10px] text-gray-600 font-black uppercase tracking-widest">
-            Boundary Points
-          </Text>
-        </Divider>
-
-        <Form.List name="points">
-          {(fields, { add, remove }) => (
-            <div className="flex flex-col gap-3">
-              <div className="max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                {fields.map(({ key, name, ...restField }, index) => (
-                  <div
-                    key={key}
-                    className="flex gap-3 mb-3 items-start bg-gray-900/40 p-3 rounded-xl border border-gray-800 group hover:border-amber-500/30 transition-all"
-                  >
-                    <div className="mt-2 w-6 h-6 rounded-full bg-gray-800 text-gray-500 flex items-center justify-center text-[10px] font-bold group-hover:bg-amber-500/10 group-hover:text-amber-500">
-                      {index + 1}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 flex-1">
-                      <Form.Item
-                        {...restField}
-                        name={[name, "latitude"]}
-                        rules={[{ required: true }]}
-                        noStyle
-                      >
-                        <Input
-                          placeholder="Lat"
-                          type="number"
-                          step="any"
-                          className="custom-dark-input bg-transparent rounded-lg"
-                        />
-                      </Form.Item>
-                      <Form.Item
-                        {...restField}
-                        name={[name, "longitude"]}
-                        rules={[{ required: true }]}
-                        noStyle
-                      >
-                        <Input
-                          placeholder="Lng"
-                          type="number"
-                          step="any"
-                          className="custom-dark-input bg-transparent rounded-lg"
-                        />
-                      </Form.Item>
-                    </div>
-                    {fields.length > 3 && (
-                      <Button
-                        type="text"
-                        danger
-                        icon={<DeleteOutlined />}
-                        onClick={() => remove(name)}
-                        className="opacity-50 hover:opacity-100 mt-1"
-                      />
-                    )}
-                  </div>
-                ))}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.15fr_0.95fr] gap-6">
+          <div className="rounded-2xl border border-gray-200 overflow-hidden bg-white">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+              <div>
+                <Text strong>Interactive Map</Text>
+                <div className="text-xs text-gray-500">
+                  Existing zone boundary is shown here. Click map to add new
+                  points.
+                </div>
               </div>
+
               <Button
-                type="dashed"
-                onClick={() => add()}
-                block
-                icon={<PlusOutlined />}
-                className="h-12 border-gray-800 text-gray-400 hover:text-amber-500 rounded-xl bg-gray-900/20"
+                icon={<AimOutlined />}
+                onClick={handleResetView}
+                className="rounded-xl"
               >
-                Add Vertex
+                Reset View
               </Button>
             </div>
-          )}
-        </Form.List>
 
-        <div className="flex justify-end gap-3 mt-8">
-          <Button
-            onClick={onCancel}
-            icon={<CloseOutlined />}
-            className="bg-transparent border-gray-700 text-gray-400 hover:text-white rounded-xl h-11 px-6"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="primary"
-            htmlType="submit"
-            loading={loading}
-            icon={<SaveOutlined />}
-            className="bg-amber-600 hover:bg-amber-500 border-none rounded-xl h-11 px-8 font-bold shadow-lg shadow-amber-500/20 transition-all active:scale-95"
-          >
-            Update Perimeter
-          </Button>
+            <div className="h-[470px] w-full">
+              <MapContainer
+                center={defaultCenter}
+                zoom={12}
+                scrollWheelZoom
+                className="h-full w-full"
+                whenReady={e => {
+                  mapRef.current = e.target;
+
+                  setTimeout(() => {
+                    e.target.invalidateSize();
+                  }, 300);
+                }}
+              >
+                <TileLayer
+                  attribution="&copy; OpenStreetMap contributors"
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+
+                <ClickHandler onAddPoint={handleMapAddPoint} />
+                <FlyToPolygon points={validPoints} />
+
+                {validPoints.map((point, index) => (
+                  <Marker
+                    key={`${point.latitude}-${point.longitude}-${index}`}
+                    position={[
+                      Number(point.latitude),
+                      Number(point.longitude),
+                    ]}
+                  />
+                ))}
+
+                {polygonPositions.length >= 3 && (
+                  <Polygon
+                    positions={polygonPositions}
+                    pathOptions={{color: "#2563eb", weight: 3}}
+                  />
+                )}
+              </MapContainer>
+            </div>
+          </div>
+
+          <div>
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_130px] gap-4">
+              <Form.Item
+                name="name"
+                label={<Text strong>Zone Name</Text>}
+                rules={[{required: true, message: "Zone name is required"}]}
+              >
+                <Input
+                  placeholder="Enter zone name"
+                  size="large"
+                  className="rounded-xl border-gray-200"
+                />
+              </Form.Item>
+
+              <Form.Item
+                name="isActive"
+                label={<Text strong>Status</Text>}
+                valuePropName="checked"
+              >
+                <div className="h-10 flex items-center">
+                  <Switch
+                    checked={isActive}
+                    checkedChildren={<CheckCircleOutlined />}
+                    unCheckedChildren={<StopOutlined />}
+                    onChange={checked => {
+                      setIsActive(checked);
+                      form.setFieldsValue({isActive: checked});
+                    }}
+                  />
+
+                  <Text
+                    className={`ml-2 text-[10px] uppercase font-bold ${
+                      isActive ? "text-blue-600" : "text-gray-500"
+                    }`}
+                  >
+                    {isActive ? "Online" : "Offline"}
+                  </Text>
+                </div>
+              </Form.Item>
+            </div>
+
+            <Divider orientation="left">
+              <Text className="text-xs uppercase tracking-widest font-bold text-gray-400">
+                Coordinate Points
+              </Text>
+            </Divider>
+
+            <Form.List name="points">
+              {(fields, {add, remove}) => (
+                <div className="flex flex-col gap-3">
+                  <div className="max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                    {fields.map(({key, name, ...restField}, index) => (
+                      <Card
+                        key={key}
+                        size="small"
+                        className="mb-3 border-gray-100 shadow-sm rounded-xl bg-gray-50/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="bg-white border border-gray-200 w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold text-gray-400">
+                            {index + 1}
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3 flex-1">
+                            <Form.Item
+                              {...restField}
+                              name={[name, "latitude"]}
+                              rules={[{required: true, message: "Required"}]}
+                              style={{marginBottom: 0}}
+                            >
+                              <Input
+                                type="number"
+                                step="any"
+                                placeholder="Latitude"
+                                className="rounded-lg"
+                              />
+                            </Form.Item>
+
+                            <Form.Item
+                              {...restField}
+                              name={[name, "longitude"]}
+                              rules={[{required: true, message: "Required"}]}
+                              style={{marginBottom: 0}}
+                            >
+                              <Input
+                                type="number"
+                                step="any"
+                                placeholder="Longitude"
+                                className="rounded-lg"
+                              />
+                            </Form.Item>
+                          </div>
+
+                          {fields.length > 3 && (
+                            <Button
+                              type="text"
+                              danger
+                              icon={<DeleteOutlined />}
+                              onClick={() => remove(name)}
+                              className="hover:bg-red-50 rounded-lg"
+                            />
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+
+                  <Button
+                    type="dashed"
+                    onClick={() =>
+                      add({
+                        latitude: "",
+                        longitude: "",
+                      })
+                    }
+                    block
+                    icon={<PlusOutlined />}
+                    className="h-12 rounded-xl border-blue-200 text-blue-600 hover:border-blue-400 hover:text-blue-700 mt-2"
+                  >
+                    Add Vertex Point
+                  </Button>
+                </div>
+              )}
+            </Form.List>
+
+            <div className="bg-blue-50 p-4 rounded-xl mt-6 border border-blue-100 flex gap-3">
+              <GlobalOutlined className="text-blue-500 mt-1" />
+              <Text className="text-[11px] text-blue-700 leading-tight">
+                You can update old coordinates manually or click the map to add
+                more boundary points.
+              </Text>
+            </div>
+
+            <div className="flex justify-end items-center gap-4 mt-8">
+              <Button onClick={handleCancel} type="text" icon={<CloseOutlined />}>
+                Cancel
+              </Button>
+
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                icon={<SaveOutlined />}
+                className="h-12 px-10 rounded-xl bg-blue-600 shadow-lg shadow-blue-500/30 border-none font-bold"
+              >
+                Update Zone
+              </Button>
+            </div>
+          </div>
         </div>
       </Form>
 
       <style
         dangerouslySetInnerHTML={{
           __html: `
-        .modern-dark-modal .ant-modal-content { background: #0b0f1a !important; border: 1px solid #1f2937; border-radius: 24px; padding: 24px; }
-        .custom-dark-input { background-color: #111827 !important; border: 1px solid #1f2937 !important; color: #ffffff !important; transition: all 0.3s !important; }
-        .custom-dark-input:focus { border-color: #f59e0b !important; background-color: #030712 !important; }
+            .manual-zone-modal .ant-modal-content {
+              border-radius: 24px !important;
+              padding: 24px !important;
+            }
 
-        /* Autofill Fix */
-        input:-webkit-autofill {
-          -webkit-text-fill-color: #ffffff !important;
-          -webkit-box-shadow: 0 0 0px 1000px #111827 inset !important;
-          transition: background-color 5000s ease-in-out 0s;
-        }
+            .manual-zone-modal .leaflet-container {
+              height: 100% !important;
+              width: 100% !important;
+              min-height: 470px !important;
+              z-index: 1;
+            }
 
-        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #1f2937; border-radius: 10px; }
-        .ant-switch-checked { background-color: #d97706 !important; }
-      `,
+            .custom-scrollbar::-webkit-scrollbar {
+              width: 4px;
+            }
+
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+              background: #e5e7eb;
+              border-radius: 10px;
+            }
+          `,
         }}
       />
     </Modal>

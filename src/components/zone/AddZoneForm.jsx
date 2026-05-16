@@ -198,6 +198,9 @@ const AddZoneForm = ({ visible, onCancel, onSuccess }) => {
       const payload = {
         name,
         points: formattedPoints,
+        managerName: values.managerName,
+        managerPhoneNumber: values.managerPhoneNumber,
+        managerPassword: values.managerPassword,
       };
 
       const response = await axiosInstance.post(
@@ -321,6 +324,64 @@ const AddZoneForm = ({ visible, onCancel, onSuccess }) => {
                 className="rounded-xl border-gray-200"
               />
             </Form.Item>
+            <Divider orientation="left">
+  <Text className="text-xs uppercase tracking-widest font-bold text-gray-400">
+    Zone Manager Login
+  </Text>
+</Divider>
+
+<Form.Item
+  name="managerName"
+  label={<Text strong>Manager Name</Text>}
+  rules={[{ required: true, message: "Manager name is required" }]}
+>
+  <Input
+    placeholder="e.g. MD Rahed"
+    size="large"
+    className="rounded-xl border-gray-200"
+  />
+</Form.Item>
+
+<Form.Item
+  name="managerPhoneNumber"
+  label={<Text strong>Manager Login Phone Number</Text>}
+  rules={[
+    { required: true, message: "Manager phone number is required" },
+    {
+      pattern: /^01[0-9]{9}$/,
+      message: "Phone number must be 11 digits and start with 01",
+    },
+  ]}
+>
+  <Input
+    placeholder="e.g. 01575088264"
+    size="large"
+    maxLength={11}
+    className="rounded-xl border-gray-200"
+  />
+</Form.Item>
+
+<Form.Item
+  name="managerPassword"
+  label={<Text strong>Manager Password</Text>}
+  rules={[
+    { required: true, message: "Manager password is required" },
+    { min: 6, message: "Password must be at least 6 characters" },
+  ]}
+>
+  <Input.Password
+    placeholder="Create login password"
+    size="large"
+    className="rounded-xl border-gray-200"
+  />
+</Form.Item>
+
+<div className="bg-emerald-50 p-4 rounded-xl mb-5 border border-emerald-100 flex gap-3">
+  <GlobalOutlined className="text-emerald-500 mt-1" />
+  <Text className="text-[11px] text-emerald-700 leading-tight">
+    This phone number and password will be used to login to the Agent Panel for this zone.
+  </Text>
+</div>
 
             <Divider orientation="left">
               <Text className="text-xs uppercase tracking-widest font-bold text-gray-400">
