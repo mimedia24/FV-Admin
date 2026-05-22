@@ -1,20 +1,13 @@
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../../secrets";
 
-const resolvedBaseURL =
-  typeof window !== "undefined" && window.location.hostname === "localhost"
-    ? "http://localhost:3000/api"
-    : apiPath;
-
 const axiosInstance = axios.create({
-  baseURL: resolvedBaseURL,
+  baseURL: apiPath,
   headers: {
-    "Content-Type": "application/json",
     "x-auth-token": apiAuthToken,
   },
 });
 
-// Request Interceptor
 axiosInstance.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("AccessToken");
@@ -23,14 +16,19 @@ axiosInstance.interceptors.request.use(
       config.headers.AccessToken = token;
     }
 
+    // FormData হলে Content-Type manually set করব না.
+    // Browser নিজে boundary সহ multipart/form-data set করবে.
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    } else {
+      config.headers["Content-Type"] = "application/json";
+    }
+
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Response Interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
