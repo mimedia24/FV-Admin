@@ -7,8 +7,9 @@ import {
   Tag,
   Tooltip,
   message,
-  Popconfirm,
   Empty,
+  Modal,
+  Input,
 } from "antd";
 import {
   PlusOutlined,
@@ -21,6 +22,8 @@ import {
   ThunderboltOutlined,
   BorderOutlined,
   EyeOutlined,
+  ExclamationCircleOutlined,
+  SafetyCertificateOutlined,
 } from "@ant-design/icons";
 import Layout from "./layout";
 import AddZoneForm from "../components/zone/AddZoneForm";
@@ -51,6 +54,25 @@ const statThemes = {
   },
 };
 
+const generateDeleteQuestion = () => {
+  const a = Math.floor(Math.random() * 40) + 10;
+  const b = Math.floor(Math.random() * 30) + 5;
+  const c = Math.floor(Math.random() * 20) + 1;
+  const useMinus = Math.random() > 0.5;
+
+  if (useMinus) {
+    return {
+      text: `${a} + ${b} - ${c}`,
+      answer: a + b - c,
+    };
+  }
+
+  return {
+    text: `${a} + ${b}`,
+    answer: a + b,
+  };
+};
+
 function ZoneManagementScreen() {
   const [zones, setZones] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -60,6 +82,15 @@ function ZoneManagementScreen() {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [isResourceModalOpen, setIsResourceModalOpen] = useState(false);
   const [selectedZone, setSelectedZone] = useState(null);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteZoneData, setDeleteZoneData] = useState(null);
+  const [deleteQuestion, setDeleteQuestion] = useState({
+    text: "",
+    answer: 0,
+  });
+  const [deleteAnswer, setDeleteAnswer] = useState("");
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const fetchZones = async () => {
     setLoading(true);
@@ -84,12 +115,50 @@ function ZoneManagementScreen() {
   };
 
   const handleDelete = async (id) => {
+    await axiosInstance.delete(`/v3/master-admin/zone/${id}`);
+  };
+
+  const openDeleteModal = (zone) => {
+    const question = generateDeleteQuestion();
+
+    setDeleteZoneData(zone);
+    setDeleteQuestion(question);
+    setDeleteAnswer("");
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteZoneData(null);
+    setDeleteAnswer("");
+    setDeleteLoading(false);
+  };
+
+  const isDeleteAnswerCorrect =
+    String(deleteAnswer).trim() !== "" &&
+    Number(deleteAnswer) === Number(deleteQuestion.answer);
+
+  const confirmDeleteZone = async () => {
+    if (!deleteZoneData) {
+      return message.error("No zone selected.");
+    }
+
+    if (!isDeleteAnswerCorrect) {
+      return message.error("Wrong answer. Zone delete cancelled.");
+    }
+
     try {
-      await axiosInstance.delete(`/v3/master-admin/zone/${id}`);
+      setDeleteLoading(true);
+
+      await handleDelete(deleteZoneData.id);
+
       message.success("Zone deleted successfully");
+      closeDeleteModal();
       fetchZones();
     } catch (error) {
       message.error(error.response?.data?.message || "Failed to delete zone");
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -239,18 +308,14 @@ function ZoneManagementScreen() {
             />
           </Tooltip>
 
-          <Popconfirm
-            title="Delete this zone?"
-            description="This action cannot be undone."
-            onConfirm={() => handleDelete(record.id)}
-            okText="Yes, Delete"
-            cancelText="No"
-            okButtonProps={{ danger: true }}
-          >
-            <Tooltip title="Remove Zone">
-              <Button type="text" danger icon={<DeleteOutlined />} />
-            </Tooltip>
-          </Popconfirm>
+          <Tooltip title="Remove Zone">
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => openDeleteModal(record)}
+            />
+          </Tooltip>
         </Space>
       ),
     },
@@ -428,6 +493,122 @@ function ZoneManagementScreen() {
           fetchZones();
         }}
       />
+
+      <Modal
+        title={null}
+        open={deleteModalOpen}
+        onCancel={closeDeleteModal}
+        footer={null}
+        centered
+        width={560}
+        destroyOnClose
+      >
+        <div className="space-y-5">
+          <div className="rounded-[24px] border border-red-200 bg-red-50 p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-red-100 text-red-600">
+                <ExclamationCircleOutlined className="text-2xl" />
+              </div>
+
+              <div>
+                <h2 className="m-0 text-xl font-black text-red-700">
+                  Delete Zone Confirmation
+                </h2>
+
+                <p className="m-0 mt-2 text-sm font-medium leading-6 text-red-600">
+                  This is a sensitive action. Deleting a zone may affect
+                  restaurant filtering, delivery area, banners, zone resources
+                  and future zone-based charge settings.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <p className="m-0 text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+              Selected Zone
+            </p>
+
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div>
+                <p className="m-0 text-lg font-black text-slate-900">
+                  {deleteZoneData?.name || "Selected Zone"}
+                </p>
+
+                <p className="m-0 mt-1 text-sm font-semibold text-slate-500">
+                  Zone ID: #{deleteZoneData?.id || "N/A"}
+                </p>
+              </div>
+
+              <Tag
+                color={deleteZoneData?.isActive ? "blue" : "default"}
+                className="rounded-full px-3 py-1 uppercase text-[10px] font-bold"
+              >
+                {deleteZoneData?.isActive ? "Online" : "Offline"}
+              </Tag>
+            </div>
+          </div>
+
+          <div className="rounded-[22px] border border-amber-200 bg-amber-50 p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <SafetyCertificateOutlined className="text-amber-700" />
+
+              <p className="m-0 text-sm font-black text-amber-800">
+                Solve this math to confirm delete
+              </p>
+            </div>
+
+            <div className="mb-3 rounded-2xl bg-white px-4 py-3 text-center text-3xl font-black text-amber-800 shadow-sm">
+              {deleteQuestion.text} = ?
+            </div>
+
+            <Input
+              type="number"
+              value={deleteAnswer}
+              onChange={(e) => setDeleteAnswer(e.target.value)}
+              onPressEnter={() => {
+                if (isDeleteAnswerCorrect) {
+                  confirmDeleteZone();
+                }
+              }}
+              placeholder="Enter correct answer"
+              className="!h-12 !rounded-2xl !text-center !text-lg !font-bold"
+            />
+
+            {deleteAnswer && !isDeleteAnswerCorrect ? (
+              <p className="m-0 mt-2 text-sm font-bold text-red-500">
+                Wrong answer. Delete button will stay disabled.
+              </p>
+            ) : null}
+
+            {deleteAnswer && isDeleteAnswerCorrect ? (
+              <p className="m-0 mt-2 text-sm font-bold text-emerald-600">
+                Correct answer. You can delete this zone now.
+              </p>
+            ) : null}
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Button
+              onClick={closeDeleteModal}
+              className="!h-12 !rounded-2xl !font-bold"
+            >
+              Cancel
+            </Button>
+
+            <Button
+              danger
+              type="primary"
+              loading={deleteLoading}
+              disabled={!isDeleteAnswerCorrect}
+              onClick={confirmDeleteZone}
+              className="!h-12 !rounded-2xl !font-black"
+            >
+              Delete Zone
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <style>{`
         .zone-light-table .ant-table {

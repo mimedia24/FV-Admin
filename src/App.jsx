@@ -30,6 +30,7 @@ import RestaurantTransaction from "./pages/RestaurantTransaction";
 import OrderHistoryScreen from "./pages/OrdeHistoryScreen";
 import ZoneManagementScreen from "./pages/ZoneManagement";
 import ManualDiscountRequests from "./pages/ManualDiscountRequests";
+import ProfitReports from "./pages/ProfitReports";
 
 function App() {
   return (
@@ -216,7 +217,14 @@ function App() {
                 </ProtectedRoute>
               }
                         />
-
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                <ProfitReports />
+                </ProtectedRoute>
+              }
+            />            
 
             <Route
               path="/zone-management"

@@ -35,6 +35,7 @@ function getStatusClass(status) {
   if (value === "picked up") return "bg-indigo-100 text-indigo-700";
   if (value === "delivered") return "bg-emerald-100 text-emerald-700";
   if (value.includes("cancelled")) return "bg-rose-100 text-rose-700";
+
   return "bg-slate-100 text-slate-700";
 }
 
@@ -60,6 +61,7 @@ function getAddonTotal(order) {
         toNumber(addon?.offerPrice);
 
       const addonQty = toNumber(addon?.quantity || 1);
+
       return addonSum + addonPrice * addonQty;
     }, 0);
 
@@ -67,31 +69,133 @@ function getAddonTotal(order) {
   }, 0);
 }
 
-function getDisplayOrderAmount(order) {
-  const explicitTotal =
-    order?.totalAmount ??
-    order?.orderAmount ??
-    order?.grandTotal ??
-    order?.payableAmount;
+function getItemUnitPrice(item) {
+  const offerPrice = toNumber(item?.offerPrice);
 
-  if (explicitTotal !== undefined && explicitTotal !== null) {
-    return toNumber(explicitTotal);
+  if (offerPrice > 0) {
+    return offerPrice;
   }
 
-  const itemTotal = (Array.isArray(order?.items) ? order.items : []).reduce(
-    (sum, item) => {
-      const price =
-        toNumber(item?.offerPrice) ||
-        toNumber(item?.sellingPrice) ||
-        toNumber(item?.price) ||
-        toNumber(item?.basedPrice);
+  const basedPrice = toNumber(item?.basedPrice);
+  const platformFee = toNumber(item?.plateformFee ?? item?.platformFee);
+  const discountRate = toNumber(item?.discountRate);
 
-      return sum + price * toNumber(item?.quantity || 1);
-    },
-    0
+  if (basedPrice > 0 || platformFee > 0) {
+    const sellingPrice = basedPrice + platformFee;
+    const discountAmount = (sellingPrice * discountRate) / 100;
+
+    return Math.max(0, sellingPrice - discountAmount);
+  }
+
+  const sellingPrice = toNumber(item?.sellingPrice);
+
+  if (sellingPrice > 0) {
+    return sellingPrice;
+  }
+
+  return toNumber(item?.price);
+}
+
+function getItemsTotal(order) {
+  const items = Array.isArray(order?.items) ? order.items : [];
+
+  return items.reduce((sum, item) => {
+    return sum + getItemUnitPrice(item) * toNumber(item?.quantity || 1);
+  }, 0);
+}
+
+function getRiderTip(order) {
+  return (
+    toNumber(order?.tip) ||
+    toNumber(order?.tips) ||
+    toNumber(order?.riderTip) ||
+    toNumber(order?.riderTips) ||
+    toNumber(order?.riderTipAmount) ||
+    toNumber(order?.deliveryTip) ||
+    toNumber(order?.tipsAmount)
   );
+}
 
-  return itemTotal + getAddonTotal(order) + toNumber(order?.deliveryAmount);
+function getVoucherAmount(order) {
+  const voucherObjectAmount =
+    toNumber(order?.voucher?.amount) ||
+    toNumber(order?.voucher?.discount) ||
+    toNumber(order?.voucher?.discountAmount) ||
+    toNumber(order?.coupon?.amount) ||
+    toNumber(order?.coupon?.discount) ||
+    toNumber(order?.coupon?.discountAmount);
+
+  return (
+    toNumber(order?.voucherAmount) ||
+    toNumber(order?.voucherDiscount) ||
+    toNumber(order?.voucherDiscountAmount) ||
+    toNumber(order?.appliedVoucherAmount) ||
+    toNumber(order?.couponAmount) ||
+    toNumber(order?.couponDiscount) ||
+    toNumber(order?.discountAmount) ||
+    voucherObjectAmount
+  );
+}
+
+function getVoucherCode(order) {
+  return (
+    order?.voucherCode ||
+    order?.couponCode ||
+    order?.voucher?.code ||
+    order?.voucher?.name ||
+    order?.voucher?.title ||
+    order?.coupon?.code ||
+    order?.coupon?.name ||
+    ""
+  );
+}
+
+function getDeliveryAmount(order) {
+  return toNumber(order?.deliveryAmount ?? order?.deliveryFee);
+}
+
+function getSubtotalBeforeVoucher(order) {
+  const directSubtotal =
+    toNumber(order?.subtotal) ||
+    toNumber(order?.subTotal) ||
+    toNumber(order?.itemsTotal) ||
+    toNumber(order?.cartTotal);
+
+  if (directSubtotal > 0) {
+    return directSubtotal;
+  }
+
+  return getItemsTotal(order) + getAddonTotal(order);
+}
+
+function getFinalPayableAmount(order) {
+  const totalAfterVoucher = toNumber(order?.totalAfterVoucherApplied);
+
+  if (totalAfterVoucher > 0) {
+    return totalAfterVoucher;
+  }
+
+  const finalAmount =
+    toNumber(order?.finalAmount) ||
+    toNumber(order?.payableAmount) ||
+    toNumber(order?.grandTotal);
+
+  if (finalAmount > 0) {
+    return finalAmount;
+  }
+
+  const totalAmount = toNumber(order?.totalAmount || order?.orderAmount);
+
+  if (totalAmount > 0) {
+    return totalAmount;
+  }
+
+  const subtotal = getSubtotalBeforeVoucher(order);
+  const deliveryAmount = getDeliveryAmount(order);
+  const riderTip = getRiderTip(order);
+  const voucherAmount = getVoucherAmount(order);
+
+  return Math.max(0, subtotal + deliveryAmount + riderTip - voucherAmount);
 }
 
 export default function OrderCard({ order, slNo, getOrders }) {
@@ -104,9 +208,16 @@ export default function OrderCard({ order, slNo, getOrders }) {
     [order?.updateTime]
   );
 
-  const displayTotal = useMemo(() => getDisplayOrderAmount(order), [order]);
+  const subtotal = useMemo(() => getSubtotalBeforeVoucher(order), [order]);
+  const deliveryAmount = useMemo(() => getDeliveryAmount(order), [order]);
+  const riderTip = useMemo(() => getRiderTip(order), [order]);
+  const voucherAmount = useMemo(() => getVoucherAmount(order), [order]);
+  const voucherCode = useMemo(() => getVoucherCode(order), [order]);
+  const finalPayableAmount = useMemo(() => getFinalPayableAmount(order), [order]);
 
   function handleCopyData(text) {
+    if (!text) return;
+
     navigator.clipboard.writeText(text);
     alert("Text copied.");
   }
@@ -118,7 +229,11 @@ export default function OrderCard({ order, slNo, getOrders }) {
       <td className="px-4 py-4 text-[13px] font-medium text-slate-700">
         <div className="flex items-center justify-center gap-1">
           <span>{order?._id}</span>
-          <span onClick={() => handleCopyData(order?._id)} className="cursor-pointer">
+
+          <span
+            onClick={() => handleCopyData(order?._id)}
+            className="cursor-pointer"
+          >
             <CopyIcon />
           </span>
         </div>
@@ -134,12 +249,18 @@ export default function OrderCard({ order, slNo, getOrders }) {
         </span>
       </td>
 
-      <td className="px-4 py-4 text-[13px] text-slate-700">{order?.userId}</td>
+      <td className="px-4 py-4 text-[13px] text-slate-700">
+        {order?.userId}
+      </td>
 
       <td className="px-4 py-4 text-[13px] text-slate-700">
         <div className="flex items-center justify-center gap-1">
           <span>{order?.customerPhone}</span>
-          <span onClick={() => handleCopyData(order?.customerPhone)} className="cursor-pointer">
+
+          <span
+            onClick={() => handleCopyData(order?.customerPhone)}
+            className="cursor-pointer"
+          >
             <CopyIcon />
           </span>
         </div>
@@ -148,7 +269,11 @@ export default function OrderCard({ order, slNo, getOrders }) {
       <td className="px-4 py-4 text-[11px] text-slate-700">
         <div className="flex items-center justify-center gap-1">
           <span>{order?.restaurantId}</span>
-          <span onClick={() => handleCopyData(order?.restaurantId)} className="cursor-pointer">
+
+          <span
+            onClick={() => handleCopyData(order?.restaurantId)}
+            className="cursor-pointer"
+          >
             <CopyIcon />
           </span>
         </div>
@@ -158,12 +283,42 @@ export default function OrderCard({ order, slNo, getOrders }) {
         {order?.restaurantName}
       </td>
 
-      <td className="px-4 py-4 text-[13px] text-slate-700">{order?.riderId || "N/A"}</td>
+      <td className="px-4 py-4 text-[13px] text-slate-700">
+        {order?.riderId || "N/A"}
+      </td>
 
       <td className="px-4 py-4">
-        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-left min-w-[110px]">
-          <p className="text-[10px] uppercase tracking-wide text-slate-400">Total</p>
-          <p className="text-sm font-black text-slate-800">{formatMoney(displayTotal)}</p>
+        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-left min-w-[135px] border border-slate-100">
+          <p className="text-[10px] uppercase tracking-wide text-slate-400">
+            Total
+          </p>
+
+          <p className="text-[15px] font-black text-emerald-600">
+            {formatMoney(finalPayableAmount)}
+          </p>
+
+          <div className="mt-1 space-y-0.5">
+            <p className="text-[10px] font-medium text-slate-500">
+              Items {formatMoney(subtotal)}
+            </p>
+
+            <p className="text-[10px] font-medium text-blue-500">
+              Delivery {formatMoney(deliveryAmount)}
+            </p>
+
+            {riderTip > 0 ? (
+              <p className="text-[10px] font-medium text-purple-500">
+                Tip {formatMoney(riderTip)}
+              </p>
+            ) : null}
+
+            {voucherAmount > 0 ? (
+              <p className="text-[10px] font-bold text-red-500">
+                Voucher -{formatMoney(voucherAmount)}
+                {voucherCode ? ` (${voucherCode})` : ""}
+              </p>
+            ) : null}
+          </div>
         </div>
       </td>
 
@@ -171,19 +326,15 @@ export default function OrderCard({ order, slNo, getOrders }) {
         {order?.peymentMethod || order?.paymentMethod || "N/A"}
       </td>
 
-      <td className="px-4 py-4">
-        <div className="rounded-2xl bg-slate-50 px-3 py-2 text-left min-w-[105px]">
-          <p className="text-[10px] uppercase tracking-wide text-slate-400">Fee</p>
-          <p className="text-sm font-bold text-slate-700">
-            {formatMoney(order?.deliveryAmount)}
-          </p>
-        </div>
+      <td className="px-4 py-4 text-[12px] text-slate-600">
+        {updateTime}
       </td>
 
-      <td className="px-4 py-4 text-[12px] text-slate-600">{updateTime}</td>
-
       <td className="px-4 py-4">
-        <Button size="small" onClick={() => setTimeLineModalOn(!timelineModalOn)}>
+        <Button
+          size="small"
+          onClick={() => setTimeLineModalOn(!timelineModalOn)}
+        >
           View
         </Button>
 

@@ -1,20 +1,46 @@
-import { Card, Tag, Divider, Button, Popconfirm, message } from "antd";
+import {
+  Card,
+  Tag,
+  Divider,
+  Button,
+  Popconfirm,
+  message,
+  Select,
+} from "antd";
 import {
   PhoneOutlined,
   MailOutlined,
   HomeOutlined,
   DollarOutlined,
   DeleteOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import ChangeRiderStatus from "./changeRiderStatus";
 import ChangeRiderSession from "./changeRiderSession";
 import { IMAGE_PATH } from "../../secrets";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axiosInstance from "../services/axios/axiosInstance";
 
 const toNumber = (value) => {
   const n = Number(value || 0);
   return Number.isFinite(n) ? n : 0;
+};
+
+const zoneOptions = [
+  {
+    value: 1,
+    label: "Lakshmipur Zone",
+  },
+  {
+    value: 2,
+    label: "Noakhali Zone",
+  },
+];
+
+const getZoneName = (zoneId, zoneName) => {
+  if (zoneName) return zoneName;
+  if (Number(zoneId) === 2) return "Noakhali Zone";
+  return "Lakshmipur Zone";
 };
 
 export default function RiderCard({ order: rider, refreshData }) {
@@ -86,9 +112,30 @@ export default function RiderCard({ order: rider, refreshData }) {
     );
   }, [rider]);
 
+  const defaultZoneId = Number(rider?.zoneId || 1);
+
   const [status, setStatus] = useState(normalizedStatus);
   const [session, setSession] = useState(normalizedSession);
+  const [assignedZoneId, setAssignedZoneId] = useState(defaultZoneId);
+  const [assignedZoneName, setAssignedZoneName] = useState(
+    getZoneName(defaultZoneId, rider?.zoneName)
+  );
+  const [zoneLoading, setZoneLoading] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    setStatus(normalizedStatus);
+  }, [normalizedStatus]);
+
+  useEffect(() => {
+    setSession(normalizedSession);
+  }, [normalizedSession]);
+
+  useEffect(() => {
+    const nextZoneId = Number(rider?.zoneId || 1);
+    setAssignedZoneId(nextZoneId);
+    setAssignedZoneName(getZoneName(nextZoneId, rider?.zoneName));
+  }, [rider?.zoneId, rider?.zoneName]);
 
   const statusColor = {
     active: "blue",
@@ -101,6 +148,7 @@ export default function RiderCard({ order: rider, refreshData }) {
     Banned: "red",
     "waiting for Approved": "geekblue",
     "Waiting for Approved": "geekblue",
+    "waiting for approved": "geekblue",
   };
 
   const sessionColor = {
@@ -110,6 +158,8 @@ export default function RiderCard({ order: rider, refreshData }) {
     Offline: "orange",
     break: "purple",
     Break: "purple",
+    busy: "purple",
+    Busy: "purple",
     "out For Delivery": "cyan",
     "out for delivery": "cyan",
     "Out for delivery": "cyan",
@@ -145,6 +195,48 @@ export default function RiderCard({ order: rider, refreshData }) {
     }
   };
 
+  const handleAssignZone = async (zoneId) => {
+    if (!normalizedRiderId || normalizedRiderId === "N/A") {
+      message.error("Invalid rider id.");
+      return;
+    }
+
+    try {
+      setZoneLoading(true);
+
+      const response = await axiosInstance.put(
+        `/admin/rider/assign-zone?id=${normalizedRiderId}`,
+        {
+          zoneId: Number(zoneId),
+          updatedBy: "admin",
+        }
+      );
+
+      if (response.data?.success) {
+        const updatedRider = response.data?.rider;
+
+        setAssignedZoneId(Number(updatedRider?.zoneId || zoneId));
+        setAssignedZoneName(
+          getZoneName(updatedRider?.zoneId || zoneId, updatedRider?.zoneName)
+        );
+
+        message.success(response.data.message || "Rider zone updated.");
+
+        if (refreshData) {
+          refreshData();
+        }
+      } else {
+        message.error(response.data?.message || "Failed to update rider zone.");
+      }
+    } catch (error) {
+      message.error(
+        error.response?.data?.message || "Failed to update rider zone."
+      );
+    } finally {
+      setZoneLoading(false);
+    }
+  };
+
   return (
     <Card
       style={{ width: 450 }}
@@ -158,6 +250,9 @@ export default function RiderCard({ order: rider, refreshData }) {
               src={`${IMAGE_PATH}${rider?.profileImage || ""}`}
               alt={normalizedName}
               className="object-cover w-full h-full"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
             />
           </div>
 
@@ -165,7 +260,9 @@ export default function RiderCard({ order: rider, refreshData }) {
             <h2 className="text-lg font-semibold text-gray-800">
               {normalizedName}
             </h2>
-            <p className="text-gray-500 text-sm">Rider ID: {normalizedRiderId}</p>
+            <p className="text-gray-500 text-sm">
+              Rider ID: {normalizedRiderId}
+            </p>
           </div>
         </div>
 
@@ -188,15 +285,46 @@ export default function RiderCard({ order: rider, refreshData }) {
 
       <Divider />
 
-      <div className="mb-3">
-        <p className="font-medium text-gray-700 mb-1">Rider Status:</p>
-        <Tag color={statusColor[status] || "default"}>{status || "N/A"}</Tag>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div>
+          <p className="font-medium text-gray-700 mb-1">Rider Status:</p>
+          <Tag color={statusColor[status] || "default"}>
+            {status || "N/A"}
+          </Tag>
+        </div>
+
+        <div>
+          <p className="font-medium text-gray-700 mb-1">Current Session:</p>
+          <Tag color={sessionColor[session] || "default"}>
+            {session || "N/A"}
+          </Tag>
+        </div>
       </div>
 
-      <div className="mb-3">
-        <p className="font-medium text-gray-700 mb-1">Current Session:</p>
-        <Tag color={sessionColor[session] || "default"}>{session || "N/A"}</Tag>
+      <div className="mt-4 rounded-xl border border-blue-100 bg-blue-50 p-3">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <p className="m-0 text-sm font-bold text-blue-700">
+            <EnvironmentOutlined className="mr-1" />
+            Assigned Zone
+          </p>
+
+          <Tag color={Number(assignedZoneId) === 2 ? "purple" : "blue"}>
+            {assignedZoneName}
+          </Tag>
+        </div>
+
+        <Select
+          value={Number(assignedZoneId)}
+          loading={zoneLoading}
+          disabled={zoneLoading}
+          onChange={handleAssignZone}
+          options={zoneOptions}
+          style={{ width: "100%" }}
+          placeholder="Select rider zone"
+        />
       </div>
+
+      <Divider />
 
       <div className="space-y-2 text-sm text-gray-600">
         <p>
@@ -226,6 +354,7 @@ export default function RiderCard({ order: rider, refreshData }) {
           status={status}
           setStatus={setStatus}
         />
+
         <ChangeRiderSession
           rider={rider}
           session={session}

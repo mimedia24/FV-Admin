@@ -22,6 +22,7 @@ import {
   Settings,
   PanelLeftOpen,
   BadgeDollarSign,
+  BarChart3,
 } from "lucide-react";
 
 const navigation = [
@@ -38,8 +39,10 @@ const navigation = [
   { title: "Manual Discounts", href: "/manual-discounts", icon: BadgeDollarSign,},
   { title: "Payouts", href: "/payment/rider", icon: WalletCards },
   { title: "Broadcasts", href: "/notification", icon: BellRing },
+  { title: "Profit Reports", href: "/reports", icon: BarChart3 },
   { title: "Zone Control", href: "/zone-management", icon: Flame },
   { title: "System Settings", href: "/settings", icon: Settings },
+  
 ];
 
 export default function Sidebar({
