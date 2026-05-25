@@ -1,4 +1,4 @@
-const mode = "DEV"; // DEV or PRO
+const mode = "PRO"; // DEV or PRO
 
 export const apiPath =
   mode === "DEV"
