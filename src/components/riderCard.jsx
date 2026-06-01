@@ -112,14 +112,17 @@ export default function RiderCard({ order: rider, refreshData }) {
     );
   }, [rider]);
 
-  const defaultZoneId = Number(rider?.zoneId || 1);
+  // IMPORTANT:
+  // Order routing uses activeZoneId.
+  // So UI must show activeZoneId first, then fallback to zoneId.
+  const defaultZoneId = Number(rider?.activeZoneId || rider?.zoneId || 1);
+  const defaultZoneName =
+    rider?.activeZoneName || rider?.zoneName || getZoneName(defaultZoneId);
 
   const [status, setStatus] = useState(normalizedStatus);
   const [session, setSession] = useState(normalizedSession);
   const [assignedZoneId, setAssignedZoneId] = useState(defaultZoneId);
-  const [assignedZoneName, setAssignedZoneName] = useState(
-    getZoneName(defaultZoneId, rider?.zoneName)
-  );
+  const [assignedZoneName, setAssignedZoneName] = useState(defaultZoneName);
   const [zoneLoading, setZoneLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -132,10 +135,18 @@ export default function RiderCard({ order: rider, refreshData }) {
   }, [normalizedSession]);
 
   useEffect(() => {
-    const nextZoneId = Number(rider?.zoneId || 1);
+    const nextZoneId = Number(rider?.activeZoneId || rider?.zoneId || 1);
+    const nextZoneName =
+      rider?.activeZoneName || rider?.zoneName || getZoneName(nextZoneId);
+
     setAssignedZoneId(nextZoneId);
-    setAssignedZoneName(getZoneName(nextZoneId, rider?.zoneName));
-  }, [rider?.zoneId, rider?.zoneName]);
+    setAssignedZoneName(nextZoneName);
+  }, [
+    rider?.zoneId,
+    rider?.zoneName,
+    rider?.activeZoneId,
+    rider?.activeZoneName,
+  ]);
 
   const statusColor = {
     active: "blue",
@@ -215,15 +226,29 @@ export default function RiderCard({ order: rider, refreshData }) {
       if (response.data?.success) {
         const updatedRider = response.data?.rider;
 
-        setAssignedZoneId(Number(updatedRider?.zoneId || zoneId));
-        setAssignedZoneName(
-          getZoneName(updatedRider?.zoneId || zoneId, updatedRider?.zoneName)
+        if (!updatedRider?.activeZoneId && !updatedRider?.zoneId) {
+          message.error(
+            "Server response missing zone data. Backend assign-zone API must return activeZoneId."
+          );
+          return;
+        }
+
+        const finalZoneId = Number(
+          updatedRider?.activeZoneId || updatedRider?.zoneId
         );
+
+        const finalZoneName =
+          updatedRider?.activeZoneName ||
+          updatedRider?.zoneName ||
+          getZoneName(finalZoneId);
+
+        setAssignedZoneId(finalZoneId);
+        setAssignedZoneName(finalZoneName);
 
         message.success(response.data.message || "Rider zone updated.");
 
         if (refreshData) {
-          refreshData();
+          await refreshData();
         }
       } else {
         message.error(response.data?.message || "Failed to update rider zone.");
@@ -272,7 +297,7 @@ export default function RiderCard({ order: rider, refreshData }) {
           onConfirm={() => handleDelete(normalizedRiderId?.toString())}
           okText="Yes"
           cancelText="No"
-          okButtonProps={{ danger: true, loading: loading }}
+          okButtonProps={{ danger: true, loading }}
         >
           <Button
             type="text"
@@ -309,7 +334,7 @@ export default function RiderCard({ order: rider, refreshData }) {
           </p>
 
           <Tag color={Number(assignedZoneId) === 2 ? "purple" : "blue"}>
-            {assignedZoneName}
+            {assignedZoneName} #{assignedZoneId}
           </Tag>
         </div>
 
