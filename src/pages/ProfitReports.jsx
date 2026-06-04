@@ -46,6 +46,108 @@ const formatSignedMoney = (value) => {
   return formatMoney(0);
 };
 
+const getSafeRestaurantSale = ({ foodSale, restaurantSale, foodMargin }) => {
+  const foodSaleValue = toNumber(foodSale);
+  const restaurantSaleValue = toNumber(restaurantSale);
+  const foodMarginValue = toNumber(foodMargin);
+
+  if (foodSaleValue > 0 && restaurantSaleValue > foodSaleValue) {
+    return Math.max(0, foodSaleValue - foodMarginValue);
+  }
+
+  return restaurantSaleValue;
+};
+
+const normalizeRestaurantReportRow = (row = {}) => {
+  const foodSale = toNumber(row.foodSale);
+  const foodMargin = toNumber(row.foodMargin);
+  const restaurantSale = getSafeRestaurantSale({
+    foodSale,
+    restaurantSale: row.restaurantSale,
+    foodMargin,
+  });
+
+  const commissionRate = toNumber(row.commissionRate);
+  const rawCommissionProfit = toNumber(row.commissionProfit);
+  const shouldRecalculateCommission =
+    foodSale > 0 &&
+    toNumber(row.restaurantSale) > foodSale &&
+    commissionRate > 0;
+
+  const commissionProfit = shouldRecalculateCommission
+    ? (restaurantSale * commissionRate) / 100
+    : rawCommissionProfit;
+
+  const deliveryFee = toNumber(row.deliveryFee);
+  const deliveryProfit = toNumber(row.deliveryProfit);
+  const riderTips = toNumber(row.riderTips);
+  const voucherExpense = toNumber(row.voucherExpense);
+  const totalAmount = toNumber(row.totalAmount);
+  const netProfit = commissionProfit + foodMargin + deliveryProfit - voucherExpense;
+
+  return {
+    ...row,
+    foodSale,
+    restaurantSale,
+    foodMargin,
+    commissionRate,
+    commissionProfit,
+    deliveryFee,
+    deliveryProfit,
+    riderTips,
+    voucherExpense,
+    totalAmount,
+    netProfit,
+  };
+};
+
+const normalizeDailyReportRow = (row = {}) => {
+  const foodSale = toNumber(row.foodSale);
+  const foodMargin = toNumber(row.foodMargin);
+  const restaurantSale = getSafeRestaurantSale({
+    foodSale,
+    restaurantSale: row.restaurantSale,
+    foodMargin,
+  });
+
+  return {
+    ...row,
+    foodSale,
+    restaurantSale,
+  };
+};
+
+const sumNormalizedRestaurantRows = (rows = []) => {
+  return rows.reduce(
+    (acc, row) => {
+      acc.completedOrders += toNumber(row.completedOrders);
+      acc.foodSale += toNumber(row.foodSale);
+      acc.restaurantSale += toNumber(row.restaurantSale);
+      acc.foodMargin += toNumber(row.foodMargin);
+      acc.deliveryFee += toNumber(row.deliveryFee);
+      acc.deliveryProfit += toNumber(row.deliveryProfit);
+      acc.riderTips += toNumber(row.riderTips);
+      acc.voucherExpense += toNumber(row.voucherExpense);
+      acc.totalAmount += toNumber(row.totalAmount);
+      acc.restaurantCommissionProfit += toNumber(row.commissionProfit);
+
+      return acc;
+    },
+    {
+      completedOrders: 0,
+      foodSale: 0,
+      restaurantSale: 0,
+      foodMargin: 0,
+      deliveryFee: 0,
+      deliveryProfit: 0,
+      riderTips: 0,
+      voucherExpense: 0,
+      totalAmount: 0,
+      restaurantCommissionProfit: 0,
+    }
+  );
+};
+
 const getLocalDateString = (date = new Date()) => {
   const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
   return offsetDate.toISOString().slice(0, 10);
@@ -94,6 +196,31 @@ const defaultReport = {
   orders: [],
 };
 
+const getAuthHeaders = () => {
+  const accessToken =
+    Cookies.get("accessToken") ||
+    localStorage.getItem("accessToken") ||
+    localStorage.getItem("AccessToken") ||
+    apiAuthToken;
+
+  return {
+    "x-auth-token": apiAuthToken,
+    AccessToken: accessToken,
+  };
+};
+
+const getListFromPayload = (payload) => {
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload?.data)) return payload.data;
+  if (Array.isArray(payload?.result)) return payload.result;
+  if (Array.isArray(payload?.discounts)) return payload.discounts;
+  if (Array.isArray(payload?.manualDiscounts)) return payload.manualDiscounts;
+  if (Array.isArray(payload?.requests)) return payload.requests;
+  if (Array.isArray(payload?.rows)) return payload.rows;
+  if (Array.isArray(payload?.list)) return payload.list;
+  return [];
+};
+
 const getDiscountDate = (item) => {
   const raw =
     item?.date ||
@@ -108,7 +235,7 @@ const getDiscountDate = (item) => {
   if (typeof raw === "string") {
     const directDate = raw.slice(0, 10);
 
-    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(directDate)) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(directDate)) {
       return directDate;
     }
   }
@@ -162,18 +289,6 @@ const isDiscountInRange = (item, startDate, endDate, zoneId = "") => {
     !selectedZoneId || !itemZoneId || String(itemZoneId) === selectedZoneId;
 
   return isApprovedDiscount(item) && zoneMatched && date >= startDate && date <= endDate;
-};
-
-const getListFromPayload = (payload) => {
-  if (Array.isArray(payload)) return payload;
-  if (Array.isArray(payload?.data)) return payload.data;
-  if (Array.isArray(payload?.result)) return payload.result;
-  if (Array.isArray(payload?.discounts)) return payload.discounts;
-  if (Array.isArray(payload?.manualDiscounts)) return payload.manualDiscounts;
-  if (Array.isArray(payload?.requests)) return payload.requests;
-  if (Array.isArray(payload?.rows)) return payload.rows;
-  if (Array.isArray(payload?.list)) return payload.list;
-  return [];
 };
 
 const uniqueDiscountRows = (rows = []) => {
@@ -251,7 +366,7 @@ function StatCard({
   );
 }
 
-function MiniLine({ label, value, icon, tone = "text-slate-700" }) {
+function MiniLine({ label, value, icon, tone = "text-white" }) {
   return (
     <div className="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3">
       <div className="flex items-center gap-2">
@@ -277,6 +392,14 @@ function ProfitReports() {
 
   const baseSummary = report?.summary || defaultReport.summary;
 
+  const normalizedRestaurantRows = useMemo(() => {
+    return (report?.restaurantRows || []).map(normalizeRestaurantReportRow);
+  }, [report?.restaurantRows]);
+
+  const normalizedDailyRows = useMemo(() => {
+    return (report?.dailyRows || []).map(normalizeDailyReportRow);
+  }, [report?.dailyRows]);
+
   const approvedManualDiscountsInRange = useMemo(() => {
     return (approvedDiscounts || [])
       .filter((item) =>
@@ -298,16 +421,72 @@ function ProfitReports() {
   }, [approvedManualDiscountsInRange]);
 
   const summary = useMemo(() => {
-    const grossProfit = toNumber(baseSummary.grossProfit);
-    const netBeforeManual = toNumber(baseSummary.netProfit);
+    const rowSummary = normalizedRestaurantRows.length
+      ? sumNormalizedRestaurantRows(normalizedRestaurantRows)
+      : null;
+
+    const foodSale = rowSummary
+      ? rowSummary.foodSale
+      : toNumber(baseSummary.foodSale);
+
+    const foodMargin = rowSummary
+      ? rowSummary.foodMargin
+      : toNumber(baseSummary.foodMargin);
+
+    const restaurantSale = rowSummary
+      ? rowSummary.restaurantSale
+      : getSafeRestaurantSale({
+          foodSale,
+          restaurantSale: baseSummary.restaurantSale,
+          foodMargin,
+        });
+
+    const deliveryFee = rowSummary
+      ? rowSummary.deliveryFee
+      : toNumber(baseSummary.deliveryFee);
+
+    const deliveryProfit = rowSummary
+      ? rowSummary.deliveryProfit
+      : toNumber(baseSummary.deliveryProfit);
+
+    const riderTips = rowSummary
+      ? rowSummary.riderTips
+      : toNumber(baseSummary.riderTips);
+
+    const voucherExpense = rowSummary
+      ? rowSummary.voucherExpense
+      : toNumber(baseSummary.voucherExpense);
+
+    const totalAmount = rowSummary
+      ? rowSummary.totalAmount
+      : toNumber(baseSummary.totalAmount);
+
+    const restaurantCommissionProfit = rowSummary
+      ? rowSummary.restaurantCommissionProfit
+      : toNumber(baseSummary.restaurantCommissionProfit);
+
+    const grossProfit =
+      restaurantCommissionProfit + foodMargin + deliveryProfit;
 
     return {
       ...baseSummary,
+      completedOrders: rowSummary
+        ? rowSummary.completedOrders
+        : toNumber(baseSummary.completedOrders),
+      foodSale,
+      restaurantSale,
+      foodMargin,
+      deliveryFee,
+      deliveryProfit,
+      riderTips,
+      voucherExpense,
+      totalAmount,
+      restaurantCommissionProfit,
       manualDiscount: manualDiscountTotal,
       grossProfit,
-      netProfit: netBeforeManual - manualDiscountTotal,
+      netProfit: grossProfit - voucherExpense - manualDiscountTotal,
     };
-  }, [baseSummary, manualDiscountTotal]);
+  }, [baseSummary, manualDiscountTotal, normalizedRestaurantRows]);
 
   const reportTitle = useMemo(() => {
     if (activeRange === "today") return "Today";
@@ -316,42 +495,14 @@ function ProfitReports() {
     return "Custom Range";
   }, [activeRange]);
 
-  const getApiBaseCandidates = () => {
-    const rawBase = String(apiPath || "").replace(/\/$/, "");
-
-    const bases = [];
-
-    if (rawBase) {
-      bases.push(rawBase);
-
-      if (!rawBase.endsWith("/v3")) {
-        bases.push(`${rawBase}/v3`);
-      }
-    }
-
-    return Array.from(new Set(bases));
-  };
-
-  const getAuthHeaders = () => {
-    const accessToken =
-      Cookies.get("accessToken") ||
-      localStorage.getItem("accessToken") ||
-      localStorage.getItem("AccessToken") ||
-      apiAuthToken;
-
-    return {
-      "x-auth-token": apiAuthToken,
-      AccessToken: accessToken,
-    };
-  };
-
   const fetchApprovedDiscounts = async ({
     nextStartDate = startDate,
     nextEndDate = endDate,
     nextZoneId = zoneId,
   } = {}) => {
     const collectedRows = [];
-    const bases = getApiBaseCandidates();
+    const rawBase = String(apiPath || "").replace(/\/$/, "");
+    const bases = rawBase ? [rawBase, `${rawBase}/v3`] : [];
 
     const endpointConfigs = [
       {
@@ -384,7 +535,11 @@ function ProfitReports() {
       });
     }
 
-    for (const base of bases) {
+    endpointConfigs.forEach((item) => {
+      item.params._t = Date.now();
+    });
+
+    for (const base of Array.from(new Set(bases))) {
       for (const item of endpointConfigs) {
         try {
           const { data } = await axios.get(`${base}${item.endpoint}`, {
@@ -441,6 +596,7 @@ function ProfitReports() {
       const params = new URLSearchParams();
       params.set("startDate", nextStartDate);
       params.set("endDate", nextEndDate);
+      params.set("_t", String(Date.now()));
 
       if (String(nextZoneId || "").trim()) {
         params.set("zoneId", String(nextZoneId).trim());
@@ -448,9 +604,8 @@ function ProfitReports() {
 
       const [reportResponse, manualDiscountRows] = await Promise.all([
         axios.get(`${apiPath}/admin/report/profit?${params.toString()}`, {
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
+          headers: getAuthHeaders(),
+          validateStatus: (status) => status >= 200 && status < 300,
         }),
         fetchApprovedDiscounts({
           nextStartDate,
@@ -531,9 +686,9 @@ function ProfitReports() {
     const text = `Foodverse Admin Profit Report
 Range: ${report?.range?.startDate} to ${report?.range?.endDate}
 Completed Orders: ${summary.completedOrders}
-Total Amount: ${formatMoney(summary.totalAmount)}
-Voucher Expense: ${formatMoney(summary.voucherExpense)}
-Manual Discount: ${formatMoney(summary.manualDiscount)}
+Food Sale: ${formatMoney(summary.foodSale)}
+Restaurant Sale: ${formatMoney(summary.restaurantSale)}
+Final Received: ${formatMoney(summary.totalAmount)}
 Net Profit: ${formatMoney(summary.netProfit)}`;
 
     try {
@@ -579,8 +734,38 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
         order?.totalAmount,
       ]),
       [],
-      ["Approved Manual Discount", "", "", "", "", "", "", "", "", "", "", "", "", manualDiscountTotal],
-      ["Final Net Profit After Manual Discount", "", "", "", "", "", "", "", "", "", "", "", "", summary.netProfit],
+      [
+        "Approved Manual Discount",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        manualDiscountTotal,
+      ],
+      [
+        "Final Net Profit After Manual Discount",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        summary.netProfit,
+      ],
     ];
 
     const csv = rows
@@ -615,7 +800,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
   }, []);
 
   const dailyRowsWithManualDiscount = useMemo(() => {
-    return (report?.dailyRows || []).map((row) => {
+    return (normalizedDailyRows || []).map((row) => {
       const rowDate = row?.date;
 
       const manualDiscount = (approvedDiscounts || [])
@@ -635,14 +820,14 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
         netProfit: toNumber(row?.netProfit) - manualDiscount,
       };
     });
-  }, [report?.dailyRows, approvedDiscounts, zoneId]);
+  }, [normalizedDailyRows, approvedDiscounts, zoneId]);
 
   const tabItems = [
     {
       key: "restaurant",
       label: "Restaurant Wise",
       children: (
-        <RestaurantTable rows={report?.restaurantRows || []} loading={loading} />
+        <RestaurantTable rows={normalizedRestaurantRows || []} loading={loading} />
       ),
     },
     {
@@ -656,7 +841,10 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
       key: "manualDiscount",
       label: `Manual Discount (${approvedManualDiscountsInRange.length})`,
       children: (
-        <ManualDiscountTable rows={approvedManualDiscountsInRange || []} loading={loading} />
+        <ManualDiscountTable
+          rows={approvedManualDiscountsInRange || []}
+          loading={loading}
+        />
       ),
     },
   ];
@@ -680,8 +868,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
                 </h1>
 
                 <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
-                  Only completed/successful orders are counted. Voucher expense
-                  and approved manual discount are counted as business expense.
+                  Only completed or successful orders are counted in this report.
                 </p>
               </div>
 
@@ -853,7 +1040,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
             <StatCard
               title="Final Received"
               value={formatMoney(summary.totalAmount)}
-              helper="Final order totals after voucher"
+              helper="Final order total"
               icon={<Wallet size={22} />}
               gradient="from-slate-800 to-slate-600"
             />
@@ -864,15 +1051,15 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
               <div className="mb-5 flex items-center justify-between">
                 <div>
                   <p className="m-0 text-sm font-bold text-white/80">
-                    Sale & Voucher Summary
+                    Sale Summary
                   </p>
 
                   <h2 className="m-0 mt-2 text-4xl font-black">
-                    {formatMoney(summary.totalAmount)}
+                    {formatMoney(summary.foodSale)}
                   </h2>
 
                   <p className="m-0 mt-1 text-sm text-white/80">
-                    Successful order amount only
+                    Customer food/item sale
                   </p>
                 </div>
 
@@ -886,21 +1073,35 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
                   label="Food Sale"
                   value={formatMoney(summary.foodSale)}
                   icon={<Utensils size={16} />}
-                  tone="text-white"
+                />
+
+                <MiniLine
+                  label="Restaurant Sale"
+                  value={formatMoney(summary.restaurantSale)}
+                  icon={<Store size={16} />}
                 />
 
                 <MiniLine
                   label="Delivery Fee"
                   value={formatMoney(summary.deliveryFee)}
                   icon={<Bike size={16} />}
-                  tone="text-white"
+                />
+
+                <MiniLine
+                  label="Delivery Profit"
+                  value={formatSignedMoney(summary.deliveryProfit)}
+                  icon={<Bike size={16} />}
+                  tone={
+                    toNumber(summary.deliveryProfit) >= 0
+                      ? "text-white"
+                      : "text-red-100"
+                  }
                 />
 
                 <MiniLine
                   label="Rider Tips"
                   value={formatMoney(summary.riderTips)}
                   icon={<Wallet size={16} />}
-                  tone="text-white"
                 />
 
                 <MiniLine
@@ -937,8 +1138,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
                   </h2>
 
                   <p className="m-0 mt-1 text-sm text-slate-400">
-                    Net = commission + food margin + delivery profit - voucher -
-                    approved manual discount
+                    Net = commission + food margin + delivery profit - expenses
                   </p>
                 </div>
 
