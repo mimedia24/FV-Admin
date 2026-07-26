@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Form,
   Input,
@@ -18,18 +18,56 @@ import {
   EyeOutlined,
   ThunderboltOutlined,
   TagsOutlined,
-  ReloadOutlined,
   BellOutlined,
   GlobalOutlined,
-  LockOutlined,
 } from "@ant-design/icons";
 import Layout from "./layout";
-import { apiAuthToken, apiPath } from "../../secrets";
 import { Link } from "react-router-dom";
+import axiosInstance from "../services/axios/axiosInstance";
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
 const { Option } = Select;
+const MAX_SOURCE_SIZE = 20 * 1024 * 1024;
+const MAX_UPLOAD_SIZE = 5 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+const compressNotificationImage = (file) =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    image.onload = () => {
+      const maxDimension = 1600;
+      const scale = Math.min(
+        1,
+        maxDimension / Math.max(image.naturalWidth, image.naturalHeight)
+      );
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob(
+        (blob) => {
+          URL.revokeObjectURL(objectUrl);
+          if (!blob) return reject(new Error("Could not process image."));
+          resolve(
+            new File([blob], `${file.name.replace(/\.[^.]+$/, "")}.webp`, {
+              type: "image/webp",
+              lastModified: Date.now(),
+            })
+          );
+        },
+        "image/webp",
+        0.82
+      );
+    };
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error("Invalid image file."));
+    };
+    image.src = objectUrl;
+  });
 
 const statThemes = {
   blue: {
@@ -77,19 +115,11 @@ function Notification() {
     formData.append("image", fileToUpload);
 
     try {
-      const response = await fetch(
-        `${apiPath}/v2/notification/promotional-notification`,
-        {
-          method: "POST",
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-          body: formData,
-        }
+      const { data } = await axiosInstance.post(
+        "/v2/notification/promotional-notification",
+        formData
       );
-
-      const data = await response.json();
-      if (response.ok) {
+      if (data) {
         message.success("Promotional Notification posted successfully!");
         promoForm.resetFields();
         setFileList([]);
@@ -97,7 +127,11 @@ function Notification() {
         message.error(data.message || "Failed to post notification.");
       }
     } catch (error) {
-      message.error("Network error. Please try again.");
+      message.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to post notification.",
+      );
     } finally {
       setLoading(false);
     }
@@ -111,27 +145,22 @@ function Notification() {
     };
 
     try {
-      const response = await fetch(
-        `${apiPath}/v2/notification/post-with-out-image`,
-        {
-          method: "POST",
-          headers: {
-            "x-auth-token": apiAuthToken,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(postData),
-        }
+      const { data } = await axiosInstance.post(
+        "/v2/notification/post-with-out-image",
+        postData
       );
-
-      const data = await response.json();
-      if (response.ok) {
+      if (data) {
         message.success("General Post sent successfully!");
         generalForm.resetFields();
       } else {
         message.error(data.message || "Failed to send notification.");
       }
     } catch (error) {
-      message.error("Network error. Please try again.");
+      message.error(
+        error?.response?.data?.message ||
+          error?.message ||
+          "Failed to send notification.",
+      );
     } finally {
       setLoading(false);
     }
@@ -139,8 +168,42 @@ function Notification() {
 
   const uploadProps = {
     onRemove: () => setFileList([]),
-    beforeUpload: (file) => {
-      setFileList([file]);
+    beforeUpload: async (file) => {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        message.error("Only JPEG, PNG, WebP or GIF images are allowed.");
+        return Upload.LIST_IGNORE;
+      }
+      if (file.size > MAX_SOURCE_SIZE) {
+        message.error("Source image is too large. Maximum source size is 20 MB.");
+        return Upload.LIST_IGNORE;
+      }
+      try {
+        const processed =
+          file.size > MAX_UPLOAD_SIZE
+            ? await compressNotificationImage(file)
+            : file;
+        if (processed.size > MAX_UPLOAD_SIZE) {
+          message.error("Image is still above 5 MB after compression.");
+          return Upload.LIST_IGNORE;
+        }
+        setFileList([
+          {
+            ...file,
+            name: processed.name,
+            size: processed.size,
+            type: processed.type,
+            status: "done",
+            originFileObj: processed,
+          },
+        ]);
+        if (processed !== file) {
+          message.success(
+            `Image compressed to ${(processed.size / 1024 / 1024).toFixed(2)} MB.`,
+          );
+        }
+      } catch (error) {
+        message.error(error.message || "Failed to process image.");
+      }
       return false;
     },
     fileList,
@@ -256,7 +319,8 @@ function Notification() {
                       Click or drag image to this area
                     </p>
                     <p className="ant-upload-hint text-slate-500">
-                      Support for a single image upload only.
+                      JPEG, PNG, WebP or GIF. Large images up to 20 MB are
+                      compressed automatically.
                     </p>
                   </Upload.Dragger>
                 </Form.Item>

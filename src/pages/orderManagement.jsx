@@ -1,8 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "./layout";
 import OrderCard from "../components/orderCard";
 import CustomSkeleton from "../components/skeleton";
-import SortOrdersList from "../components/sortOrderList";
 import { apiAuthToken, apiPath } from "../../secrets";
 import {
   Button,
@@ -20,14 +19,8 @@ import {
   Search,
   ShoppingBag,
   CheckCircle2,
-  Clock3,
-  Bike,
-  Store,
   Wallet,
-  Filter,
 } from "lucide-react";
-
-const { Search: AntSearch } = Input;
 
 const ORDER_LIMIT = 15;
 
@@ -46,7 +39,7 @@ const tableHeading = [
   "Timeline",
   "Change Status",
   "Assign Rider",
-  "Delete",
+  "Trash",
   "Items",
   "Platform",
   "History",

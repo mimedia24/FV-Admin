@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button, Modal } from "antd";
 import { FaPencilAlt } from "react-icons/fa";
 
 import { Input } from "antd";
-import axios from "axios";
-import { apiAuthToken, apiPath } from "../../../secrets";
+import axiosInstance from "../../services/axios/axiosInstance";
 import toast from "react-hot-toast";
 
 export default function UpdateChargeForm({ item }) {
@@ -12,7 +11,7 @@ export default function UpdateChargeForm({ item }) {
 
   const defaultFormData = {
     riderFirstKMCharge: data.riderFirstKMCharge,
-    riderOthersKMCharge: data.userFirstKMCharge,
+    riderOthersKMCharge: data.riderOthersKMCharge,
     userFirstKMCharge: data.userFirstKMCharge,
     userOthersKMCharge: data.userOthersKMCharge,
     isActive: data.isActive,
@@ -26,16 +25,16 @@ export default function UpdateChargeForm({ item }) {
   };
   const handleOk = async () => {
     try {
-      const { data } = await axios.put(
-        `${apiPath}/charges/update-schedule?id=${item._id}`,
+      const { data } = await axiosInstance.put(
+        `/charges/update-schedule?id=${item._id}`,
         {
           ...formData,
+          riderFirstKMCharge: Number(formData.riderFirstKMCharge),
+          riderOthersKMCharge: Number(formData.riderOthersKMCharge),
+          userFirstKMCharge: Number(formData.userFirstKMCharge),
+          userOthersKMCharge: Number(formData.userOthersKMCharge),
+          isActive: String(formData.isActive) === "true",
         },
-        {
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-        }
       );
 
       console.log(data);
@@ -126,23 +125,16 @@ export default function UpdateChargeForm({ item }) {
             name="isActive"
             id=""
             onChange={handleOnChange}
+            value={String(formData.isActive)}
             className="w-full px-2 py-2 rounded-lg border shadow-lg mt-2 text-black"
           >
             <option value="" disabled>
               select status
             </option>
-            <option
-              value={false}
-              selected={item.isActive}
-              className="text-black"
-            >
+            <option value={false} className="text-black">
               disabled
             </option>
-            <option
-              value={true}
-              selected={item.isActive}
-              className="text-black"
-            >
+            <option value={true} className="text-black">
               active
             </option>
           </select>

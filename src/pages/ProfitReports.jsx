@@ -1,8 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "./layout";
-import axios from "axios";
-import Cookies from "js-cookie";
-import { apiAuthToken, apiPath } from "../../secrets";
+import axiosInstance from "../services/axios/axiosInstance";
 import {
   Button,
   Empty,
@@ -83,7 +81,12 @@ const normalizeRestaurantReportRow = (row = {}) => {
   const riderTips = toNumber(row.riderTips);
   const voucherExpense = toNumber(row.voucherExpense);
   const totalAmount = toNumber(row.totalAmount);
-  const netProfit = commissionProfit + foodMargin + deliveryProfit - voucherExpense;
+  const calculatedNetProfit =
+    commissionProfit + foodMargin + deliveryProfit - voucherExpense;
+  const netProfit =
+    row.netProfit !== undefined && row.netProfit !== null
+      ? toNumber(row.netProfit)
+      : calculatedNetProfit;
 
   return {
     ...row,
@@ -117,56 +120,34 @@ const normalizeDailyReportRow = (row = {}) => {
   };
 };
 
-const sumNormalizedRestaurantRows = (rows = []) => {
-  return rows.reduce(
-    (acc, row) => {
-      acc.completedOrders += toNumber(row.completedOrders);
-      acc.foodSale += toNumber(row.foodSale);
-      acc.restaurantSale += toNumber(row.restaurantSale);
-      acc.foodMargin += toNumber(row.foodMargin);
-      acc.deliveryFee += toNumber(row.deliveryFee);
-      acc.deliveryProfit += toNumber(row.deliveryProfit);
-      acc.riderTips += toNumber(row.riderTips);
-      acc.voucherExpense += toNumber(row.voucherExpense);
-      acc.totalAmount += toNumber(row.totalAmount);
-      acc.restaurantCommissionProfit += toNumber(row.commissionProfit);
+const getBangladeshDateString = (date = new Date()) =>
+  new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Dhaka",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
 
-      return acc;
-    },
-    {
-      completedOrders: 0,
-      foodSale: 0,
-      restaurantSale: 0,
-      foodMargin: 0,
-      deliveryFee: 0,
-      deliveryProfit: 0,
-      riderTips: 0,
-      voucherExpense: 0,
-      totalAmount: 0,
-      restaurantCommissionProfit: 0,
-    }
-  );
+const shiftCalendarDate = (dateString, days) => {
+  const date = new Date(`${dateString}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
 };
 
-const getLocalDateString = (date = new Date()) => {
-  const offsetDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
-  return offsetDate.toISOString().slice(0, 10);
-};
+const today = getBangladeshDateString();
 
 const getWeekStart = () => {
-  const date = new Date();
-  const day = date.getDay();
-  const diff = date.getDate() - day;
-  const start = new Date(date.setDate(diff));
-  return getLocalDateString(start);
+  const weekday = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Dhaka",
+    weekday: "short",
+  }).format(new Date());
+  const dayIndex = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(
+    weekday
+  );
+  return shiftCalendarDate(today, -Math.max(dayIndex, 0));
 };
 
-const getMonthStart = () => {
-  const date = new Date();
-  return getLocalDateString(new Date(date.getFullYear(), date.getMonth(), 1));
-};
-
-const today = getLocalDateString();
+const getMonthStart = () => `${today.slice(0, 7)}-01`;
 
 const defaultReport = {
   range: {
@@ -194,19 +175,6 @@ const defaultReport = {
   restaurantRows: [],
   dailyRows: [],
   orders: [],
-};
-
-const getAuthHeaders = () => {
-  const accessToken =
-    Cookies.get("accessToken") ||
-    localStorage.getItem("accessToken") ||
-    localStorage.getItem("AccessToken") ||
-    apiAuthToken;
-
-  return {
-    "x-auth-token": apiAuthToken,
-    AccessToken: accessToken,
-  };
 };
 
 const getListFromPayload = (payload) => {
@@ -246,7 +214,7 @@ const getDiscountDate = (item) => {
     return String(raw).slice(0, 10);
   }
 
-  return getLocalDateString(d);
+  return getBangladeshDateString(d);
 };
 
 const getDiscountAmount = (item) => {
@@ -421,72 +389,50 @@ function ProfitReports() {
   }, [approvedManualDiscountsInRange]);
 
   const summary = useMemo(() => {
-    const rowSummary = normalizedRestaurantRows.length
-      ? sumNormalizedRestaurantRows(normalizedRestaurantRows)
-      : null;
-
-    const foodSale = rowSummary
-      ? rowSummary.foodSale
-      : toNumber(baseSummary.foodSale);
-
-    const foodMargin = rowSummary
-      ? rowSummary.foodMargin
-      : toNumber(baseSummary.foodMargin);
-
-    const restaurantSale = rowSummary
-      ? rowSummary.restaurantSale
-      : getSafeRestaurantSale({
-          foodSale,
-          restaurantSale: baseSummary.restaurantSale,
-          foodMargin,
-        });
-
-    const deliveryFee = rowSummary
-      ? rowSummary.deliveryFee
-      : toNumber(baseSummary.deliveryFee);
-
-    const deliveryProfit = rowSummary
-      ? rowSummary.deliveryProfit
-      : toNumber(baseSummary.deliveryProfit);
-
-    const riderTips = rowSummary
-      ? rowSummary.riderTips
-      : toNumber(baseSummary.riderTips);
-
-    const voucherExpense = rowSummary
-      ? rowSummary.voucherExpense
-      : toNumber(baseSummary.voucherExpense);
-
-    const totalAmount = rowSummary
-      ? rowSummary.totalAmount
-      : toNumber(baseSummary.totalAmount);
-
-    const restaurantCommissionProfit = rowSummary
-      ? rowSummary.restaurantCommissionProfit
-      : toNumber(baseSummary.restaurantCommissionProfit);
-
-    const grossProfit =
+    const hasServerManualDiscount =
+      Object.prototype.hasOwnProperty.call(
+        baseSummary,
+        "approvedManualDiscount"
+      ) ||
+      Object.prototype.hasOwnProperty.call(baseSummary, "manualDiscount");
+    const manualDiscount = hasServerManualDiscount
+      ? toNumber(
+          baseSummary.approvedManualDiscount ?? baseSummary.manualDiscount
+        )
+      : manualDiscountTotal;
+    const restaurantCommissionProfit = toNumber(
+      baseSummary.restaurantCommissionProfit
+    );
+    const foodMargin = toNumber(baseSummary.foodMargin);
+    const deliveryProfit = toNumber(baseSummary.deliveryProfit);
+    const voucherExpense = toNumber(baseSummary.voucherExpense);
+    const calculatedGrossProfit =
       restaurantCommissionProfit + foodMargin + deliveryProfit;
-
+    const grossProfit =
+      baseSummary.grossProfit !== undefined
+        ? toNumber(baseSummary.grossProfit)
+        : calculatedGrossProfit;
+    const netProfit =
+      baseSummary.netProfit !== undefined
+        ? toNumber(baseSummary.netProfit)
+        : grossProfit - voucherExpense - manualDiscount;
     return {
       ...baseSummary,
-      completedOrders: rowSummary
-        ? rowSummary.completedOrders
-        : toNumber(baseSummary.completedOrders),
-      foodSale,
-      restaurantSale,
+      completedOrders: toNumber(baseSummary.completedOrders),
+      foodSale: toNumber(baseSummary.foodSale),
+      restaurantSale: toNumber(baseSummary.restaurantSale),
       foodMargin,
-      deliveryFee,
+      deliveryFee: toNumber(baseSummary.deliveryFee),
       deliveryProfit,
-      riderTips,
+      riderTips: toNumber(baseSummary.riderTips),
       voucherExpense,
-      totalAmount,
+      totalAmount: toNumber(baseSummary.totalAmount),
       restaurantCommissionProfit,
-      manualDiscount: manualDiscountTotal,
+      manualDiscount,
       grossProfit,
-      netProfit: grossProfit - voucherExpense - manualDiscountTotal,
+      netProfit,
     };
-  }, [baseSummary, manualDiscountTotal, normalizedRestaurantRows]);
+  }, [baseSummary, manualDiscountTotal]);
 
   const reportTitle = useMemo(() => {
     if (activeRange === "today") return "Today";
@@ -500,66 +446,28 @@ function ProfitReports() {
     nextEndDate = endDate,
     nextZoneId = zoneId,
   } = {}) => {
-    const collectedRows = [];
-    const rawBase = String(apiPath || "").replace(/\/$/, "");
-    const bases = rawBase ? [rawBase, `${rawBase}/v3`] : [];
-
-    const endpointConfigs = [
-      {
-        endpoint: "/master-admin/manual-discount/requests",
-        params: {
-          status: "approved",
-          limit: 500,
-        },
-      },
-      {
-        endpoint: "/zone/manual-discount/approved",
-        params: {
-          startDate: nextStartDate,
-          endDate: nextEndDate,
-        },
-      },
-      {
-        endpoint: "/zone/manual-discount/list",
-        params: {
-          startDate: nextStartDate,
-          endDate: nextEndDate,
-          status: "approved",
-        },
-      },
-    ];
-
-    if (String(nextZoneId || "").trim()) {
-      endpointConfigs.forEach((item) => {
-        item.params.zoneId = String(nextZoneId).trim();
-      });
-    }
-
-    endpointConfigs.forEach((item) => {
-      item.params._t = Date.now();
-    });
-
-    for (const base of Array.from(new Set(bases))) {
-      for (const item of endpointConfigs) {
-        try {
-          const { data } = await axios.get(`${base}${item.endpoint}`, {
-            params: item.params,
-            headers: getAuthHeaders(),
-            validateStatus: () => true,
-          });
-
-          const rows = getListFromPayload(data);
-
-          if (rows.length) {
-            collectedRows.push(...rows);
-          }
-        } catch (error) {
-          console.log(
-            `Manual discount endpoint failed: ${base}${item.endpoint}`,
-            error?.message
-          );
-        }
+    let collectedRows = [];
+    try {
+      const params = {
+        status: "approved",
+        startDate: nextStartDate,
+        endDate: nextEndDate,
+        limit: 500,
+        _t: Date.now(),
+      };
+      if (String(nextZoneId || "").trim()) {
+        params.zoneId = String(nextZoneId).trim();
       }
+      const { data } = await axiosInstance.get(
+        "/v3/master-admin/manual-discount/requests",
+        { params }
+      );
+      collectedRows = getListFromPayload(data);
+    } catch (error) {
+      console.log(
+        "Manual discount endpoint failed:",
+        error?.response?.data || error?.message
+      );
     }
 
     const uniqueRows = uniqueDiscountRows(collectedRows).filter((item) => {
@@ -603,10 +511,7 @@ function ProfitReports() {
       }
 
       const [reportResponse, manualDiscountRows] = await Promise.all([
-        axios.get(`${apiPath}/admin/report/profit?${params.toString()}`, {
-          headers: getAuthHeaders(),
-          validateStatus: (status) => status >= 200 && status < 300,
-        }),
+        axiosInstance.get(`/admin/report/profit?${params.toString()}`),
         fetchApprovedDiscounts({
           nextStartDate,
           nextEndDate,
@@ -694,7 +599,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
     try {
       await navigator.clipboard.writeText(text);
       message.success("Report summary copied.");
-    } catch (error) {
+    } catch {
       message.error("Could not copy report summary.");
     }
   };

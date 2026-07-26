@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import ChangeUserStatus from "./changeUserStatus";
+import { resolveImageUrl, useImageFallback } from "../../helpers/imageUrl";
 
 function safeValue(value) {
   if (value === undefined || value === null || value === "") return null;
@@ -106,16 +107,6 @@ export default function UserCard({ detail, slNO }) {
       : "bg-amber-50 text-amber-600 border-amber-200";
   }, [status]);
 
-  const visibleAddresses = useMemo(() => {
-    const items = [
-      { key: "home", title: "Home", data: address?.home },
-      { key: "office", title: "Office", data: address?.office },
-      { key: "others", title: "Others", data: address?.others },
-    ];
-
-    return items.filter((item) => safeValue(item?.data?.address));
-  }, [address]);
-
   return (
     <tr className="text-[12px] transition-colors hover:bg-slate-50/70">
       <td className="border-b border-slate-200 px-3 py-4 text-center font-semibold text-slate-700 align-top">
@@ -133,9 +124,10 @@ export default function UserCard({ detail, slNO }) {
 
       <td className="border-b border-slate-200 px-3 py-4 text-center align-top">
         <img
-          src={detail.profileImage || "images/avater.png"}
+          src={resolveImageUrl(detail.profileImage)}
           alt="profile-image"
           className="mx-auto h-14 w-14 rounded-full border-2 border-slate-200 object-cover shadow-sm"
+          onError={useImageFallback}
         />
       </td>
 

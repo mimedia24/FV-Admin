@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Modal,
   Form,
@@ -88,7 +88,11 @@ const AddZoneForm = ({ visible, onCancel, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const mapRef = useRef(null);
 
-  const watchedPoints = Form.useWatch("points", form) || [{}, {}, {}];
+  const watchedPointsValue = Form.useWatch("points", form);
+  const watchedPoints = useMemo(
+    () => watchedPointsValue || [{}, {}, {}],
+    [watchedPointsValue]
+  );
 
   useEffect(() => {
     if (visible) {
@@ -198,6 +202,7 @@ const AddZoneForm = ({ visible, onCancel, onSuccess }) => {
       const payload = {
         name,
         points: formattedPoints,
+        agentName: values.agentName,
         managerName: values.managerName,
         managerPhoneNumber: values.managerPhoneNumber,
         managerPassword: values.managerPassword,
@@ -329,6 +334,18 @@ const AddZoneForm = ({ visible, onCancel, onSuccess }) => {
     Zone Manager Login
   </Text>
 </Divider>
+
+<Form.Item
+  name="agentName"
+  label={<Text strong>Agent / Business Name</Text>}
+  rules={[{ required: true, message: "Agent name is required" }]}
+>
+  <Input
+    placeholder="e.g. FoodVerse Lakshmipur Agent"
+    size="large"
+    className="rounded-xl border-gray-200"
+  />
+</Form.Item>
 
 <Form.Item
   name="managerName"

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Button,
   Typography,
@@ -30,6 +30,7 @@ import AddZoneForm from "../components/zone/AddZoneForm";
 import axiosInstance from "../services/axios/axiosInstance";
 import UpdateZoneForm from "../components/zone/UpdateZoneForm";
 import UpdateZoneResource from "../components/zone/UpdateZoneResource";
+import ZoneAgentChargeDirectory from "../components/zone/ZoneAgentChargeDirectory";
 
 const { Title, Text } = Typography;
 
@@ -163,7 +164,7 @@ function ZoneManagementScreen() {
   };
 
   const handleToggleZoneStatus = async (record) => {
-    const nextStatus = !Boolean(record?.isActive);
+    const nextStatus = !record?.isActive;
     const oldZones = [...zones];
 
     try {
@@ -354,8 +355,8 @@ function ZoneManagementScreen() {
                 </Title>
 
                 <Text className="text-slate-500 text-sm md:text-base">
-                  Manage service areas, geometry updates and zone resources from
-                  one clean interface.
+                  Manage service areas, available Agents and zone delivery
+                  charges from one interface.
                 </Text>
               </div>
             </div>
@@ -458,6 +459,12 @@ function ZoneManagementScreen() {
             />
           </div>
         </div>
+
+        <ZoneAgentChargeDirectory
+          zones={zones}
+          loading={loading}
+          onRefresh={fetchZones}
+        />
       </div>
 
       <AddZoneForm

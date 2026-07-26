@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, Tag, Popconfirm, Button, message, InputNumber } from "antd";
 import { Link } from "react-router-dom";
 import {
@@ -17,6 +17,7 @@ import UpdateIsHomeMade from "./restaurant/UpdateHome";
 import { CopyFilled } from "@ant-design/icons";
 import UpdateOpenClose from "./restaurant/UpdateOpenClose";
 import OpenCloseTime from "./restaurant/OpenCloseTime";
+import { resolveImageUrl, useImageFallback } from "../helpers/imageUrl";
 
 export default function RestaurantCard({
   restaurant,
@@ -115,9 +116,10 @@ export default function RestaurantCard({
       <div className="flex items-center justify-between p-4">
         <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-white bg-gray-100 shadow-md">
           <img
-            src={import.meta.env.VITE_IMAGE_PATH + restaurant.image}
+            src={resolveImageUrl(restaurant.image)}
             alt="Restaurant"
             className="h-full w-full object-cover"
+            onError={useImageFallback}
           />
         </div>
         <div className="text-right">

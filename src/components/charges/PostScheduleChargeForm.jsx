@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button, Modal } from "antd";
-import { FaPencilAlt } from "react-icons/fa";
 
 import { Input } from "antd";
-import axios from "axios";
-import { apiAuthToken, apiPath } from "../../../secrets";
+import axiosInstance from "../../services/axios/axiosInstance";
 import toast from "react-hot-toast";
 
 import { FaRegPlusSquare } from "react-icons/fa";
@@ -26,16 +24,16 @@ export default function PostScheduleCharge() {
   };
   const handleOk = async () => {
     try {
-      const { data } = await axios.post(
-        `${apiPath}/charges/post-schedule`,
+      const { data } = await axiosInstance.post(
+        "/charges/post-schedule",
         {
           ...formData,
+          riderFirstKMCharge: Number(formData.riderFirstKMCharge),
+          riderOthersKMCharge: Number(formData.riderOthersKMCharge),
+          userFirstKMCharge: Number(formData.userFirstKMCharge),
+          userOthersKMCharge: Number(formData.userOthersKMCharge),
+          isActive: String(formData.isActive) === "true",
         },
-        {
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-        }
       );
 
       console.log(data);
@@ -128,7 +126,7 @@ export default function PostScheduleCharge() {
             onChange={handleOnChange}
             className="w-full px-2 py-2 rounded-lg border shadow-lg mt-2 text-black"
           >
-            <option value="" disabled selected>
+            <option value="" disabled>
               select status
             </option>
             <option value={false} className="text-black">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Modal } from "antd";
 import { Input } from "antd";
 import handleApiRequest from "../../helpers/handleApiRequest";
@@ -11,12 +11,22 @@ export default function UpdateMenuDiscountRate({ menu, getMenus }) {
     setIsModalOpen(true);
   };
   const handleOk = async () => {
-    const { result, loading } = await handleApiRequest(
+    const nextDiscountRate = Number(discountRate);
+    if (
+      !Number.isFinite(nextDiscountRate) ||
+      nextDiscountRate < 0 ||
+      nextDiscountRate > 100
+    ) {
+      toast.error("Discount must be between 0 and 100.");
+      return;
+    }
+
+    const { result } = await handleApiRequest(
       `/admin/menu/update-discount-rate?id=${menu._id}`,
       {
         method: "PUT",
         body: JSON.stringify({
-          discountRate: Number(discountRate),
+          discountRate: nextDiscountRate,
         }),
       }
     );

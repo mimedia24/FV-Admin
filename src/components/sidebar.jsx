@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import Cookies from "js-cookie";
 import {
@@ -23,11 +23,14 @@ import {
   PanelLeftOpen,
   BadgeDollarSign,
   BarChart3,
+  Landmark,
+  Trash2,
 } from "lucide-react";
 
 const navigation = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { title: "Order Management", href: "/order-management", icon: ClipboardList },
+  { title: "Order Trash", href: "/order-trash", icon: Trash2 },
   { title: "Live Order Maps", href: "/order-map", icon: MapPinned },
   { title: "Rider Management", href: "/rider-management", icon: Bike },
   { title: "Restaurant Registry", href: "/restaurant-management", icon: Store },
@@ -38,9 +41,10 @@ const navigation = [
   { title: "Service Charges", href: "/charges", icon: ReceiptText },
   { title: "Manual Discounts", href: "/manual-discounts", icon: BadgeDollarSign,},
   { title: "Payouts", href: "/payment/rider", icon: WalletCards },
+  { title: "bKash Zone Ledger", href: "/bkash-ledger", icon: Landmark },
   { title: "Broadcasts", href: "/notification", icon: BellRing },
   { title: "Profit Reports", href: "/reports", icon: BarChart3 },
-  { title: "Zone Control", href: "/zone-management", icon: Flame },
+  { title: "Zone & Agent Control", href: "/zone-management", icon: Flame },
   { title: "System Settings", href: "/settings", icon: Settings },
   
 ];
@@ -64,6 +68,9 @@ export default function Sidebar({
 
   const handleLogOut = () => {
     Cookies.remove("accessToken");
+    localStorage.removeItem("AccessToken");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("id");
     setIsOpen(false);
     navigate("/login");
   };

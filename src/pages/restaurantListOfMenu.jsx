@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Layout from "./layout";
 import RestaurantDetails from "../components/restaurant/restaurantDetails";
 import { useParams } from "react-router-dom";
 import axiosInstance from "../services/axios/axiosInstance";
 import { Table, Tag, Checkbox, Image, message } from "antd";
 import PositionUpdate from "../components/restaurant/UpdateRestaurantMenuPosition";
+import { resolveImageUrl } from "../helpers/imageUrl";
 
 export default function RestaurantListOfMenu() {
   const [restaurantDetail, setRestaurantDetail] = useState(null);
@@ -27,7 +28,7 @@ export default function RestaurantListOfMenu() {
         setRestaurantDetail(data.restaurant || null);
         setTotalItems(data.totalItems || 0);
       }
-    } catch (err) {
+    } catch {
       message.error("Failed to load menu list");
     } finally {
       setLoading(false);
@@ -36,6 +37,8 @@ export default function RestaurantListOfMenu() {
 
   useEffect(() => {
     fetchMenu();
+    // fetchMenu uses the current restaurant and pagination values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, page]);
 
   const handleStatusUpdate = async (menuId, field, newValue, endpoint) => {
@@ -50,7 +53,7 @@ export default function RestaurantListOfMenu() {
         );
         message.success(`${field} updated successfully`);
       }
-    } catch (err) {
+    } catch {
       message.error("Update failed");
     }
   };
@@ -69,7 +72,8 @@ export default function RestaurantListOfMenu() {
           width={50}
           height={50}
           className="rounded shadow-sm object-cover"
-          src={img ? import.meta.env.VITE_IMAGE_PATH + img : "https://placehold.co/100"}
+          src={resolveImageUrl(img)}
+          fallback={resolveImageUrl()}
         />
       ),
     },

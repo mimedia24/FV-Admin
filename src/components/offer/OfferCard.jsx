@@ -6,6 +6,7 @@ import { MdDelete } from "react-icons/md";
 import { Button, message, Popconfirm } from "antd";
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../../secrets";
+import { resolveImageUrl, useImageFallback } from "../../helpers/imageUrl";
 
 export default function OfferCard({ item, setAdvertisement }) {
   const [subMenu, setSubMenu] = React.useState(false);
@@ -38,7 +39,11 @@ export default function OfferCard({ item, setAdvertisement }) {
 
   return (
     <div className="max-w-[300px] border shadow-md p-4 rounded-md relative">
-      <img src={import.meta.env.VITE_IMAGE_PATH + item.thumbnail} alt="" />
+      <img
+        src={resolveImageUrl(item.thumbnail)}
+        alt={item.title || "Offer"}
+        onError={useImageFallback}
+      />
       <div>
         <h1>{item.title}</h1>
         <h1>{item.link || "currently no link available"}</h1>

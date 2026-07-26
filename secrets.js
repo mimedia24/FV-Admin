@@ -1,14 +1,12 @@
-const mode = "PRO"; // DEV or PRO
-
 export const apiPath =
-  mode === "DEV"
+  import.meta.env.VITE_API_PATH ||
+  (import.meta.env.DEV
     ? "http://localhost:3000/api"
-    : "https://api.foodversedelivery.com/api";
+    : "https://api.foodversedelivery.com/api");
 
 export const apiAuthToken =
   import.meta.env.VITE_API_TOKEN || "YOUR_API_TOKEN_HERE";
 
 export const IMAGE_PATH =
-  mode === "DEV"
-    ? "http://localhost:3000"
-    : "https://api.foodversedelivery.com"; 
+  import.meta.env.VITE_IMAGE_PATH ||
+  apiPath.replace(/\/api\/?$/, "");

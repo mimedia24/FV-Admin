@@ -1,13 +1,12 @@
-import React from "react";
-import { Select, Space } from "antd";
+import { Select } from "antd";
 import handleApiRequest from "../../helpers/handleApiRequest";
 import { toast } from "react-toastify";
 
-export default function ChangeStatus({ menu, status, setStatus }) {
+export default function ChangeStatus({ menu, setStatus }) {
   const handleChange = async (value) => {
     console.log(`selected ${value}`);
 
-    const { loading, result } = await handleApiRequest(
+    const { result } = await handleApiRequest(
       `/admin/menu/change-menu-status?id=${menu._id}`,
       {
         method: "PUT",

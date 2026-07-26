@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Space,
@@ -27,13 +27,14 @@ import {
 } from "@ant-design/icons";
 import Layout from "./layout";
 import axios from "axios";
-import { apiAuthToken, apiPath, IMAGE_PATH } from "../../secrets";
+import { apiAuthToken, apiPath } from "../../secrets";
 import OfferCard from "../components/offer/OfferCard";
 import CustomSkeleton from "../components/skeleton";
 import AddOfferModal from "../components/offer/AddOfferModal";
 import AddVoucher from "../components/offer/AddVoucher";
 import axiosInstance from "../services/axios/axiosInstance";
 import UpdateVoucher from "../components/offer/UpdateVoucher";
+import { resolveImageUrl } from "../helpers/imageUrl";
 
 const { Title, Text } = Typography;
 
@@ -83,7 +84,7 @@ export default function Offermanagement() {
       if (voucherRes.data.success) {
         setVouchers(voucherRes.data.result.data || []);
       }
-    } catch (error) {
+    } catch {
       message.error("Failed to load data");
     } finally {
       setLoading(false);
@@ -125,8 +126,8 @@ export default function Offermanagement() {
             width={56}
             height={56}
             className="rounded-2xl object-cover border border-slate-200 shadow-sm"
-            src={record.image ? `${IMAGE_PATH}${record.image}` : null}
-            fallback="https://via.placeholder.com/56?text=No+Img"
+            src={resolveImageUrl(record.image)}
+            fallback={resolveImageUrl()}
             preview={{ mask: <EyeOutlined className="text-white" /> }}
           />
         </div>

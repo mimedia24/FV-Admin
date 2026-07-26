@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Layout from "./layout";
-import axios from "axios";
-import { apiAuthToken, apiPath } from "../../secrets";
+import axiosInstance from "../services/axios/axiosInstance";
 import UpdateChargeForm from "../components/charges/UpdateChargeForm";
 import PostScheduleCharge from "../components/charges/PostScheduleChargeForm";
 import DeleteChargeList from "../components/charges/DeleteChargeList";
@@ -49,11 +48,7 @@ export default function Charges() {
   async function getChargeList() {
     try {
       setLoading(true);
-      const { data } = await axios.get(`${apiPath}/charges/schedule`, {
-        headers: {
-          "x-auth-token": apiAuthToken,
-        },
-      });
+      const { data } = await axiosInstance.get("/charges/schedule");
 
       setCharges(data.charges);
     } catch (error) {
@@ -277,6 +272,7 @@ export default function Charges() {
             )}
           </div>
         </div>
+
       </div>
     </Layout>
   );

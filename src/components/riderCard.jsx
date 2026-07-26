@@ -17,9 +17,9 @@ import {
 } from "@ant-design/icons";
 import ChangeRiderStatus from "./changeRiderStatus";
 import ChangeRiderSession from "./changeRiderSession";
-import { IMAGE_PATH } from "../../secrets";
 import { useEffect, useMemo, useState } from "react";
 import axiosInstance from "../services/axios/axiosInstance";
+import { resolveImageUrl, useImageFallback } from "../helpers/imageUrl";
 
 const toNumber = (value) => {
   const n = Number(value || 0);
@@ -272,12 +272,10 @@ export default function RiderCard({ order: rider, refreshData }) {
         <div className="flex items-center gap-4">
           <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 shadow bg-gray-50">
             <img
-              src={`${IMAGE_PATH}${rider?.profileImage || ""}`}
+              src={resolveImageUrl(rider?.profileImage)}
               alt={normalizedName}
               className="object-cover w-full h-full"
-              onError={(e) => {
-                e.currentTarget.style.display = "none";
-              }}
+              onError={useImageFallback}
             />
           </div>
 

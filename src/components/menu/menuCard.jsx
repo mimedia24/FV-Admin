@@ -1,29 +1,21 @@
-import React, { useState } from "react";
-import { Card, Tag, Checkbox } from "antd";
+import { useState } from "react";
+import { Tag, Checkbox } from "antd";
 import ChangeStatus from "./changeStatus";
 import UpdateMenuDiscountRate from "./updateMenuDiscountRate";
 import UpdateMenuPlateFormFee from "./UpdateMenuPlateformFee";
-import { apiAuthToken, apiPath } from "../../../secrets";
+import axiosInstance from "../../services/axios/axiosInstance";
+import { resolveImageUrl, useImageFallback } from "../../helpers/imageUrl";
 
-export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
+export default function MenuCard({ menu, slNo, getMenus }) {
   const [status, setStatus] = useState(menu?.status);
   const [approvalStatus, setApprovalStatus] = useState(menu.isApproved);
   const [isPopular, setIsPopular] = useState(menu.isPopular);
 
   async function handleAdminApproved() {
     try {
-      const res = await fetch(
-        `${apiPath}/menu/update/approval?approvalStatus=${!menu.isApproved}&menuId=${
-          menu._id
-        }`,
-        {
-          method: "PUT",
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-        }
+      const { data } = await axiosInstance.put(
+        `/menu/update/approval?approvalStatus=${!menu.isApproved}&menuId=${menu._id}`
       );
-      const data = await res.json();
       if (data.success) {
         setApprovalStatus(!approvalStatus);
       }
@@ -34,18 +26,9 @@ export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
 
   async function handlePopularItem() {
     try {
-      const res = await fetch(
-        `${apiPath}/menu/update/popular?status=${!menu.isPopular}&menuId=${
-          menu._id
-        }`,
-        {
-          method: "PUT",
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-        }
+      const { data } = await axiosInstance.put(
+        `/menu/update/popular?status=${!menu.isPopular}&menuId=${menu._id}`
       );
-      const data = await res.json();
       if (data.success) {
         setIsPopular(!isPopular);
       }
@@ -78,11 +61,9 @@ export default function MenuCard({ menu, setMenus, slNo, getMenus }) {
       <td className="text-sm text-center px-3 py-2">
         <img
           className="w-16 h-16 mx-auto rounded-full border object-cover shadow"
-          src={
-            import.meta.env.VITE_IMAGE_PATH + menu.image ||
-            "https://placehold.co/600x400"
-          }
+          src={resolveImageUrl(menu.image)}
           alt={menu.name}
+          onError={useImageFallback}
         />
       </td>
       <td className="text-sm text-center px-3 py-2 min-w-[120px] text-gray-500 truncate">

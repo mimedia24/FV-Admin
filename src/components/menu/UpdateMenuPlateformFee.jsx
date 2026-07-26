@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button, Modal } from "antd";
 import { Input } from "antd";
 import handleApiRequest from "../../helpers/handleApiRequest";
@@ -11,12 +11,18 @@ export default function UpdateMenuPlateFormFee({ menu, getMenus }) {
     setIsModalOpen(true);
   };
   const handleOk = async () => {
-    const { result, loading } = await handleApiRequest(
+    const nextPlatformFee = Number(plateformFee);
+    if (!Number.isFinite(nextPlatformFee) || nextPlatformFee < 0) {
+      toast.error("Platform fee must be zero or greater.");
+      return;
+    }
+
+    const { result } = await handleApiRequest(
       `/menu/platform-fee/update?menu-id=${menu._id}`,
       {
         method: "PUT",
         body: JSON.stringify({
-          platformFee: Number(plateformFee),
+          platformFee: nextPlatformFee,
         }),
       }
     );

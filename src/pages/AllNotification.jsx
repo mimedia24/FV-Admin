@@ -1,5 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { apiAuthToken } from "../../secrets";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "./layout";
 import { Button, Empty, Spin, Tag } from "antd";
 import {
@@ -11,6 +10,8 @@ import {
   ThunderboltOutlined,
   TagsOutlined,
 } from "@ant-design/icons";
+import axiosInstance from "../services/axios/axiosInstance";
+import { resolveImageUrl, useImageFallback } from "../helpers/imageUrl";
 
 function AllNotification() {
   const [notifications, setNotifications] = useState([]);
@@ -18,17 +19,9 @@ function AllNotification() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_PATH}/notification/notifications?limit=5`,
-        {
-          method: "GET",
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-        }
+      const { data } = await axiosInstance.get(
+        "/notification/notifications?limit=5"
       );
-
-      const data = await response.json();
       if (data.success) {
         setNotifications(data.notifications);
       } else {
@@ -50,14 +43,7 @@ function AllNotification() {
   async function handleDelete(id) {
     try {
       setLoading(true);
-      const response = await fetch(
-        `${import.meta.env.VITE_API_PATH}/notification/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      const data = await response.json();
+      const { data } = await axiosInstance.delete(`/notification/${id}`);
       if (data.success) {
         alert(data.message);
       } else {
@@ -204,9 +190,10 @@ function AllNotification() {
                     {item.image ? (
                       <div className="aspect-[16/7] w-full overflow-hidden bg-slate-100">
                         <img
-                          src={import.meta.env.VITE_IMAGE_PATH + item.image}
+                          src={resolveImageUrl(item.image)}
                           alt="Notification"
                           className="h-full w-full object-cover"
+                          onError={useImageFallback}
                         />
                       </div>
                     ) : (

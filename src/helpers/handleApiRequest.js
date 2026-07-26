@@ -2,10 +2,12 @@ import { apiAuthToken, apiPath } from "../../secrets";
 
 export default async function handleApiRequest(url, options) {
   let loading = true;
+  const accessToken = localStorage.getItem("AccessToken");
 
   const defaultHeaders = {
     "x-auth-token": apiAuthToken,
     "content-type": "application/json",
+    ...(accessToken ? { AccessToken: accessToken } : {}),
   };
 
   try {

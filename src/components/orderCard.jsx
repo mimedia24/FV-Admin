@@ -340,12 +340,7 @@ export default function OrderCard({ order, slNo, getOrders }) {
 
         <Modal isActive={timelineModalOn}>
           <TimelineContainer
-            timeline={{
-              riderAssignTime: order?.riderAssignTime || 0,
-              pickupTime: order?.pickupTime || 0,
-              deliveredTime: order?.deliveredTime || 0,
-              restaurantAcceptTime: order?.restaurantAcceptTime || 0,
-            }}
+            order={order}
             handleClose={() => setTimeLineModalOn(!timelineModalOn)}
           />
         </Modal>

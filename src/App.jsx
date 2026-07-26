@@ -31,6 +31,8 @@ import OrderHistoryScreen from "./pages/OrdeHistoryScreen";
 import ZoneManagementScreen from "./pages/ZoneManagement";
 import ManualDiscountRequests from "./pages/ManualDiscountRequests";
 import ProfitReports from "./pages/ProfitReports";
+import BkashLedger from "./pages/BkashLedger";
+import OrderTrash from "./pages/OrderTrash";
 
 function App() {
   return (
@@ -231,6 +233,22 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ZoneManagementScreen />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/order-trash"
+              element={
+                <ProtectedRoute>
+                  <OrderTrash />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/bkash-ledger"
+              element={
+                <ProtectedRoute>
+                  <BkashLedger />
                 </ProtectedRoute>
               }
             />

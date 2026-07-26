@@ -1,10 +1,8 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button, Modal } from "antd";
 import { MdDelete } from "react-icons/md";
 
-import { Input } from "antd";
-import axios from "axios";
-import { apiAuthToken, apiPath } from "../../../secrets";
+import axiosInstance from "../../services/axios/axiosInstance";
 import toast from "react-hot-toast";
 
 export default function DeleteChargeList({ item }) {
@@ -15,14 +13,8 @@ export default function DeleteChargeList({ item }) {
   };
   const handleOk = async () => {
     try {
-      const { data } = await axios.delete(
-        `${apiPath}/charges/delete-schedule?id=${item._id}`,
-        
-        {
-          headers: {
-            "x-auth-token": apiAuthToken,
-          },
-        }
+      const { data } = await axiosInstance.delete(
+        `/charges/delete-schedule?id=${item._id}`
       );
 
       console.log(data);

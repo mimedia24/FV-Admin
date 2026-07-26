@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Checkbox, message, Spin } from "antd";
-import axios from "axios";
-import { apiAuthToken, apiPath } from "../../../secrets";
+import axiosInstance from "../../services/axios/axiosInstance";
 
 const PopularToggle = ({ restaurantId, initialStatus }) => {
   const [isPopular, setIsPopular] = useState(initialStatus);
@@ -12,14 +11,11 @@ const PopularToggle = ({ restaurantId, initialStatus }) => {
     setLoading(true);
 
     try {
-      const { data } = await axios.put(
-        `${apiPath}/admin/make-popular-restaurant`,
+      const { data } = await axiosInstance.put(
+        "/admin/make-popular-restaurant",
         {
           restaurantId,
           status: newStatus,
-        },
-        {
-          headers: { "x-auth-token": apiAuthToken },
         }
       );
 

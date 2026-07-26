@@ -1,5 +1,6 @@
 import axios from "axios";
 import { apiAuthToken, apiPath } from "../../../secrets";
+import Cookies from "js-cookie";
 
 const axiosInstance = axios.create({
   baseURL: apiPath,
@@ -35,6 +36,8 @@ axiosInstance.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       console.warn("Session expired. Logging out...");
       localStorage.removeItem("AccessToken");
+      localStorage.removeItem("accessToken");
+      Cookies.remove("accessToken");
       window.location.href = "/login";
     }
 

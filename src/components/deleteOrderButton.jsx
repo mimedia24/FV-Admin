@@ -1,43 +1,74 @@
-import React, { useState } from "react";
-import { Button, message, Popconfirm } from "antd";
+import { useState } from "react";
+import { Button, Popconfirm, Tooltip, message } from "antd";
+import { Trash2 } from "lucide-react";
 import handleApiRequest from "../helpers/handleApiRequest";
-import { toast } from "react-toastify";
+
+const canMoveToTrash = (status) => {
+  const normalized = String(status || "")
+    .trim()
+    .toLowerCase();
+  return normalized.includes("cancel") || normalized.includes("cencel");
+};
 
 export default function DeleteOrderButton({ order, getOrders }) {
-  const confirm = async (e) => {
-    console.log(e);
-    message.success("Click on Yes");
-    console.log("order id is: ", order._id);
+  const [loading, setLoading] = useState(false);
+  const allowed = canMoveToTrash(order?.status);
 
-    const { result, loading } = await handleApiRequest(
-      `/admin/order/delete-order?id=${order._id}`,
-      {
-        method: "DELETE",
+  const moveToTrash = async () => {
+    try {
+      setLoading(true);
+      const { result } = await handleApiRequest(
+        `/admin/order/delete-order?id=${order._id}`,
+        {
+          method: "DELETE",
+          body: JSON.stringify({
+            reason: "Moved to Trash from Main Admin Order Management",
+          }),
+        },
+      );
+
+      if (!result?.success) {
+        throw new Error(result?.message || "Failed to move order to Trash.");
       }
-    );
 
-    if (result?.success) {
-      getOrders();
-      toast(result?.message);
+      message.success(result?.message || "Order moved to Trash.");
+      await getOrders();
+    } catch (error) {
+      message.error(error?.message || "Failed to move order to Trash.");
+    } finally {
+      setLoading(false);
     }
   };
-  const cancel = (e) => {
-    console.log(e);
-    message.error("Click on No");
-  };
+
+  const button = (
+    <Button
+      danger
+      size="small"
+      icon={<Trash2 size={14} />}
+      disabled={!allowed}
+      loading={loading}
+    >
+      Trash
+    </Button>
+  );
+
+  if (!allowed) {
+    return (
+      <Tooltip title="Cancel the order first. Active orders cannot be moved to Trash.">
+        <span>{button}</span>
+      </Tooltip>
+    );
+  }
 
   return (
-    <div className="my-4">
-      <Popconfirm
-        title="Delete the task"
-        description="Are you sure to delete this task?"
-        onConfirm={confirm}
-        onCancel={cancel}
-        okText="Yes"
-        cancelText="No"
-      >
-        <Button danger>Delete</Button>
-      </Popconfirm>
-    </div>
+    <Popconfirm
+      title="Move this order to Trash?"
+      description="It will no longer appear in active orders, but can be restored later."
+      onConfirm={moveToTrash}
+      okText="Move to Trash"
+      cancelText="Keep order"
+    >
+      {button}
+    </Popconfirm>
   );
 }

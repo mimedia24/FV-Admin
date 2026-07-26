@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, Tag, Popconfirm, Button } from "antd";
 import { MdDelete, MdEdit, MdDescription, MdInfoOutline } from "react-icons/md";
 import { FaFire } from "react-icons/fa";
@@ -6,6 +6,7 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import EditCategoryModal from "./EditCategoryModal";
 import { apiAuthToken, apiPath } from "../../../secrets";
+import { resolveImageUrl, useImageFallback } from "../../helpers/imageUrl";
 
 export default function CategoryCard({ category, setCategories }) {
   const [editModal, setEditModal] = useState(false);
@@ -70,9 +71,10 @@ export default function CategoryCard({ category, setCategories }) {
         {/* Thumbnail Image */}
         <div className="flex justify-center p-4">
           <img
-            src={category?.thumbnail || "https://placehold.co/80x80/E5E7EB/4B5563?text=IMG"}
+            src={resolveImageUrl(category?.thumbnail)}
             alt="category thumbnail"
             className="w-20 h-20 rounded-full object-cover border-2 border-white shadow-md"
+            onError={useImageFallback}
           />
         </div>
 
