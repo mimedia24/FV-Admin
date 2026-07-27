@@ -24,6 +24,7 @@ import { LoadingOutlined } from "@ant-design/icons";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { GoogleMap, useJsApiLoader } from "@react-google-maps/api";
+import { GOOGLE_MAPS_API_KEY } from "../../config/maps";
 
 import { apiPath, apiAuthToken } from "../../../secrets";
 
@@ -344,7 +345,7 @@ function RegisterNewRestaurant({ visible, onCancel, onSuccess }) {
   const [selectedZone, setSelectedZone] = useState(null);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+    googleMapsApiKey: GOOGLE_MAPS_API_KEY,
   });
 
   const mapCenter = useMemo(() => {

@@ -19,6 +19,10 @@ import {
   Tooltip,
 } from "antd";
 import handleApiRequest from "../helpers/handleApiRequest";
+import {
+  GOOGLE_MAP_ID,
+  hasGoogleMapsConfig,
+} from "../config/maps";
 import { 
   CalendarOutlined, 
   EnvironmentOutlined, 
@@ -56,7 +60,16 @@ function OrderMap() {
   const loadOrders = async (targetDate) => {
     setLoading(true);
     const response = await handleGetOrderByDate(targetDate);
-    if (response) setOrders(response.orders);
+    if (response) {
+      const mappedOrders = (Array.isArray(response.orders) ? response.orders : [])
+        .filter((order) => order?.isArchived !== true)
+        .filter((order) => {
+          const latitude = Number(order?.coords?.lat);
+          const longitude = Number(order?.coords?.long ?? order?.coords?.lng);
+          return Number.isFinite(latitude) && Number.isFinite(longitude);
+        });
+      setOrders(mappedOrders);
+    }
     setLoading(false);
   };
 
@@ -113,11 +126,21 @@ function OrderMap() {
           </div>
         )}
 
+        {!hasGoogleMapsConfig ? (
+          <div className="flex h-full items-center justify-center p-6">
+            <Card className="max-w-lg text-center shadow-lg">
+              <Title level={4}>Google Maps key is missing</Title>
+              <Text type="secondary">
+                Add VITE_MAP_API_KEY before building the Main Admin Panel.
+              </Text>
+            </Card>
+          </div>
+        ) : (
         <Map
           style={{ width: "100%", height: "100%" }}
           defaultCenter={{ lat: 22.9443, lng: 90.8301 }}
           defaultZoom={13}
-          mapId={import.meta.env.VITE_MAP_ID}
+          mapId={GOOGLE_MAP_ID || undefined}
           disableDefaultUI={true}
         >
           {orders?.map((order) => {
@@ -125,7 +148,10 @@ function OrderMap() {
             return (
               <AdvancedMarker
                 key={order._id}
-                position={{ lat: order.coords.lat, lng: order.coords.long }}
+                position={{
+                  lat: Number(order.coords.lat),
+                  lng: Number(order.coords.long ?? order.coords.lng),
+                }}
                 onClick={() => { setModalData(order); setModalOpen(true); }}
               >
                 <div className="relative flex items-center justify-center">
@@ -140,6 +166,7 @@ function OrderMap() {
             );
           })}
         </Map>
+        )}
       </div>
 
       <OrderModal

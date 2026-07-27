@@ -25,6 +25,7 @@ import {
   HandCoins,
   Coins,
 } from "lucide-react";
+import { calculateActiveDashboardStats } from "../helpers/dashboardActiveOrders";
 
 const iconMap = {
   users: Users,
@@ -292,41 +293,28 @@ export default function Dashboard() {
 
     async function fetchDashboardFirst() {
       try {
-        const dashboardRes = await axiosInstance.get(
-          "/admin/dashboard/information"
-        );
-
-        if (!active) return;
-
-        const payload =
-          dashboardRes?.data?.data ??
-          dashboardRes?.data?.result ??
-          dashboardRes?.data ??
-          null;
-
-        setStats(payload);
-      } catch (error) {
-        if (active) {
-          console.error("Dashboard main stats fetch error:", error);
-          setStats(null);
-        }
-      } finally {
-        if (active) {
-          setLoading(false);
-        }
-      }
-
-      try {
         const [usersRes, ridersRes, restaurantsRes, ordersRes] =
           await Promise.allSettled([
             axiosInstance.get("/admin/list-of-users"),
             axiosInstance.get("/admin/list-of-riders"),
             axiosInstance.get("/admin/list-of-restaurants"),
-            axiosInstance.get("/admin/list-of-orders"),
+            axiosInstance.get("/admin/list-of-orders", {
+              params: { page: 1, limit: 10000 },
+            }),
           ]);
 
         if (!active) return;
 
+        const activeOrders =
+          ordersRes.status === "fulfilled" &&
+          Array.isArray(ordersRes.value?.data?.orders)
+            ? ordersRes.value.data.orders.filter(
+                (order) => order?.isArchived !== true,
+              )
+            : [];
+        const activeStats = calculateActiveDashboardStats(activeOrders);
+
+        setStats(activeStats);
         setCounts({
           users:
             usersRes.status === "fulfilled"
@@ -342,16 +330,19 @@ export default function Dashboard() {
               : 0,
           orders:
             ordersRes.status === "fulfilled"
-              ? extractCount(ordersRes.value?.data)
+              ? activeOrders.length ||
+                extractCount(ordersRes.value?.data)
               : 0,
         });
       } catch (error) {
         if (active) {
           console.error("Dashboard count fetch error:", error);
+          setStats(null);
         }
       } finally {
         if (active) {
           setCountsLoading(false);
+          setLoading(false);
         }
       }
     }

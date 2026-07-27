@@ -33,6 +33,7 @@ import ManualDiscountRequests from "./pages/ManualDiscountRequests";
 import ProfitReports from "./pages/ProfitReports";
 import BkashLedger from "./pages/BkashLedger";
 import OrderTrash from "./pages/OrderTrash";
+import AppUpdateControl from "./pages/AppUpdateControl";
 
 function App() {
   return (
@@ -233,6 +234,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ZoneManagementScreen />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/app-update"
+              element={
+                <ProtectedRoute>
+                  <AppUpdateControl />
                 </ProtectedRoute>
               }
             />

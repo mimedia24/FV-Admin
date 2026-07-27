@@ -25,10 +25,12 @@ import {
   BarChart3,
   Landmark,
   Trash2,
+  Smartphone,
 } from "lucide-react";
 
 const navigation = [
   { title: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+  { title: "App Update Control", href: "/app-update", icon: Smartphone },
   { title: "Order Management", href: "/order-management", icon: ClipboardList },
   { title: "Order Trash", href: "/order-trash", icon: Trash2 },
   { title: "Live Order Maps", href: "/order-map", icon: MapPinned },

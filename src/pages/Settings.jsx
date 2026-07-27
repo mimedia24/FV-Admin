@@ -2,11 +2,13 @@ import React, { useMemo, useState } from "react";
 import Layout from "./layout";
 import ChangePassword from "../components/settings/ChangePassword";
 import AdminInformation from "../components/settings/AdminInformation";
+import AppUpdateManagement from "../components/settings/AppUpdateManagement";
 import {
   HiOutlineUserCircle,
   HiOutlineShieldCheck,
   HiOutlineChevronRight,
   HiOutlineSparkles,
+  HiOutlineDeviceMobile,
 } from "react-icons/hi";
 
 const settingsSubMenu = [
@@ -29,6 +31,16 @@ const settingsSubMenu = [
     activeClass:
       "from-fuchsia-600 to-violet-600 text-white shadow-lg shadow-fuchsia-500/20",
     softClass: "bg-violet-50 text-violet-600",
+  },
+  {
+    id: "app-update",
+    title: "App Update Control",
+    description: "Manage optional reminders and mandatory app upgrades.",
+    icon: <HiOutlineDeviceMobile />,
+    component: <AppUpdateManagement />,
+    activeClass:
+      "from-emerald-600 to-cyan-600 text-white shadow-lg shadow-emerald-500/20",
+    softClass: "bg-emerald-50 text-emerald-600",
   },
 ];
 
@@ -104,7 +116,7 @@ function Settings() {
                     Settings Menu
                   </p>
                   <h2 className="mt-1 text-lg font-black text-slate-900">
-                    Account Preferences
+                      Admin Controls
                   </h2>
                 </div>
 
