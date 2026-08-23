@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "./layout";
 import useFetch from "../useFetch/useFetch";
 import CustomSkeleton from "../components/skeleton";
@@ -183,12 +183,20 @@ function getOrderAmount(order) {
     toNumber(order?.tip) ||
     toNumber(order?.riderTip) ||
     toNumber(order?.riderTips);
+  const orderPlatformFee = toNumber(
+    order?.orderPlatformFee ??
+      order?.orderPlatformFeeSnapshot?.effectiveAmount ??
+      0
+  );
   const voucherAmount =
     toNumber(order?.voucherAmount) ||
     toNumber(order?.voucherDiscount) ||
     toNumber(order?.discountAmount);
 
-  return Math.max(0, itemsTotal + deliveryAmount + riderTip - voucherAmount);
+  return Math.max(
+    0,
+    itemsTotal + deliveryAmount + riderTip + orderPlatformFee - voucherAmount
+  );
 }
 
 function getOrderDate(order) {

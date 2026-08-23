@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "./layout";
 import axiosInstance from "../services/axios/axiosInstance";
 import {
@@ -24,6 +24,7 @@ import {
   UtensilsCrossed,
   HandCoins,
   Coins,
+  BadgeDollarSign,
 } from "lucide-react";
 import { calculateActiveDashboardStats } from "../helpers/dashboardActiveOrders";
 
@@ -74,7 +75,10 @@ const toNumber = (value) => {
 };
 
 const formatMoney = (value) =>
-  `BDT ${Math.trunc(toNumber(value)).toLocaleString("en-BD")}`;
+  `BDT ${toNumber(value).toLocaleString("en-BD", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+  })}`;
 
 function extractCount(payload) {
   if (typeof payload === "number") return payload;
@@ -178,6 +182,7 @@ function SalesSummaryCard({ item, tone = "blue" }) {
     { label: "Delivery Fee", value: item.deliveryFee, icon: Wallet },
     { label: "Delivery Profit", value: item.deliveryProfit, icon: HandCoins },
     { label: "Rider Tips", value: item.riderTips, icon: Coins },
+    { label: "Platform Fee", value: item.platformFee, icon: BadgeDollarSign },
   ];
 
   return (
@@ -268,6 +273,13 @@ const CustomTooltip = ({ active, payload, label }) => {
             {formatMoney(data.riderTips)}
           </span>
         </div>
+
+        <div className="flex items-center justify-between gap-8">
+          <span className="text-[12px] text-slate-500">Platform Fee</span>
+          <span className="text-sm font-bold text-fuchsia-600">
+            {formatMoney(data.platformFee)}
+          </span>
+        </div>
       </div>
 
       <div className="mt-3 border-t border-slate-100 pt-2 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -291,53 +303,54 @@ export default function Dashboard() {
   useEffect(() => {
     let active = true;
 
+    async function fetchLegacyCounts() {
+      const requests = [
+        axiosInstance.get("/admin/list-of-users", { params: { page: 1, limit: 1 } }),
+        axiosInstance.get("/admin/list-of-riders", { params: { page: 1, limit: 1 } }),
+        axiosInstance.get("/admin/list-of-restaurants", { params: { page: 1, limit: 1 } }),
+        axiosInstance.get("/admin/list-of-orders", { params: { page: 1, limit: 1 } }),
+      ];
+      const [usersRes, ridersRes, restaurantsRes, ordersRes] =
+        await Promise.allSettled(requests);
+
+      return {
+        users: usersRes.status === "fulfilled" ? extractCount(usersRes.value?.data) : 0,
+        riders: ridersRes.status === "fulfilled" ? extractCount(ridersRes.value?.data) : 0,
+        restaurants:
+          restaurantsRes.status === "fulfilled"
+            ? extractCount(restaurantsRes.value?.data)
+            : 0,
+        orders: ordersRes.status === "fulfilled" ? extractCount(ordersRes.value?.data) : 0,
+      };
+    }
+
     async function fetchDashboardFirst() {
       try {
-        const [usersRes, ridersRes, restaurantsRes, ordersRes] =
-          await Promise.allSettled([
-            axiosInstance.get("/admin/list-of-users"),
-            axiosInstance.get("/admin/list-of-riders"),
-            axiosInstance.get("/admin/list-of-restaurants"),
-            axiosInstance.get("/admin/list-of-orders", {
-              params: { page: 1, limit: 10000 },
-            }),
-          ]);
-
+        const response = await axiosInstance.get("/admin/dashboard/information");
         if (!active) return;
 
-        const activeOrders =
-          ordersRes.status === "fulfilled" &&
-          Array.isArray(ordersRes.value?.data?.orders)
-            ? ordersRes.value.data.orders.filter(
-                (order) => order?.isArchived !== true,
-              )
-            : [];
-        const activeStats = calculateActiveDashboardStats(activeOrders);
+        const dashboard = response?.data?.data || {};
+        const serverCounts = dashboard?.counts;
+        const hasConsolidatedCounts = ["users", "riders", "restaurants", "orders"].every(
+          (key) => Number.isFinite(Number(serverCounts?.[key]))
+        );
 
-        setStats(activeStats);
-        setCounts({
-          users:
-            usersRes.status === "fulfilled"
-              ? extractCount(usersRes.value?.data)
-              : 0,
-          riders:
-            ridersRes.status === "fulfilled"
-              ? extractCount(ridersRes.value?.data)
-              : 0,
-          restaurants:
-            restaurantsRes.status === "fulfilled"
-              ? extractCount(restaurantsRes.value?.data)
-              : 0,
-          orders:
-            ordersRes.status === "fulfilled"
-              ? activeOrders.length ||
-                extractCount(ordersRes.value?.data)
-              : 0,
-        });
+        setStats(dashboard);
+        setCounts(
+          hasConsolidatedCounts
+            ? {
+                users: toNumber(serverCounts.users),
+                riders: toNumber(serverCounts.riders),
+                restaurants: toNumber(serverCounts.restaurants),
+                orders: toNumber(serverCounts.orders),
+              }
+            : await fetchLegacyCounts()
+        );
       } catch (error) {
         if (active) {
-          console.error("Dashboard count fetch error:", error);
+          console.error("Dashboard fetch error:", error);
           setStats(null);
+          setCounts(await fetchLegacyCounts());
         }
       } finally {
         if (active) {
@@ -368,6 +381,7 @@ export default function Dashboard() {
         deliveryProfit,
         chartDeliveryProfit: deliveryProfit < 0 ? 0 : deliveryProfit,
         riderTips: toNumber(item?.riderTips),
+        platformFee: toNumber(item?.platformFee),
         totalOrder: toNumber(item?.totalOrders ?? item?.totalOrder),
         isUpcoming: !!item?.isUpcoming,
       };
@@ -378,6 +392,7 @@ export default function Dashboard() {
     return weekDaySales.map((item) => ({
       label: item.label,
       foodSell: item.foodSell,
+      platformFee: item.platformFee,
     }));
   }, [weekDaySales]);
 
@@ -391,6 +406,7 @@ export default function Dashboard() {
       deliveryFee: toNumber(source?.deliveryAmount ?? source?.deliveryFee),
       deliveryProfit: toNumber(source?.deliveryProfit),
       riderTips: toNumber(source?.riderTips),
+      platformFee: toNumber(source?.platformFee),
       tone,
     });
 
@@ -499,7 +515,7 @@ export default function Dashboard() {
           <section className="grid gap-6 xl:grid-cols-2">
             <SectionCard
               title="Order Overview"
-              subtitle="Food sales, restaurant sell, delivery fee, delivery profit, rider tips and total order"
+              subtitle="Food sales, restaurant sell, delivery fee, delivery profit, rider tips, platform fee and total order"
               badge="Live Comparison"
             >
               <div className="h-[340px]">
@@ -553,6 +569,12 @@ export default function Dashboard() {
                       name="Rider Tips"
                     />
                     <Bar
+                      dataKey="platformFee"
+                      fill="#d946ef"
+                      radius={[10, 10, 0, 0]}
+                      name="Platform Fee"
+                    />
+                    <Bar
                       dataKey="totalOrder"
                       fill="#0f172a"
                       radius={[10, 10, 0, 0]}
@@ -565,8 +587,8 @@ export default function Dashboard() {
 
             <SectionCard
               title="Revenue Overview"
-              subtitle="Only food sales"
-              badge="Food Sales Only"
+              subtitle="Food sales and order platform fee"
+              badge="Revenue Breakdown"
             >
               <div className="h-[340px]">
                 <ResponsiveContainer width="100%" height="100%">
@@ -589,6 +611,16 @@ export default function Dashboard() {
                           stopColor="#2563eb"
                           stopOpacity={0.02}
                         />
+                      </linearGradient>
+                      <linearGradient
+                        id="platformFeeGradientMain"
+                        x1="0"
+                        x2="0"
+                        y1="0"
+                        y2="1"
+                      >
+                        <stop offset="5%" stopColor="#d946ef" stopOpacity={0.45} />
+                        <stop offset="95%" stopColor="#d946ef" stopOpacity={0.02} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid
@@ -618,6 +650,14 @@ export default function Dashboard() {
                       strokeWidth={4}
                       fill="url(#sellGradientMain)"
                       name="Food Sales"
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="platformFee"
+                      stroke="#d946ef"
+                      strokeWidth={3}
+                      fill="url(#platformFeeGradientMain)"
+                      name="Platform Fee"
                     />
                   </AreaChart>
                 </ResponsiveContainer>

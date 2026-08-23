@@ -35,7 +35,10 @@ const toNumber = (value) => {
 };
 
 const formatMoney = (value) =>
-  `BDT ${Math.round(toNumber(value)).toLocaleString("en-BD")}`;
+  `BDT ${toNumber(value).toLocaleString("en-BD", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+  })}`;
 
 const formatSignedMoney = (value) => {
   const n = toNumber(value);
@@ -80,9 +83,14 @@ const normalizeRestaurantReportRow = (row = {}) => {
   const deliveryProfit = toNumber(row.deliveryProfit);
   const riderTips = toNumber(row.riderTips);
   const voucherExpense = toNumber(row.voucherExpense);
+  const orderPlatformFeeRevenue = toNumber(row.orderPlatformFeeRevenue);
   const totalAmount = toNumber(row.totalAmount);
   const calculatedNetProfit =
-    commissionProfit + foodMargin + deliveryProfit - voucherExpense;
+    commissionProfit +
+    foodMargin +
+    deliveryProfit +
+    orderPlatformFeeRevenue -
+    voucherExpense;
   const netProfit =
     row.netProfit !== undefined && row.netProfit !== null
       ? toNumber(row.netProfit)
@@ -99,6 +107,7 @@ const normalizeRestaurantReportRow = (row = {}) => {
     deliveryProfit,
     riderTips,
     voucherExpense,
+    orderPlatformFeeRevenue,
     totalAmount,
     netProfit,
   };
@@ -117,6 +126,7 @@ const normalizeDailyReportRow = (row = {}) => {
     ...row,
     foodSale,
     restaurantSale,
+    orderPlatformFeeRevenue: toNumber(row.orderPlatformFeeRevenue),
   };
 };
 
@@ -166,6 +176,7 @@ const defaultReport = {
     deliveryProfit: 0,
     riderTips: 0,
     voucherExpense: 0,
+    orderPlatformFeeRevenue: 0,
     manualDiscount: 0,
     totalAmount: 0,
     restaurantCommissionProfit: 0,
@@ -406,8 +417,14 @@ function ProfitReports() {
     const foodMargin = toNumber(baseSummary.foodMargin);
     const deliveryProfit = toNumber(baseSummary.deliveryProfit);
     const voucherExpense = toNumber(baseSummary.voucherExpense);
+    const orderPlatformFeeRevenue = toNumber(
+      baseSummary.orderPlatformFeeRevenue
+    );
     const calculatedGrossProfit =
-      restaurantCommissionProfit + foodMargin + deliveryProfit;
+      restaurantCommissionProfit +
+      foodMargin +
+      deliveryProfit +
+      orderPlatformFeeRevenue;
     const grossProfit =
       baseSummary.grossProfit !== undefined
         ? toNumber(baseSummary.grossProfit)
@@ -426,6 +443,7 @@ function ProfitReports() {
       deliveryProfit,
       riderTips: toNumber(baseSummary.riderTips),
       voucherExpense,
+      orderPlatformFeeRevenue,
       totalAmount: toNumber(baseSummary.totalAmount),
       restaurantCommissionProfit,
       manualDiscount,
@@ -593,6 +611,7 @@ Range: ${report?.range?.startDate} to ${report?.range?.endDate}
 Completed Orders: ${summary.completedOrders}
 Food Sale: ${formatMoney(summary.foodSale)}
 Restaurant Sale: ${formatMoney(summary.restaurantSale)}
+Platform Fee: ${formatMoney(summary.orderPlatformFeeRevenue)}
 Final Received: ${formatMoney(summary.totalAmount)}
 Net Profit: ${formatMoney(summary.netProfit)}`;
 
@@ -618,6 +637,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
         "Restaurant Sale",
         "Delivery Fee",
         "Rider Tips",
+        "Platform Fee",
         "Voucher Expense",
         "Voucher Code",
         "Total Amount",
@@ -634,6 +654,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
         order?.restaurantSale,
         order?.deliveryFee,
         order?.riderTips,
+        order?.orderPlatformFee,
         order?.voucherExpense,
         order?.voucherCode,
         order?.totalAmount,
@@ -653,6 +674,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
         "",
         "",
         "",
+        '',
         manualDiscountTotal,
       ],
       [
@@ -669,6 +691,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
         "",
         "",
         "",
+        '',
         summary.netProfit,
       ],
     ];
@@ -917,7 +940,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
             </div>
           ) : null}
 
-          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
             <StatCard
               title="Completed Orders"
               value={summary.completedOrders}
@@ -940,6 +963,14 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
               helper="Restaurant base sale"
               icon={<Store size={22} />}
               gradient="from-violet-600 to-fuchsia-500"
+            />
+
+            <StatCard
+              title="Platform Fee"
+              value={formatMoney(summary.orderPlatformFeeRevenue)}
+              helper="Order-level platform revenue"
+              icon={<ReceiptText size={22} />}
+              gradient="from-fuchsia-600 to-pink-500"
             />
 
             <StatCard
@@ -1010,6 +1041,12 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
                 />
 
                 <MiniLine
+                  label="Platform Fee"
+                  value={formatMoney(summary.orderPlatformFeeRevenue)}
+                  icon={<ReceiptText size={16} />}
+                />
+
+                <MiniLine
                   label={`Voucher Expense (${summary.voucherAppliedOrders || 0} orders)`}
                   value={`-${formatMoney(summary.voucherExpense)}`}
                   icon={<Gift size={16} />}
@@ -1043,7 +1080,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
                   </h2>
 
                   <p className="m-0 mt-1 text-sm text-slate-400">
-                    Net = commission + food margin + delivery profit - expenses
+                    Net = commission + food margin + delivery profit + platform fee - expenses
                   </p>
                 </div>
 
@@ -1076,6 +1113,13 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
                       ? "text-emerald-300"
                       : "text-red-300"
                   }
+                />
+
+                <MiniLine
+                  label="Platform Fee Revenue"
+                  value={formatSignedMoney(summary.orderPlatformFeeRevenue)}
+                  icon={<ReceiptText size={16} />}
+                  tone="text-fuchsia-300"
                 />
 
                 <MiniLine
@@ -1174,7 +1218,7 @@ function RestaurantTable({ rows, loading }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[1150px] text-left text-sm">
+      <table className="w-full min-w-[1250px] text-left text-sm">
         <thead>
           <tr className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
             <th className="px-4 py-3">Restaurant</th>
@@ -1185,6 +1229,7 @@ function RestaurantTable({ rows, loading }) {
             <th className="px-4 py-3">Commission</th>
             <th className="px-4 py-3">Delivery Fee</th>
             <th className="px-4 py-3">Rider Tips</th>
+            <th className="px-4 py-3">Platform Fee</th>
             <th className="px-4 py-3">Voucher</th>
             <th className="px-4 py-3">Total</th>
             <th className="px-4 py-3">Net Profit</th>
@@ -1229,6 +1274,10 @@ function RestaurantTable({ rows, loading }) {
 
               <td className="px-4 py-3">{formatMoney(row.riderTips)}</td>
 
+              <td className="px-4 py-3 font-bold text-fuchsia-600">
+                {formatMoney(row.orderPlatformFeeRevenue)}
+              </td>
+
               <td className="px-4 py-3 font-bold text-red-500">
                 -{formatMoney(row.voucherExpense)}
               </td>
@@ -1263,7 +1312,7 @@ function DailyTable({ rows, loading }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[1050px] text-left text-sm">
+      <table className="w-full min-w-[1150px] text-left text-sm">
         <thead>
           <tr className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
             <th className="px-4 py-3">Date</th>
@@ -1272,6 +1321,7 @@ function DailyTable({ rows, loading }) {
             <th className="px-4 py-3">Restaurant Sale</th>
             <th className="px-4 py-3">Delivery Fee</th>
             <th className="px-4 py-3">Rider Tips</th>
+            <th className="px-4 py-3">Platform Fee</th>
             <th className="px-4 py-3">Voucher</th>
             <th className="px-4 py-3">Manual Discount</th>
             <th className="px-4 py-3">Total</th>
@@ -1297,6 +1347,10 @@ function DailyTable({ rows, loading }) {
               <td className="px-4 py-3">{formatMoney(row.deliveryFee)}</td>
 
               <td className="px-4 py-3">{formatMoney(row.riderTips)}</td>
+
+              <td className="px-4 py-3 font-bold text-fuchsia-600">
+                {formatMoney(row.orderPlatformFeeRevenue)}
+              </td>
 
               <td className="px-4 py-3 font-bold text-red-500">
                 -{formatMoney(row.voucherExpense)}
@@ -1399,7 +1453,7 @@ function OrdersModal({ open, onCancel, orders }) {
         <Empty description="No orders found" />
       ) : (
         <div className="max-h-[70vh] overflow-auto">
-          <table className="w-full min-w-[1100px] text-left text-sm">
+          <table className="w-full min-w-[1200px] text-left text-sm">
             <thead>
               <tr className="bg-slate-50 text-[11px] uppercase tracking-wide text-slate-500">
                 <th className="px-3 py-3">Order</th>
@@ -1411,6 +1465,7 @@ function OrdersModal({ open, onCancel, orders }) {
                 <th className="px-3 py-3">Food</th>
                 <th className="px-3 py-3">Delivery</th>
                 <th className="px-3 py-3">Tips</th>
+                <th className="px-3 py-3">Platform Fee</th>
                 <th className="px-3 py-3">Voucher</th>
                 <th className="px-3 py-3">Total</th>
               </tr>
@@ -1451,6 +1506,10 @@ function OrdersModal({ open, onCancel, orders }) {
 
                   <td className="px-3 py-3">
                     {formatMoney(order.riderTips)}
+                  </td>
+
+                  <td className="px-3 py-3 font-bold text-fuchsia-600">
+                    {formatMoney(order.orderPlatformFee)}
                   </td>
 
                   <td className="px-3 py-3 font-bold text-red-500">

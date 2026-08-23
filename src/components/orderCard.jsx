@@ -154,6 +154,14 @@ function getDeliveryAmount(order) {
   return toNumber(order?.deliveryAmount ?? order?.deliveryFee);
 }
 
+function getOrderPlatformFee(order) {
+  return toNumber(
+    order?.orderPlatformFee ??
+      order?.orderPlatformFeeSnapshot?.effectiveAmount ??
+      0
+  );
+}
+
 function getSubtotalBeforeVoucher(order) {
   const directSubtotal =
     toNumber(order?.subtotal) ||
@@ -193,9 +201,13 @@ function getFinalPayableAmount(order) {
   const subtotal = getSubtotalBeforeVoucher(order);
   const deliveryAmount = getDeliveryAmount(order);
   const riderTip = getRiderTip(order);
+  const orderPlatformFee = getOrderPlatformFee(order);
   const voucherAmount = getVoucherAmount(order);
 
-  return Math.max(0, subtotal + deliveryAmount + riderTip - voucherAmount);
+  return Math.max(
+    0,
+    subtotal + deliveryAmount + riderTip + orderPlatformFee - voucherAmount
+  );
 }
 
 export default function OrderCard({ order, slNo, getOrders }) {
@@ -211,6 +223,7 @@ export default function OrderCard({ order, slNo, getOrders }) {
   const subtotal = useMemo(() => getSubtotalBeforeVoucher(order), [order]);
   const deliveryAmount = useMemo(() => getDeliveryAmount(order), [order]);
   const riderTip = useMemo(() => getRiderTip(order), [order]);
+  const orderPlatformFee = useMemo(() => getOrderPlatformFee(order), [order]);
   const voucherAmount = useMemo(() => getVoucherAmount(order), [order]);
   const voucherCode = useMemo(() => getVoucherCode(order), [order]);
   const finalPayableAmount = useMemo(() => getFinalPayableAmount(order), [order]);
@@ -304,6 +317,10 @@ export default function OrderCard({ order, slNo, getOrders }) {
 
             <p className="text-[10px] font-medium text-blue-500">
               Delivery {formatMoney(deliveryAmount)}
+            </p>
+
+            <p className="text-[10px] font-semibold text-violet-600">
+              Platform Fee {formatMoney(orderPlatformFee)}
             </p>
 
             {riderTip > 0 ? (

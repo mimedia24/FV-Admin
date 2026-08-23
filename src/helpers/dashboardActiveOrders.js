@@ -56,6 +56,7 @@ const emptySummary = () => ({
   riderTips: 0,
   riderCost: 0,
   deliveryProfit: 0,
+  platformFee: 0,
 });
 
 const calculateOrderMoney = (order) => {
@@ -86,6 +87,11 @@ const calculateOrderMoney = (order) => {
   const riderTips = numberValue(
     order?.riderTips ?? order?.tipAmount ?? order?.tip,
   );
+  const platformFee = numberValue(
+    order?.orderPlatformFee ??
+      order?.orderPlatformFeeSnapshot?.effectiveAmount ??
+      0,
+  );
 
   return {
     totalSales,
@@ -94,6 +100,7 @@ const calculateOrderMoney = (order) => {
     riderCost,
     riderTips,
     deliveryProfit: deliveryAmount - riderCost,
+    platformFee,
   };
 };
 
@@ -107,6 +114,7 @@ const addOrder = (summary, order) => {
   summary.riderTips += money.riderTips;
   summary.riderCost += money.riderCost;
   summary.deliveryProfit += money.deliveryProfit;
+  summary.platformFee += money.platformFee;
 };
 
 export const calculateActiveDashboardStats = (
@@ -135,6 +143,7 @@ export const calculateActiveDashboardStats = (
     riderTips: 0,
     riderCost: 0,
     deliveryProfit: 0,
+    platformFee: 0,
     isUpcoming: moveDateKey(weekStartKey, index) > todayKey,
   }));
   const weekMap = new Map(weekRows.map((row) => [row.dateKey, row]));
@@ -164,6 +173,10 @@ export const calculateActiveDashboardStats = (
     today,
     weekly,
     monthly,
-    weekDaySales: weekRows.map(({ dateKey, ...row }) => row),
+    weekDaySales: weekRows.map((row) => {
+      const publicRow = { ...row };
+      delete publicRow.dateKey;
+      return publicRow;
+    }),
   };
 };

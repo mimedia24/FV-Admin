@@ -119,7 +119,7 @@ function Detail({ icon: Icon, label, children }) {
   );
 }
 
-function TrashOrderCard({ order, restoring, onRestore }) {
+function TrashOrderCard({ order, restoring, deleting, onRestore, onDelete }) {
   const orderId = String(order?._id || "");
   const tip = money(order?.tip ?? order?.tipAmount ?? order?.riderTips);
 
@@ -139,20 +139,39 @@ function TrashOrderCard({ order, restoring, onRestore }) {
           </p>
         </div>
 
-        <Popconfirm
-          title="Restore this order?"
-          description="The order will return to Order Management."
-          onConfirm={() => onRestore(orderId)}
-          okText="Restore"
-        >
-          <Button
-            type="primary"
-            icon={<ArchiveRestore size={15} />}
-            loading={restoring}
+        <div className="flex flex-wrap items-center gap-2">
+          <Popconfirm
+            title="Restore this order?"
+            description="The order will return to Order Management."
+            onConfirm={() => onRestore(orderId)}
+            okText="Restore"
           >
-            Restore Order
-          </Button>
-        </Popconfirm>
+            <Button
+              type="primary"
+              icon={<ArchiveRestore size={15} />}
+              loading={restoring}
+            >
+              Restore Order
+            </Button>
+          </Popconfirm>
+
+          <Popconfirm
+            title="Permanently delete this order?"
+            description="This cannot be undone. The order will be removed from the database."
+            onConfirm={() => onDelete(orderId)}
+            okText="Delete Permanently"
+            cancelText="Cancel"
+            okButtonProps={{ danger: true }}
+          >
+            <Button
+              danger
+              icon={<Trash2 size={15} />}
+              loading={deleting}
+            >
+              Delete Permanently
+            </Button>
+          </Popconfirm>
+        </div>
       </div>
 
       <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -201,6 +220,7 @@ export default function OrderTrash() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [restoringId, setRestoringId] = useState("");
+  const [deletingId, setDeletingId] = useState("");
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [date, setDate] = useState("");
@@ -267,6 +287,28 @@ export default function OrderTrash() {
     }
   };
 
+  const permanentlyDeleteOrder = async (orderId) => {
+    try {
+      setDeletingId(orderId);
+      const { data } = await axiosInstance.delete(
+        `/admin/order/${orderId}/permanent`,
+      );
+      message.success(data?.message || "Order permanently deleted.");
+
+      if (orders.length === 1 && page > 1) {
+        setPage((currentPage) => currentPage - 1);
+      } else {
+        await loadArchivedOrders();
+      }
+    } catch (error) {
+      message.error(
+        error?.response?.data?.message ||
+          "Failed to permanently delete archived order.",
+      );
+    } finally {
+      setDeletingId("");
+    }
+  };
   return (
     <Layout>
       <div className="min-h-screen bg-slate-50 p-3 md:p-6">
@@ -337,7 +379,9 @@ export default function OrderTrash() {
                     key={order._id}
                     order={order}
                     restoring={restoringId === order._id}
+                    deleting={deletingId === order._id}
                     onRestore={restoreOrder}
+                    onDelete={permanentlyDeleteOrder}
                   />
                 ))
               )}

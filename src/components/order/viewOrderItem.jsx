@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Modal, Button } from "antd";
 
 const toNumber = (value) => {
@@ -54,14 +54,39 @@ export default function ViewOrderItem({ order }) {
     });
 
     const deliveryFee = toNumber(order?.deliveryAmount);
+    const riderTip = toNumber(
+      order?.tip ?? order?.riderTip ?? order?.riderTips ?? 0
+    );
+    const platformFee = toNumber(
+      order?.orderPlatformFee ??
+        order?.orderPlatformFeeSnapshot?.effectiveAmount ??
+        0
+    );
+    const voucherAmount = toNumber(
+      order?.voucherAmount ??
+        order?.voucherDiscount ??
+        order?.voucherDiscountAmount ??
+        0
+    );
     const grandTotal =
-      toNumber(order?.totalAmount) || itemSellingTotal + addonTotal + deliveryFee;
+      toNumber(order?.totalAfterVoucherApplied) ||
+      toNumber(order?.totalAmount) ||
+      Math.max(
+        0,
+        itemSellingTotal +
+          addonTotal +
+          deliveryFee +
+          riderTip +
+          platformFee -
+          voucherAmount
+      );
 
     return {
       itemBaseTotal,
       itemSellingTotal,
       addonTotal,
       deliveryFee,
+      platformFee,
       grandTotal,
     };
   }, [order]);
@@ -157,7 +182,7 @@ export default function ViewOrderItem({ order }) {
             </table>
           </div>
 
-          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
             <div className="rounded-2xl bg-slate-50 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-400">Item Base Total</p>
               <p className="mt-2 text-lg font-black text-slate-900">
@@ -183,6 +208,13 @@ export default function ViewOrderItem({ order }) {
               <p className="text-xs uppercase tracking-wide text-slate-400">Delivery Fee</p>
               <p className="mt-2 text-lg font-black text-slate-900">
                 {formatMoney(summary.deliveryFee)}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-violet-50 p-4">
+              <p className="text-xs uppercase tracking-wide text-violet-400">Platform Fee</p>
+              <p className="mt-2 text-lg font-black text-violet-700">
+                {formatMoney(summary.platformFee)}
               </p>
             </div>
           </div>

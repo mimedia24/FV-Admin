@@ -139,6 +139,14 @@ const getRiderTips = (order) => {
   );
 };
 
+const getOrderPlatformFee = (order) => {
+  return toNumber(
+    order?.orderPlatformFee ??
+      order?.orderPlatformFeeSnapshot?.effectiveAmount ??
+      0
+  );
+};
+
 const isDelivered = (order) => {
   const status = String(order?.status || order?.orderStatus || "").toLowerCase();
   return (
@@ -281,6 +289,10 @@ export default function OrderManagement() {
       amount: filteredOrders.reduce((sum, item) => sum + getOrderAmount(item), 0),
       delivery: filteredOrders.reduce((sum, item) => sum + getDeliveryFee(item), 0),
       tips: filteredOrders.reduce((sum, item) => sum + getRiderTips(item), 0),
+      platformFee: filteredOrders.reduce(
+        (sum, item) => sum + getOrderPlatformFee(item),
+        0
+      ),
     };
   }, [orders, filteredOrders]);
 
@@ -374,7 +386,7 @@ export default function OrderManagement() {
           <StatCard
             title="Visible Amount"
             value={money(stats.amount)}
-            helper={`Delivery ${money(stats.delivery)} • Tips ${money(stats.tips)}`}
+            helper={`Delivery ${money(stats.delivery)} • Tips ${money(stats.tips)} • Platform ${money(stats.platformFee)}`}
             icon={<Wallet size={20} />}
             tone="amber"
           />
