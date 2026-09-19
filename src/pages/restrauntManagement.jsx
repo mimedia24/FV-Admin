@@ -23,6 +23,7 @@ import {
   ShieldAlert,
   ChevronLeft,
   ChevronRight,
+  MapPinned,
 } from "lucide-react";
 
 const num = (value) => {
@@ -60,14 +61,33 @@ export default function RestrauntManagement() {
   const [refreshing, setRefreshing] = useState(false);
   const [forceCloseAll, setForceCloseAll] = useState(false);
   const [bulkClosing, setBulkClosing] = useState(false);
+  const [zones, setZones] = useState([]);
+  const [zonesLoading, setZonesLoading] = useState(false);
+  const [selectedZone, setSelectedZone] = useState(null);
 
   const pageSize = 10;
 
-  const fetchRestaurants = async (currentPage = page) => {
+  const fetchZones = async () => {
+    setZonesLoading(true);
+    try {
+      const { data } = await axiosInstance.get("/v3/master-admin/zone/list");
+      const list =
+        data?.result?.data || data?.data || data?.zones || [];
+      setZones(Array.isArray(list) ? list : []);
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to load zones");
+      setZones([]);
+    } finally {
+      setZonesLoading(false);
+    }
+  };
+
+  const fetchRestaurants = async (currentPage = page, zone = selectedZone) => {
+    if (!zone?.id) return;
     setLoading(true);
     try {
       const { data } = await axios.get(
-        `${apiPath}/admin/list-of-restaurants?page=${currentPage}&limit=${pageSize}`,
+        `${apiPath}/admin/list-of-restaurants?page=${currentPage}&limit=${pageSize}&zoneId=${encodeURIComponent(zone.id)}`,
         {
           headers: { "x-auth-token": apiAuthToken },
         }
@@ -95,8 +115,27 @@ export default function RestrauntManagement() {
   };
 
   useEffect(() => {
-    fetchRestaurants(page);
-  }, [page]);
+    fetchZones();
+  }, []);
+
+  useEffect(() => {
+    if (selectedZone) fetchRestaurants(page, selectedZone);
+  }, [page, selectedZone]);
+
+  const handleZoneSelect = (zone) => {
+    setSelectedZone(zone);
+    setPage(1);
+    setSearch("");
+    setRestaurantList([]);
+  };
+
+  const handleBackToZones = () => {
+    setSelectedZone(null);
+    setRestaurantList([]);
+    setTotalCount(0);
+    setSearch("");
+    setPage(1);
+  };
 
   const filteredRestaurants = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -142,8 +181,13 @@ export default function RestrauntManagement() {
   const handleRefresh = async () => {
     try {
       setRefreshing(true);
-      await fetchRestaurants(page);
-      message.success("Restaurant list refreshed");
+      if (selectedZone) {
+        await fetchRestaurants(page, selectedZone);
+        message.success("Restaurant list refreshed");
+      } else {
+        await fetchZones();
+        message.success("Zone list refreshed");
+      }
     } finally {
       setRefreshing(false);
     }
@@ -244,10 +288,9 @@ export default function RestrauntManagement() {
                 Restaurant Partners
               </h1>
               <p className="mt-2 text-sm text-slate-500">
-                First page shows{" "}
-                <span className="font-bold text-blue-600">{pageSize}</span>{" "}
-                restaurants. Total partners:{" "}
-                <span className="font-bold text-blue-600">{totalCount}</span>
+                {selectedZone
+                  ? `Restaurants in ${selectedZone.name || `Zone ${selectedZone.id}`}`
+                  : "Choose a zone to view its restaurants"}
               </p>
             </div>
 
@@ -276,6 +319,7 @@ export default function RestrauntManagement() {
               <Button
                 type="primary"
                 onClick={() => setIsModalVisible(true)}
+                disabled={!selectedZone}
                 icon={<HiPlus className="text-lg" />}
                 className="!h-11 !rounded-2xl !border-none !bg-blue-600 !px-6 !font-bold shadow-lg shadow-blue-200"
               >
@@ -284,6 +328,47 @@ export default function RestrauntManagement() {
             </div>
           </div>
 
+          {!selectedZone ? (
+            <div className="rounded-[30px] border border-blue-100 bg-white p-6 shadow-sm">
+              <div className="mb-5 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-blue-600">Restaurant Zones</p>
+                  <h2 className="mt-1 text-2xl font-black text-slate-950">Choose a zone</h2>
+                  <p className="mt-1 text-sm text-slate-500">Select a zone to see every restaurant assigned to it.</p>
+                </div>
+                <MapPinned className="text-blue-600" size={28} />
+              </div>
+              {zonesLoading ? (
+                <div className="flex justify-center py-16"><LoadingSpinner /></div>
+              ) : zones.length === 0 ? (
+                <Empty description="No zones found." />
+              ) : (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {zones.map((zone) => (
+                    <button
+                      key={zone.id}
+                      type="button"
+                      onClick={() => handleZoneSelect(zone)}
+                      className="group rounded-3xl border border-slate-200 bg-gradient-to-br from-white to-blue-50 p-5 text-left shadow-sm transition hover:-translate-y-1 hover:border-blue-300 hover:shadow-lg"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-600">
+                          <MapPinned size={21} />
+                        </div>
+                        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${zone.isActive === false ? "bg-slate-100 text-slate-500" : "bg-emerald-100 text-emerald-700"}`}>
+                          {zone.isActive === false ? "Offline" : "Active"}
+                        </span>
+                      </div>
+                      <h3 className="mt-5 text-lg font-black text-slate-950">{zone.name || `Zone ${zone.id}`}</h3>
+                      <p className="mt-1 text-xs text-slate-500">Zone #{zone.id}</p>
+                      <p className="mt-4 text-xs font-bold text-blue-600 group-hover:underline">View restaurants →</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : (
+          <>
           <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="grid flex-1 grid-cols-2 gap-4 xl:grid-cols-4">
               {statCards.map((item) => (
@@ -326,6 +411,15 @@ export default function RestrauntManagement() {
                 onChange={handleForceCloseAll}
               />
             </div>
+          </div>
+
+          <div className="mb-5 flex items-center justify-between rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
+            <div className="flex items-center gap-3">
+              <MapPinned size={18} className="text-blue-600" />
+              <span className="text-sm font-bold text-slate-800">{selectedZone.name || `Zone ${selectedZone.id}`}</span>
+              <span className="text-xs text-slate-500">All restaurants in this zone</span>
+            </div>
+            <Button onClick={handleBackToZones} className="!rounded-xl">Change zone</Button>
           </div>
 
           <div className="mt-6">
@@ -415,13 +509,15 @@ export default function RestrauntManagement() {
               <ChevronRight size={16} />
             </Button>
           </div>
+          </>
+          )}
         </div>
       </div>
 
       <RegisterNewRestaurant
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
-        onSuccess={() => fetchRestaurants(page)}
+        onSuccess={() => fetchRestaurants(page, selectedZone)}
       />
 
       <style>{`
