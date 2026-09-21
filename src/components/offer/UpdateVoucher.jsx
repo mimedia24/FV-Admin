@@ -18,6 +18,7 @@ import {
 import { UploadOutlined, EyeOutlined, EditOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import axiosInstance from "../../services/axios/axiosInstance";
+import VoucherScopeFields, { normalizeScopeIds } from "./VoucherScopeFields";
 
 const { Option } = Select;
 const { Text } = Typography;
@@ -35,12 +36,9 @@ export default function UpdateVoucher({ isVisible, onClose, onSuccess, editingVo
         startAt: editingVoucher.startAt ? dayjs(editingVoucher.startAt) : null,
         expireAt: editingVoucher.expireAt ? dayjs(editingVoucher.expireAt) : null,
         // Array গুলোকে কমা সেপারেটেড স্ট্রিং-এ রূপান্তর (যদি ব্যাকএন্ড থেকে অ্যারে আসে)
-        applicableRestaurants: Array.isArray(editingVoucher.applicableRestaurants) 
-          ? editingVoucher.applicableRestaurants.join(", ") : editingVoucher.applicableRestaurants,
-        applicableMenus: Array.isArray(editingVoucher.applicableMenus) 
-          ? editingVoucher.applicableMenus.join(", ") : editingVoucher.applicableMenus,
-        applicableZones: Array.isArray(editingVoucher.applicableZones) 
-          ? editingVoucher.applicableZones.join(", ") : editingVoucher.applicableZones,
+        applicableRestaurants: normalizeScopeIds(editingVoucher.applicableRestaurants),
+        applicableMenus: normalizeScopeIds(editingVoucher.applicableMenus),
+        applicableZones: normalizeScopeIds(editingVoucher.applicableZones).map(Number),
       });
       setFileList([]);
     } else {
@@ -59,6 +57,8 @@ export default function UpdateVoucher({ isVisible, onClose, onSuccess, editingVo
 
         if (key === "startAt" || key === "expireAt") {
           formData.append(key, values[key].toISOString());
+        } else if (["applicableRestaurants", "applicableMenus", "applicableZones"].includes(key)) {
+          formData.append(key, Array.isArray(values[key]) ? values[key].join(",") : values[key]);
         } else {
           formData.append(key, values[key]);
         }
@@ -110,7 +110,7 @@ export default function UpdateVoucher({ isVisible, onClose, onSuccess, editingVo
       width={800}
       centered
       destroyOnClose
-      styles={{ body: { backgroundColor: "#111827", color: "white", padding: "24px" } }}
+      styles={{ body: { backgroundColor: "#111827", color: "white", padding: "24px", maxHeight: "78vh", overflowY: "auto" } }}
     >
       <Form form={form} layout="vertical" onFinish={onFinish} className="custom-dark-form">
         <Row gutter={16}>
@@ -174,32 +174,7 @@ export default function UpdateVoucher({ isVisible, onClose, onSuccess, editingVo
 
         <Divider orientation="left" className="border-gray-800 text-gray-400">Applicability Scope</Divider>
 
-        <Form.Item name="applicableZones" label="Zone IDs (Comma Separated)">
-          <Input placeholder="1, 2, 3" className="h-10" />
-        </Form.Item>
-
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item name="applicableRestaurants" label="Restaurant IDs">
-              <Input placeholder="id1, id2" className="h-10" disabled={anyRestaurant} />
-              {!anyRestaurant && editingVoucher?.applicableRestaurantNames?.length > 0 && (
-                <div className="mt-1 text-[11px] text-emerald-400">
-                  Names: {editingVoucher.applicableRestaurantNames.join(", ")}
-                </div>
-              )}
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item name="applicableMenus" label="Menu IDs">
-              <Input placeholder="id1, id2" className="h-10" disabled={anyMenus} />
-              {!anyMenus && editingVoucher?.applicableMenuNames?.length > 0 && (
-                <div className="mt-1 text-[11px] text-emerald-400">
-                  Names: {editingVoucher.applicableMenuNames.join(", ")}
-                </div>
-              )}
-            </Form.Item>
-          </Col>
-        </Row>
+        <VoucherScopeFields form={form} visible={isVisible} />
 
         <div className="flex flex-wrap gap-x-8 gap-y-4 bg-gray-800/30 p-4 rounded-xl mb-6">
           <Form.Item name="isActive" label="Active" valuePropName="checked" className="m-0"><Switch size="small" /></Form.Item>
@@ -207,10 +182,10 @@ export default function UpdateVoucher({ isVisible, onClose, onSuccess, editingVo
           <Form.Item name="firsOrderOnly" label="1st Order" valuePropName="checked" className="m-0"><Switch size="small" /></Form.Item>
           <Form.Item name="autoApply" label="Auto Apply" valuePropName="checked" className="m-0"><Switch size="small" /></Form.Item>
           <Form.Item name="anyRestaurant" label="Any Restaurant" valuePropName="checked" className="m-0">
-            <Switch size="small" onChange={(val) => val && form.setFieldsValue({applicableRestaurants: ''})} />
+            <Switch size="small" onChange={(val) => val && form.setFieldsValue({applicableRestaurants: [], applicableMenus: []})} />
           </Form.Item>
           <Form.Item name="anyMenus" label="Any Menu" valuePropName="checked" className="m-0">
-            <Switch size="small" onChange={(val) => val && form.setFieldsValue({applicableMenus: ''})} />
+            <Switch size="small" onChange={(val) => val && form.setFieldsValue({applicableMenus: []})} />
           </Form.Item>
         </div>
 

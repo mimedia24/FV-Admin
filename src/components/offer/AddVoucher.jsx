@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Modal, Form, Input, InputNumber, Select, Switch, DatePicker, Upload, Button, message, Divider } from "antd";
 import { UploadOutlined, TagOutlined } from "@ant-design/icons";
 import axiosInstance from "../../services/axios/axiosInstance";
+import VoucherScopeFields from "./VoucherScopeFields";
 
 const { RangePicker } = DatePicker;
 
@@ -26,13 +27,14 @@ function AddVoucher({ isVisible, onClose, onSuccess }) {
       formData.append("usageLimit", values.usageLimit);
       formData.append("perUserLimit", values.perUserLimit);
       formData.append("isActive", values.isActive ?? true);
+      formData.append("isPublic", values.isPublic ?? true);
       formData.append("firsOrderOnly", values.firsOrderOnly ?? false);
       formData.append("autoApply", values.autoApply ?? false);
       formData.append("anyRestaurant", values.anyRestaurant ?? false);
       formData.append("anyMenus", values.anyMenus ?? false);
-      formData.append("applicableRestaurants", values.applicableRestaurants || "");
-      formData.append("applicableMenus", values.applicableMenus || "");
-      formData.append("applicableZones", values.applicableZones || "");
+      formData.append("applicableRestaurants", (values.applicableRestaurants || []).join(","));
+      formData.append("applicableMenus", (values.applicableMenus || []).join(","));
+      formData.append("applicableZones", (values.applicableZones || []).join(","));
 
       if (values.dates && values.dates.length === 2) {
         formData.append("startAt", values.dates[0].toISOString());
@@ -75,12 +77,14 @@ function AddVoucher({ isVisible, onClose, onSuccess }) {
       open={isVisible}
       onCancel={onClose}
       width={800}
+      centered
+      styles={{ body: { maxHeight: "72vh", overflowY: "auto", paddingRight: 8 } }}
       footer={[
         <Button key="back" onClick={onClose}>Cancel</Button>,
         <Button key="submit" type="primary" loading={loading} onClick={handleSubmit}>Create Voucher</Button>
       ]}
     >
-      <Form form={form} layout="vertical" initialValues={{ type: 'PERCENTAGE', isActive: true }}>
+      <Form form={form} layout="vertical" initialValues={{ type: 'PERCENTAGE', isActive: true, isPublic: true, anyRestaurant: true, anyMenus: true, applicableZones: [], applicableRestaurants: [], applicableMenus: [] }}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Form.Item name="code" label="Voucher Code" rules={[{ required: true }]}>
             <Input placeholder="e.g. SAVE50" style={{ textTransform: 'uppercase' }} />
@@ -121,27 +125,17 @@ function AddVoucher({ isVisible, onClose, onSuccess }) {
 
         <Divider orientation="left">Applicability</Divider>
         
-        <Form.Item name="applicableZones" label="Zone IDs (Comma Separated)">
-          <Input placeholder="1, 2, 3" />
-        </Form.Item>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Form.Item name="applicableRestaurants" label="Restaurant IDs">
-            <Input placeholder="id1, id2" disabled={form.getFieldValue('anyRestaurant')} />
-          </Form.Item>
-          <Form.Item name="applicableMenus" label="Menu IDs">
-            <Input placeholder="id1, id2" disabled={form.getFieldValue('anyMenus')} />
-          </Form.Item>
-        </div>
+        <VoucherScopeFields form={form} visible={isVisible} />
 
         <Divider />
 
         <div className="flex flex-wrap gap-6 mb-4">
           <Form.Item name="isActive" label="Active" valuePropName="checked"><Switch /></Form.Item>
+          <Form.Item name="isPublic" label="Show in User App" valuePropName="checked"><Switch /></Form.Item>
           <Form.Item name="firsOrderOnly" label="First Order Only" valuePropName="checked"><Switch /></Form.Item>
           <Form.Item name="autoApply" label="Auto Apply" valuePropName="checked"><Switch /></Form.Item>
-          <Form.Item name="anyRestaurant" label="Any Restaurant" valuePropName="checked"><Switch onChange={() => form.setFieldsValue({applicableRestaurants: ''})} /></Form.Item>
-          <Form.Item name="anyMenus" label="Any Menu" valuePropName="checked"><Switch onChange={() => form.setFieldsValue({applicableMenus: ''})} /></Form.Item>
+          <Form.Item name="anyRestaurant" label="Any Restaurant" valuePropName="checked"><Switch onChange={(checked) => checked && form.setFieldsValue({applicableRestaurants: [], applicableMenus: []})} /></Form.Item>
+          <Form.Item name="anyMenus" label="Any Menu" valuePropName="checked"><Switch onChange={(checked) => checked && form.setFieldsValue({applicableMenus: []})} /></Form.Item>
         </div>
 
         <Form.Item label="Voucher Image">
