@@ -75,6 +75,19 @@ const toNumber = (value) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+// Dashboard APIs may return the customer-paid food sale for older orders.
+// When a flash discount is present, show the gross/original sale consistently
+// with the reports and order management screens.
+const getGrossFoodSell = (source) => {
+  const foodSell = toNumber(source?.totalSales ?? source?.foodSell);
+  const restaurantSell = toNumber(source?.restaurantSales ?? source?.restaurantSell);
+  const flashDeal = toNumber(
+    source?.flashDealExpense ?? source?.flashDiscountAmount
+  );
+  if (flashDeal <= 0) return foodSell;
+  return Math.max(foodSell, foodSell + flashDeal, restaurantSell);
+};
+
 const formatMoney = (value) =>
   `BDT ${toNumber(value).toLocaleString("en-BD", {
     maximumFractionDigits: 2,
@@ -377,7 +390,7 @@ export default function Dashboard() {
 
       return {
         label: item?.day || item?.label || "—",
-        foodSell: toNumber(item?.totalSales ?? item?.foodSell),
+        foodSell: getGrossFoodSell(item),
         restaurantSell: toNumber(item?.restaurantSales ?? item?.restaurantSell),
         deliveryFee: toNumber(item?.deliveryAmount ?? item?.deliveryFee),
         deliveryProfit,
@@ -402,7 +415,7 @@ export default function Dashboard() {
   const salesSummary = useMemo(() => {
     const makeCard = (title, source, tone) => ({
       title,
-      foodSell: toNumber(source?.totalSales ?? source?.foodSell),
+      foodSell: getGrossFoodSell(source),
       restaurantSell: toNumber(
         source?.restaurantSales ?? source?.restaurantSell
       ),

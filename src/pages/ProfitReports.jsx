@@ -60,7 +60,15 @@ const getSafeRestaurantSale = ({ foodSale, restaurantSale, foodMargin }) => {
 };
 
 const normalizeRestaurantReportRow = (row = {}) => {
-  const foodSale = toNumber(row.foodSale);
+  const reportedFoodSale = toNumber(row.foodSale);
+  const flashDealExpense = toNumber(row.flashDealExpense);
+  const foodSale = flashDealExpense > 0
+    ? Math.max(
+        reportedFoodSale,
+        reportedFoodSale + flashDealExpense,
+        toNumber(row.restaurantSale)
+      )
+    : reportedFoodSale;
   const foodMargin = toNumber(row.foodMargin);
   const restaurantSale = getSafeRestaurantSale({
     foodSale,
@@ -83,7 +91,6 @@ const normalizeRestaurantReportRow = (row = {}) => {
   const deliveryProfit = toNumber(row.deliveryProfit);
   const riderTips = toNumber(row.riderTips);
   const voucherExpense = toNumber(row.voucherExpense);
-  const flashDealExpense = toNumber(row.flashDealExpense);
   const orderPlatformFeeRevenue = toNumber(row.orderPlatformFeeRevenue);
   const totalAmount = toNumber(row.totalAmount);
   const calculatedNetProfit =
@@ -93,10 +100,7 @@ const normalizeRestaurantReportRow = (row = {}) => {
     orderPlatformFeeRevenue -
     voucherExpense -
     flashDealExpense;
-  const netProfit =
-    row.netProfit !== undefined && row.netProfit !== null
-      ? toNumber(row.netProfit)
-      : calculatedNetProfit;
+  const netProfit = calculatedNetProfit;
 
   return {
     ...row,
@@ -117,7 +121,15 @@ const normalizeRestaurantReportRow = (row = {}) => {
 };
 
 const normalizeDailyReportRow = (row = {}) => {
-  const foodSale = toNumber(row.foodSale);
+  const flashDealExpense = toNumber(row.flashDealExpense);
+  const reportedFoodSale = toNumber(row.foodSale);
+  const foodSale = flashDealExpense > 0
+    ? Math.max(
+        reportedFoodSale,
+        reportedFoodSale + flashDealExpense,
+        toNumber(row.restaurantSale)
+      )
+    : reportedFoodSale;
   const foodMargin = toNumber(row.foodMargin);
   const restaurantSale = getSafeRestaurantSale({
     foodSale,
@@ -130,7 +142,7 @@ const normalizeDailyReportRow = (row = {}) => {
     foodSale,
     restaurantSale,
     orderPlatformFeeRevenue: toNumber(row.orderPlatformFeeRevenue),
-    flashDealExpense: toNumber(row.flashDealExpense),
+    flashDealExpense,
   };
 };
 
@@ -423,6 +435,11 @@ function ProfitReports() {
     const deliveryProfit = toNumber(baseSummary.deliveryProfit);
     const voucherExpense = toNumber(baseSummary.voucherExpense);
     const flashDealExpense = toNumber(baseSummary.flashDealExpense);
+    const reportedFoodSale = toNumber(baseSummary.foodSale);
+    const reportedRestaurantSale = toNumber(baseSummary.restaurantSale);
+    const grossFoodSale = flashDealExpense > 0
+      ? Math.max(reportedFoodSale, reportedFoodSale + flashDealExpense, reportedRestaurantSale)
+      : reportedFoodSale;
     const orderPlatformFeeRevenue = toNumber(
       baseSummary.orderPlatformFeeRevenue
     );
@@ -435,15 +452,12 @@ function ProfitReports() {
       baseSummary.grossProfit !== undefined
         ? toNumber(baseSummary.grossProfit)
         : calculatedGrossProfit;
-    const netProfit =
-      baseSummary.netProfit !== undefined
-        ? toNumber(baseSummary.netProfit)
-        : grossProfit - voucherExpense - flashDealExpense - manualDiscount;
+    const netProfit = grossProfit - voucherExpense - flashDealExpense - manualDiscount;
     return {
       ...baseSummary,
       completedOrders: toNumber(baseSummary.completedOrders),
-      foodSale: toNumber(baseSummary.foodSale),
-      restaurantSale: toNumber(baseSummary.restaurantSale),
+      foodSale: grossFoodSale,
+      restaurantSale: reportedRestaurantSale,
       foodMargin,
       deliveryFee: toNumber(baseSummary.deliveryFee),
       deliveryProfit,

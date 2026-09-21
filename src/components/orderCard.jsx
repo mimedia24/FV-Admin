@@ -166,7 +166,26 @@ function getFlashDealAmount(order) {
 function getGrossItemsTotal(order) {
   const snapshotGross = toNumber(order?.pricingSnapshot?.grossItemsTotal);
   if (snapshotGross > 0) return snapshotGross;
-  return getSubtotalBeforeVoucher(order);
+  const storedGross = toNumber(order?.totalSellingAmount ?? order?.grossItemsTotal);
+  const discounted = getSubtotalBeforeVoucher(order);
+  const flash = getFlashDealAmount(order);
+  const storedFinal = toNumber(order?.totalAfterVoucherApplied ?? order?.totalAmount);
+  const expectedItems = storedFinal > 0
+    ? storedFinal -
+      getDeliveryAmount(order) -
+      getRiderTip(order) -
+      getOrderPlatformFee(order) +
+      getVoucherAmount(order) -
+      getAddonTotal(order)
+    : 0;
+
+  if (storedGross > 0 && !(flash > 0 && expectedItems > 0 && Math.abs(expectedItems - storedGross) < 1)) {
+    return storedGross;
+  }
+  if (flash > 0 && expectedItems > 0 && Math.abs(expectedItems - discounted) < 1) {
+    return discounted + flash;
+  }
+  return discounted;
 }
 
 function getOrderPlatformFee(order) {
