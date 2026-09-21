@@ -85,7 +85,9 @@ const getGrossFoodSell = (source) => {
     source?.flashDealExpense ?? source?.flashDiscountAmount
   );
   if (flashDeal <= 0) return foodSell;
-  return Math.max(foodSell, foodSell + flashDeal, restaurantSell);
+  // The API may already return gross food sale. Only use restaurant sale as
+  // the legacy fallback; never add the discount twice.
+  return Math.max(foodSell, restaurantSell);
 };
 
 const formatMoney = (value) =>

@@ -63,11 +63,7 @@ const normalizeRestaurantReportRow = (row = {}) => {
   const reportedFoodSale = toNumber(row.foodSale);
   const flashDealExpense = toNumber(row.flashDealExpense);
   const foodSale = flashDealExpense > 0
-    ? Math.max(
-        reportedFoodSale,
-        reportedFoodSale + flashDealExpense,
-        toNumber(row.restaurantSale)
-      )
+    ? Math.max(reportedFoodSale, toNumber(row.restaurantSale))
     : reportedFoodSale;
   const foodMargin = toNumber(row.foodMargin);
   const restaurantSale = getSafeRestaurantSale({
@@ -124,11 +120,7 @@ const normalizeDailyReportRow = (row = {}) => {
   const flashDealExpense = toNumber(row.flashDealExpense);
   const reportedFoodSale = toNumber(row.foodSale);
   const foodSale = flashDealExpense > 0
-    ? Math.max(
-        reportedFoodSale,
-        reportedFoodSale + flashDealExpense,
-        toNumber(row.restaurantSale)
-      )
+    ? Math.max(reportedFoodSale, toNumber(row.restaurantSale))
     : reportedFoodSale;
   const foodMargin = toNumber(row.foodMargin);
   const restaurantSale = getSafeRestaurantSale({
@@ -438,7 +430,7 @@ function ProfitReports() {
     const reportedFoodSale = toNumber(baseSummary.foodSale);
     const reportedRestaurantSale = toNumber(baseSummary.restaurantSale);
     const grossFoodSale = flashDealExpense > 0
-      ? Math.max(reportedFoodSale, reportedFoodSale + flashDealExpense, reportedRestaurantSale)
+      ? Math.max(reportedFoodSale, reportedRestaurantSale)
       : reportedFoodSale;
     const orderPlatformFeeRevenue = toNumber(
       baseSummary.orderPlatformFeeRevenue
