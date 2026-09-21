@@ -83,6 +83,7 @@ const normalizeRestaurantReportRow = (row = {}) => {
   const deliveryProfit = toNumber(row.deliveryProfit);
   const riderTips = toNumber(row.riderTips);
   const voucherExpense = toNumber(row.voucherExpense);
+  const flashDealExpense = toNumber(row.flashDealExpense);
   const orderPlatformFeeRevenue = toNumber(row.orderPlatformFeeRevenue);
   const totalAmount = toNumber(row.totalAmount);
   const calculatedNetProfit =
@@ -90,7 +91,8 @@ const normalizeRestaurantReportRow = (row = {}) => {
     foodMargin +
     deliveryProfit +
     orderPlatformFeeRevenue -
-    voucherExpense;
+    voucherExpense -
+    flashDealExpense;
   const netProfit =
     row.netProfit !== undefined && row.netProfit !== null
       ? toNumber(row.netProfit)
@@ -107,6 +109,7 @@ const normalizeRestaurantReportRow = (row = {}) => {
     deliveryProfit,
     riderTips,
     voucherExpense,
+    flashDealExpense,
     orderPlatformFeeRevenue,
     totalAmount,
     netProfit,
@@ -127,6 +130,7 @@ const normalizeDailyReportRow = (row = {}) => {
     foodSale,
     restaurantSale,
     orderPlatformFeeRevenue: toNumber(row.orderPlatformFeeRevenue),
+    flashDealExpense: toNumber(row.flashDealExpense),
   };
 };
 
@@ -176,6 +180,7 @@ const defaultReport = {
     deliveryProfit: 0,
     riderTips: 0,
     voucherExpense: 0,
+    flashDealExpense: 0,
     orderPlatformFeeRevenue: 0,
     manualDiscount: 0,
     totalAmount: 0,
@@ -417,6 +422,7 @@ function ProfitReports() {
     const foodMargin = toNumber(baseSummary.foodMargin);
     const deliveryProfit = toNumber(baseSummary.deliveryProfit);
     const voucherExpense = toNumber(baseSummary.voucherExpense);
+    const flashDealExpense = toNumber(baseSummary.flashDealExpense);
     const orderPlatformFeeRevenue = toNumber(
       baseSummary.orderPlatformFeeRevenue
     );
@@ -432,7 +438,7 @@ function ProfitReports() {
     const netProfit =
       baseSummary.netProfit !== undefined
         ? toNumber(baseSummary.netProfit)
-        : grossProfit - voucherExpense - manualDiscount;
+        : grossProfit - voucherExpense - flashDealExpense - manualDiscount;
     return {
       ...baseSummary,
       completedOrders: toNumber(baseSummary.completedOrders),
@@ -443,6 +449,7 @@ function ProfitReports() {
       deliveryProfit,
       riderTips: toNumber(baseSummary.riderTips),
       voucherExpense,
+      flashDealExpense,
       orderPlatformFeeRevenue,
       totalAmount: toNumber(baseSummary.totalAmount),
       restaurantCommissionProfit,
@@ -610,6 +617,7 @@ function ProfitReports() {
 Range: ${report?.range?.startDate} to ${report?.range?.endDate}
 Completed Orders: ${summary.completedOrders}
 Food Sale: ${formatMoney(summary.foodSale)}
+Flash Deal: -${formatMoney(summary.flashDealExpense)}
 Restaurant Sale: ${formatMoney(summary.restaurantSale)}
 Platform Fee: ${formatMoney(summary.orderPlatformFeeRevenue)}
 Final Received: ${formatMoney(summary.totalAmount)}
@@ -638,6 +646,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
         "Delivery Fee",
         "Rider Tips",
         "Platform Fee",
+        "Flash Deal",
         "Voucher Expense",
         "Voucher Code",
         "Total Amount",
@@ -655,6 +664,7 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
         order?.deliveryFee,
         order?.riderTips,
         order?.orderPlatformFee,
+        order?.flashDealExpense,
         order?.voucherExpense,
         order?.voucherCode,
         order?.totalAmount,
@@ -1047,6 +1057,13 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
                 />
 
                 <MiniLine
+                  label="Flash Deal"
+                  value={`-${formatMoney(summary.flashDealExpense)}`}
+                  icon={<Percent size={16} />}
+                  tone="text-red-100"
+                />
+
+                <MiniLine
                   label={`Voucher Expense (${summary.voucherAppliedOrders || 0} orders)`}
                   value={`-${formatMoney(summary.voucherExpense)}`}
                   icon={<Gift size={16} />}
@@ -1120,6 +1137,13 @@ Net Profit: ${formatMoney(summary.netProfit)}`;
                   value={formatSignedMoney(summary.orderPlatformFeeRevenue)}
                   icon={<ReceiptText size={16} />}
                   tone="text-fuchsia-300"
+                />
+
+                <MiniLine
+                  label="Flash Deal Expense"
+                  value={`-${formatMoney(summary.flashDealExpense)}`}
+                  icon={<Percent size={16} />}
+                  tone="text-red-300"
                 />
 
                 <MiniLine
@@ -1230,6 +1254,7 @@ function RestaurantTable({ rows, loading }) {
             <th className="px-4 py-3">Delivery Fee</th>
             <th className="px-4 py-3">Rider Tips</th>
             <th className="px-4 py-3">Platform Fee</th>
+            <th className="px-4 py-3">Flash Deal</th>
             <th className="px-4 py-3">Voucher</th>
             <th className="px-4 py-3">Total</th>
             <th className="px-4 py-3">Net Profit</th>
@@ -1279,6 +1304,10 @@ function RestaurantTable({ rows, loading }) {
               </td>
 
               <td className="px-4 py-3 font-bold text-red-500">
+                -{formatMoney(row.flashDealExpense)}
+              </td>
+
+              <td className="px-4 py-3 font-bold text-red-500">
                 -{formatMoney(row.voucherExpense)}
               </td>
 
@@ -1322,6 +1351,7 @@ function DailyTable({ rows, loading }) {
             <th className="px-4 py-3">Delivery Fee</th>
             <th className="px-4 py-3">Rider Tips</th>
             <th className="px-4 py-3">Platform Fee</th>
+            <th className="px-4 py-3">Flash Deal</th>
             <th className="px-4 py-3">Voucher</th>
             <th className="px-4 py-3">Manual Discount</th>
             <th className="px-4 py-3">Total</th>
@@ -1350,6 +1380,10 @@ function DailyTable({ rows, loading }) {
 
               <td className="px-4 py-3 font-bold text-fuchsia-600">
                 {formatMoney(row.orderPlatformFeeRevenue)}
+              </td>
+
+              <td className="px-4 py-3 font-bold text-red-500">
+                -{formatMoney(row.flashDealExpense)}
               </td>
 
               <td className="px-4 py-3 font-bold text-red-500">
@@ -1466,6 +1500,7 @@ function OrdersModal({ open, onCancel, orders }) {
                 <th className="px-3 py-3">Delivery</th>
                 <th className="px-3 py-3">Tips</th>
                 <th className="px-3 py-3">Platform Fee</th>
+                <th className="px-3 py-3">Flash Deal</th>
                 <th className="px-3 py-3">Voucher</th>
                 <th className="px-3 py-3">Total</th>
               </tr>
@@ -1510,6 +1545,10 @@ function OrdersModal({ open, onCancel, orders }) {
 
                   <td className="px-3 py-3 font-bold text-fuchsia-600">
                     {formatMoney(order.orderPlatformFee)}
+                  </td>
+
+                  <td className="px-3 py-3 font-bold text-red-500">
+                    -{formatMoney(order.flashDealExpense)}
                   </td>
 
                   <td className="px-3 py-3 font-bold text-red-500">

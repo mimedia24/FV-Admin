@@ -154,6 +154,21 @@ function getDeliveryAmount(order) {
   return toNumber(order?.deliveryAmount ?? order?.deliveryFee);
 }
 
+function getFlashDealAmount(order) {
+  return Math.max(
+    0,
+    toNumber(order?.flashDiscountAmount) ||
+      toNumber(order?.pricingSnapshot?.flashDiscountAmount) ||
+      toNumber(order?.flashOffer?.discountAmount)
+  );
+}
+
+function getGrossItemsTotal(order) {
+  const snapshotGross = toNumber(order?.pricingSnapshot?.grossItemsTotal);
+  if (snapshotGross > 0) return snapshotGross;
+  return getSubtotalBeforeVoucher(order);
+}
+
 function getOrderPlatformFee(order) {
   return toNumber(
     order?.orderPlatformFee ??
@@ -226,6 +241,8 @@ export default function OrderCard({ order, slNo, getOrders }) {
   const orderPlatformFee = useMemo(() => getOrderPlatformFee(order), [order]);
   const voucherAmount = useMemo(() => getVoucherAmount(order), [order]);
   const voucherCode = useMemo(() => getVoucherCode(order), [order]);
+  const flashDealAmount = useMemo(() => getFlashDealAmount(order), [order]);
+  const grossItemsTotal = useMemo(() => getGrossItemsTotal(order), [order]);
   const finalPayableAmount = useMemo(() => getFinalPayableAmount(order), [order]);
 
   function handleCopyData(text) {
@@ -312,8 +329,14 @@ export default function OrderCard({ order, slNo, getOrders }) {
 
           <div className="mt-1 space-y-0.5">
             <p className="text-[10px] font-medium text-slate-500">
-              Items {formatMoney(subtotal)}
+              Items {formatMoney(grossItemsTotal)}
             </p>
+
+            {flashDealAmount > 0 ? (
+              <p className="text-[10px] font-bold text-red-500">
+                Flash Deal -{formatMoney(flashDealAmount)}
+              </p>
+            ) : null}
 
             <p className="text-[10px] font-medium text-blue-500">
               Delivery {formatMoney(deliveryAmount)}

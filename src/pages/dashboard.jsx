@@ -25,6 +25,7 @@ import {
   HandCoins,
   Coins,
   BadgeDollarSign,
+  Percent,
 } from "lucide-react";
 import { calculateActiveDashboardStats } from "../helpers/dashboardActiveOrders";
 
@@ -183,6 +184,7 @@ function SalesSummaryCard({ item, tone = "blue" }) {
     { label: "Delivery Profit", value: item.deliveryProfit, icon: HandCoins },
     { label: "Rider Tips", value: item.riderTips, icon: Coins },
     { label: "Platform Fee", value: item.platformFee, icon: BadgeDollarSign },
+    { label: "Flash Deal", value: -toNumber(item.flashDealExpense), icon: Percent },
   ];
 
   return (
@@ -382,6 +384,7 @@ export default function Dashboard() {
         chartDeliveryProfit: deliveryProfit < 0 ? 0 : deliveryProfit,
         riderTips: toNumber(item?.riderTips),
         platformFee: toNumber(item?.platformFee),
+        flashDealExpense: toNumber(item?.flashDealExpense),
         totalOrder: toNumber(item?.totalOrders ?? item?.totalOrder),
         isUpcoming: !!item?.isUpcoming,
       };
@@ -407,6 +410,7 @@ export default function Dashboard() {
       deliveryProfit: toNumber(source?.deliveryProfit),
       riderTips: toNumber(source?.riderTips),
       platformFee: toNumber(source?.platformFee),
+      flashDealExpense: toNumber(source?.flashDealExpense),
       tone,
     });
 
