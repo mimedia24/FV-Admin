@@ -182,17 +182,28 @@ export default function UpdateVoucher({ isVisible, onClose, onSuccess, editingVo
           <Col span={12}>
             <Form.Item name="applicableRestaurants" label="Restaurant IDs">
               <Input placeholder="id1, id2" className="h-10" disabled={anyRestaurant} />
+              {!anyRestaurant && editingVoucher?.applicableRestaurantNames?.length > 0 && (
+                <div className="mt-1 text-[11px] text-emerald-400">
+                  Names: {editingVoucher.applicableRestaurantNames.join(", ")}
+                </div>
+              )}
             </Form.Item>
           </Col>
           <Col span={12}>
             <Form.Item name="applicableMenus" label="Menu IDs">
               <Input placeholder="id1, id2" className="h-10" disabled={anyMenus} />
+              {!anyMenus && editingVoucher?.applicableMenuNames?.length > 0 && (
+                <div className="mt-1 text-[11px] text-emerald-400">
+                  Names: {editingVoucher.applicableMenuNames.join(", ")}
+                </div>
+              )}
             </Form.Item>
           </Col>
         </Row>
 
         <div className="flex flex-wrap gap-x-8 gap-y-4 bg-gray-800/30 p-4 rounded-xl mb-6">
           <Form.Item name="isActive" label="Active" valuePropName="checked" className="m-0"><Switch size="small" /></Form.Item>
+          <Form.Item name="isPublic" label="Show in User App" valuePropName="checked" className="m-0"><Switch size="small" /></Form.Item>
           <Form.Item name="firsOrderOnly" label="1st Order" valuePropName="checked" className="m-0"><Switch size="small" /></Form.Item>
           <Form.Item name="autoApply" label="Auto Apply" valuePropName="checked" className="m-0"><Switch size="small" /></Form.Item>
           <Form.Item name="anyRestaurant" label="Any Restaurant" valuePropName="checked" className="m-0">

@@ -220,6 +220,27 @@ export default function Offermanagement() {
       },
     },
     {
+      title: "Scope",
+      key: "scope",
+      width: 240,
+      render: (_, record) => (
+        <div className="flex flex-col gap-1 text-[12px]">
+          {record.anyRestaurant || !record.applicableRestaurants?.length ? (
+            <Tag color="green" className="w-fit m-0">All restaurants</Tag>
+          ) : (
+            <Text className="text-slate-600">
+              Restaurants: {record.applicableRestaurantNames?.join(", ") || "Selected restaurants"}
+            </Text>
+          )}
+          {record.anyMenus || !record.applicableMenus?.length ? null : (
+            <Text className="text-slate-600">
+              Menus: {record.applicableMenuNames?.join(", ") || "Selected menus"}
+            </Text>
+          )}
+        </div>
+      ),
+    },
+    {
       title: "Status",
       dataIndex: "isActive",
       key: "isActive",
