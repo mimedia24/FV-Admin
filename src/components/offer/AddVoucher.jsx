@@ -35,6 +35,11 @@ function AddVoucher({ isVisible, onClose, onSuccess }) {
       formData.append("applicableRestaurants", (values.applicableRestaurants || []).join(","));
       formData.append("applicableMenus", (values.applicableMenus || []).join(","));
       formData.append("applicableZones", (values.applicableZones || []).join(","));
+      formData.append("geoScope", JSON.stringify({
+        mode: values.geoScopeMode || "GLOBAL",
+        zoneIds: values.geoScopeMode === "POLYGON" ? [values.geoZoneId] : (values.applicableZones || []),
+        polygon: values.geoScopeMode === "POLYGON" ? (values.geoPolygon || []) : [],
+      }));
 
       if (values.dates && values.dates.length === 2) {
         formData.append("startAt", values.dates[0].toISOString());
@@ -84,7 +89,7 @@ function AddVoucher({ isVisible, onClose, onSuccess }) {
         <Button key="submit" type="primary" loading={loading} onClick={handleSubmit}>Create Voucher</Button>
       ]}
     >
-      <Form form={form} layout="vertical" initialValues={{ type: 'PERCENTAGE', isActive: true, isPublic: true, anyRestaurant: true, anyMenus: true, applicableZones: [], applicableRestaurants: [], applicableMenus: [] }}>
+      <Form form={form} layout="vertical" initialValues={{ type: 'PERCENTAGE', isActive: true, isPublic: true, anyRestaurant: true, anyMenus: true, geoScopeMode: 'GLOBAL', geoPolygon: [], applicableZones: [], applicableRestaurants: [], applicableMenus: [] }}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Form.Item name="code" label="Voucher Code" rules={[{ required: true }]}>
             <Input placeholder="e.g. SAVE50" style={{ textTransform: 'uppercase' }} />

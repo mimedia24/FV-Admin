@@ -39,6 +39,9 @@ export default function UpdateVoucher({ isVisible, onClose, onSuccess, editingVo
         applicableRestaurants: normalizeScopeIds(editingVoucher.applicableRestaurants),
         applicableMenus: normalizeScopeIds(editingVoucher.applicableMenus),
         applicableZones: normalizeScopeIds(editingVoucher.applicableZones).map(Number),
+        geoScopeMode: editingVoucher.geoScope?.mode || (editingVoucher.applicableZones?.length ? "ZONE" : "GLOBAL"),
+        geoZoneId: editingVoucher.geoScope?.mode === "POLYGON" ? Number(editingVoucher.geoScope?.zoneIds?.[0]) : null,
+        geoPolygon: editingVoucher.geoScope?.polygon || [],
       });
       setFileList([]);
     } else {
@@ -57,12 +60,19 @@ export default function UpdateVoucher({ isVisible, onClose, onSuccess, editingVo
 
         if (key === "startAt" || key === "expireAt") {
           formData.append(key, values[key].toISOString());
+        } else if (["geoScopeMode", "geoZoneId", "geoPolygon"].includes(key)) {
+          return;
         } else if (["applicableRestaurants", "applicableMenus", "applicableZones"].includes(key)) {
           formData.append(key, Array.isArray(values[key]) ? values[key].join(",") : values[key]);
         } else {
           formData.append(key, values[key]);
         }
       });
+      formData.append("geoScope", JSON.stringify({
+        mode: values.geoScopeMode || "GLOBAL",
+        zoneIds: values.geoScopeMode === "POLYGON" ? [values.geoZoneId] : (values.applicableZones || []),
+        polygon: values.geoScopeMode === "POLYGON" ? (values.geoPolygon || []) : [],
+      }));
 
       if (fileList.length > 0 && fileList[0]) {
         formData.append("image", fileList[0]);

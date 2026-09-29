@@ -316,6 +316,7 @@ export default function Dashboard() {
     orders: 0,
   });
   const [stats, setStats] = useState(null);
+  const [activity, setActivity] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -382,6 +383,21 @@ export default function Dashboard() {
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const loadActivity = async () => {
+      try {
+        const response = await axiosInstance.get("/v3/master-admin/user-activity/summary");
+        if (active) setActivity(response.data?.result || null);
+      } catch (error) {
+        if (active) console.error("User activity fetch error:", error);
+      }
+    };
+    loadActivity();
+    const timer = setInterval(loadActivity, 15000);
+    return () => { active = false; clearInterval(timer); };
   }, []);
 
   const weekDaySales = useMemo(() => {
@@ -530,6 +546,35 @@ export default function Dashboard() {
               />
             ))}
           </section>
+
+          <SectionCard
+            title="Customer Activity"
+            subtitle="Authenticated users currently online and unique users active today"
+            badge={activity?.generatedAt ? `Updated ${new Date(activity.generatedAt).toLocaleTimeString("en-BD")}` : "Connecting"}
+          >
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div className="rounded-2xl bg-emerald-50 p-5 ring-1 ring-emerald-100">
+                <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">Online Now</p>
+                <p className="mt-2 text-4xl font-black text-emerald-950">{toNumber(activity?.onlineNow).toLocaleString("en-BD")}</p>
+              </div>
+              <div className="rounded-2xl bg-blue-50 p-5 ring-1 ring-blue-100">
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-700">Active Today</p>
+                <p className="mt-2 text-4xl font-black text-blue-950">{toNumber(activity?.activeToday).toLocaleString("en-BD")}</p>
+              </div>
+              {(activity?.zones || []).map((zone) => (
+                <div key={zone.zoneId} className="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+                  <p className="truncate text-xs font-bold uppercase tracking-wider text-slate-500">{zone.zoneName}</p>
+                  <div className="mt-3 flex items-end justify-between gap-3"><div><p className="text-2xl font-black text-slate-950">{toNumber(zone.onlineNow)}</p><p className="text-xs text-slate-500">online</p></div><div className="text-right"><p className="text-2xl font-black text-blue-700">{toNumber(zone.activeToday)}</p><p className="text-xs text-slate-500">today</p></div></div>
+                </div>
+              ))}
+              {(activity?.unknownZone?.onlineNow > 0 || activity?.unknownZone?.activeToday > 0) && (
+                <div className="rounded-2xl bg-amber-50 p-5 ring-1 ring-amber-100">
+                  <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Unknown Zone</p>
+                  <p className="mt-2 text-sm font-semibold text-amber-950">{toNumber(activity?.unknownZone?.onlineNow)} online · {toNumber(activity?.unknownZone?.activeToday)} today</p>
+                </div>
+              )}
+            </div>
+          </SectionCard>
 
           <section className="grid gap-6 xl:grid-cols-2">
             <SectionCard
