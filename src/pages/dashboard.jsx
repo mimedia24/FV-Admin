@@ -4,6 +4,7 @@ import axiosInstance from "../services/axios/axiosInstance";
 import {
   ResponsiveContainer,
   BarChart,
+  ComposedChart,
   Bar,
   CartesianGrid,
   Tooltip,
@@ -12,6 +13,8 @@ import {
   Legend,
   AreaChart,
   Area,
+  Line,
+  LabelList,
 } from "recharts";
 import {
   Sparkles,
@@ -27,7 +30,6 @@ import {
   BadgeDollarSign,
   Percent,
 } from "lucide-react";
-import { calculateActiveDashboardStats } from "../helpers/dashboardActiveOrders";
 
 const iconMap = {
   users: Users,
@@ -306,6 +308,52 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+const activityColors = [
+  "#2563eb",
+  "#8b5cf6",
+  "#10b981",
+  "#f59e0b",
+  "#ec4899",
+  "#06b6d4",
+  "#f97316",
+  "#6366f1",
+];
+
+function WeeklyActivityTooltip({ active, payload }) {
+  if (!(active && payload?.length)) return null;
+  const row = payload[0]?.payload || {};
+
+  return (
+    <div className="min-w-[190px] rounded-2xl border border-slate-100 bg-white/95 p-4 shadow-2xl ring-1 ring-black/5 backdrop-blur-md">
+      <div className="flex items-center justify-between gap-6 border-b border-slate-100 pb-2">
+        <span className="text-sm font-bold text-slate-700">{row.fullLabel}</span>
+        <span className="text-lg font-black text-blue-700">
+          {toNumber(row.total).toLocaleString("en-BD")}
+        </span>
+      </div>
+      <div className="mt-2 space-y-1.5">
+        {(row.breakdown || []).map((item) => (
+          <div key={item.key} className="flex items-center justify-between gap-6 text-xs">
+            <span className="flex min-w-0 items-center gap-2 text-slate-500">
+              <span
+                className="h-2.5 w-2.5 shrink-0 rounded-full"
+                style={{ backgroundColor: item.color }}
+              />
+              <span className="truncate">{item.name}</span>
+            </span>
+            <span className="font-black text-slate-800">
+              {toNumber(item.value).toLocaleString("en-BD")}
+            </span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-3 border-t border-slate-100 pt-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        Unique logged-in app users
+      </p>
+    </div>
+  );
+}
+
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [countsLoading, setCountsLoading] = useState(true);
@@ -399,6 +447,52 @@ export default function Dashboard() {
     const timer = setInterval(loadActivity, 15000);
     return () => { active = false; clearInterval(timer); };
   }, []);
+
+  const weeklyActivity = useMemo(() => {
+    const weekly = activity?.weekly || {};
+    const zones = Array.isArray(weekly.zones) ? weekly.zones : [];
+    const days = Array.isArray(weekly.days) ? weekly.days : [];
+    const hasUnknown = days.some((day) => toNumber(day?.unknownZone) > 0);
+    const series = zones.map((zone, index) => ({
+      key: `zone_${zone.zoneId}`,
+      zoneId: String(zone.zoneId),
+      name: zone.zoneName || `Zone ${zone.zoneId}`,
+      color: activityColors[index % activityColors.length],
+    }));
+
+    if (hasUnknown) {
+      series.push({
+        key: "unknownZone",
+        zoneId: null,
+        name: "Unknown Zone",
+        color: "#94a3b8",
+      });
+    }
+
+    const data = days.map((day) => {
+      const row = {
+        dateKey: day.dateKey,
+        label: `${day.label || ""} ${String(day.dateKey || "").slice(5)}`.trim(),
+        fullLabel: day.dateKey || day.label || "Activity",
+        total: toNumber(day.total),
+      };
+      row.breakdown = series.map((item) => {
+        const value = item.zoneId
+          ? toNumber(day?.byZone?.[item.zoneId])
+          : toNumber(day?.unknownZone);
+        row[item.key] = value;
+        return { ...item, value };
+      });
+      return row;
+    });
+
+    return {
+      data,
+      series,
+      startDateKey: weekly.startDateKey,
+      endDateKey: weekly.endDateKey,
+    };
+  }, [activity]);
 
   const weekDaySales = useMemo(() => {
     const rows = Array.isArray(stats?.weekDaySales) ? stats.weekDaySales : [];
@@ -558,7 +652,7 @@ export default function Dashboard() {
                 <p className="mt-2 text-4xl font-black text-emerald-950">{toNumber(activity?.onlineNow).toLocaleString("en-BD")}</p>
               </div>
               <div className="rounded-2xl bg-blue-50 p-5 ring-1 ring-blue-100">
-                <p className="text-xs font-bold uppercase tracking-wider text-blue-700">Active Today</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-blue-700">App Users Today</p>
                 <p className="mt-2 text-4xl font-black text-blue-950">{toNumber(activity?.activeToday).toLocaleString("en-BD")}</p>
               </div>
               {(activity?.zones || []).map((zone) => (
@@ -571,6 +665,93 @@ export default function Dashboard() {
                 <div className="rounded-2xl bg-amber-50 p-5 ring-1 ring-amber-100">
                   <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Unknown Zone</p>
                   <p className="mt-2 text-sm font-semibold text-amber-950">{toNumber(activity?.unknownZone?.onlineNow)} online · {toNumber(activity?.unknownZone?.activeToday)} today</p>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-7 border-t border-slate-100 pt-6">
+              <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <h4 className="text-lg font-black tracking-tight text-slate-950">
+                    Weekly App Users
+                  </h4>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Daily unique logged-in users, stacked by their first valid zone
+                  </p>
+                </div>
+                {weeklyActivity.startDateKey && weeklyActivity.endDateKey ? (
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                    {weeklyActivity.startDateKey} — {weeklyActivity.endDateKey}
+                  </span>
+                ) : null}
+              </div>
+
+              {weeklyActivity.data.length ? (
+                <div className="h-[330px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart
+                      data={weeklyActivity.data}
+                      margin={{ top: 24, right: 8, left: -16, bottom: 4 }}
+                    >
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                        vertical={false}
+                        stroke="#e2e8f0"
+                      />
+                      <XAxis
+                        dataKey="label"
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fontSize: 11, fill: "#64748b" }}
+                      />
+                      <YAxis
+                        allowDecimals={false}
+                        tickLine={false}
+                        axisLine={false}
+                        domain={[0, "auto"]}
+                      />
+                      <Tooltip content={<WeeklyActivityTooltip />} />
+                      <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+                      {weeklyActivity.series.map((item, index) => (
+                        <Bar
+                          key={item.key}
+                          dataKey={item.key}
+                          name={item.name}
+                          stackId="users"
+                          fill={item.color}
+                          maxBarSize={64}
+                          radius={
+                            index === weeklyActivity.series.length - 1
+                              ? [8, 8, 0, 0]
+                              : 0
+                          }
+                        />
+                      ))}
+                      <Line
+                        type="monotone"
+                        dataKey="total"
+                        name="Total"
+                        stroke="transparent"
+                        dot={false}
+                        activeDot={false}
+                        legendType="none"
+                        isAnimationActive={false}
+                      >
+                        <LabelList
+                          dataKey="total"
+                          position="top"
+                          formatter={(value) =>
+                            toNumber(value).toLocaleString("en-BD")
+                          }
+                          className="fill-slate-700 text-xs font-black"
+                        />
+                      </Line>
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="flex h-52 items-center justify-center rounded-2xl bg-slate-50 text-sm font-semibold text-slate-400">
+                  Weekly activity is loading…
                 </div>
               )}
             </div>
