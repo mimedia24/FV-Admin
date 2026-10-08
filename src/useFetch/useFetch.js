@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { apiAuthToken } from "../../secrets";
+import { apiAuthToken, apiPath } from "../../secrets";
 
 const useFetch = (url, options = {}) => {
   const [data, setData] = useState(null);
@@ -22,7 +22,7 @@ const useFetch = (url, options = {}) => {
       setLoading(true);
       try {
         const apiResponse = await fetch(
-          `${import.meta.env.VITE_API_PATH}${url}`,
+          `${apiPath}${url}`,
           {
             ...options,
             headers: {

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import Cookies from "js-cookie";
 import toast from "react-hot-toast";
@@ -16,12 +16,13 @@ import {
   Trash2,
 } from "lucide-react";
 import Layout from "./layout";
+import { apiPath } from "../../secrets";
 
 const fallbackBaseUrl = "https://api.foodversedelivery.com/api";
 
 const normalApiBaseUrl =
   import.meta.env.VITE_API_BASE_URL ||
-  import.meta.env.VITE_API_PATH ||
+  apiPath ||
   fallbackBaseUrl;
 
 const apiBaseUrl = normalApiBaseUrl.endsWith("/v3")
