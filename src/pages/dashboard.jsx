@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { io } from "socket.io-client";
 import Layout from "./layout";
 import axiosInstance from "../services/axios/axiosInstance";
+import { apiPath } from "../../secrets";
 import {
   ResponsiveContainer,
   BarChart,
@@ -319,7 +321,7 @@ const activityColors = [
   "#6366f1",
 ];
 
-function WeeklyActivityTooltip({ active, payload }) {
+function WeeklyActivityTooltip({ active, payload, footer = "Unique logged-in app users" }) {
   if (!(active && payload?.length)) return null;
   const row = payload[0]?.payload || {};
 
@@ -348,9 +350,139 @@ function WeeklyActivityTooltip({ active, payload }) {
         ))}
       </div>
       <p className="mt-3 border-t border-slate-100 pt-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-        Unique logged-in app users
+        {footer}
       </p>
     </div>
+  );
+}
+
+function buildWeeklyActivity(activity) {
+  const weekly = activity?.weekly || {};
+  const zones = Array.isArray(weekly.zones) ? weekly.zones : [];
+  const days = Array.isArray(weekly.days) ? weekly.days : [];
+  const hasUnknown = days.some((day) => toNumber(day?.unknownZone) > 0);
+  const series = zones.map((zone, index) => ({
+    key: `zone_${zone.zoneId}`,
+    zoneId: String(zone.zoneId),
+    name: zone.zoneName || `Zone ${zone.zoneId}`,
+    color: activityColors[index % activityColors.length],
+  }));
+
+  if (hasUnknown) {
+    series.push({
+      key: "unknownZone",
+      zoneId: null,
+      name: "Unknown Zone",
+      color: "#94a3b8",
+    });
+  }
+
+  const data = days.map((day) => {
+    const row = {
+      dateKey: day.dateKey,
+      label: `${day.label || ""} ${String(day.dateKey || "").slice(5)}`.trim(),
+      fullLabel: day.dateKey || day.label || "Activity",
+      total: toNumber(day.total),
+    };
+    row.breakdown = series.map((item) => {
+      const value = item.zoneId
+        ? toNumber(day?.byZone?.[item.zoneId])
+        : toNumber(day?.unknownZone);
+      row[item.key] = value;
+      return { ...item, value };
+    });
+    return row;
+  });
+
+  return {
+    data,
+    series,
+    startDateKey: weekly.startDateKey,
+    endDateKey: weekly.endDateKey,
+  };
+}
+
+function WebsiteActivitySection({ activity, weeklyActivity }) {
+  return (
+    <SectionCard
+      title="Website Activity"
+      subtitle="Live and daily unique visitors on the customer website"
+      badge={
+        activity?.generatedAt
+          ? `Updated ${new Date(activity.generatedAt).toLocaleTimeString("en-BD")}`
+          : "Connecting"
+      }
+    >
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-2xl bg-violet-50 p-5 ring-1 ring-violet-100">
+          <p className="text-xs font-bold uppercase tracking-wider text-violet-700">Visitors Online Now</p>
+          <p className="mt-2 text-4xl font-black text-violet-950">{toNumber(activity?.onlineNow).toLocaleString("en-BD")}</p>
+        </div>
+        <div className="rounded-2xl bg-fuchsia-50 p-5 ring-1 ring-fuchsia-100">
+          <p className="text-xs font-bold uppercase tracking-wider text-fuchsia-700">Unique Website Visitors Today</p>
+          <p className="mt-2 text-4xl font-black text-fuchsia-950">{toNumber(activity?.uniqueToday).toLocaleString("en-BD")}</p>
+        </div>
+        {(activity?.zones || []).map((zone) => (
+          <div key={zone.zoneId} className="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
+            <p className="truncate text-xs font-bold uppercase tracking-wider text-slate-500">{zone.zoneName}</p>
+            <div className="mt-3 flex items-end justify-between gap-3">
+              <div><p className="text-2xl font-black text-slate-950">{toNumber(zone.onlineNow)}</p><p className="text-xs text-slate-500">online</p></div>
+              <div className="text-right"><p className="text-2xl font-black text-violet-700">{toNumber(zone.uniqueToday)}</p><p className="text-xs text-slate-500">today</p></div>
+            </div>
+          </div>
+        ))}
+        {(activity?.unknownZone?.onlineNow > 0 || activity?.unknownZone?.uniqueToday > 0) && (
+          <div className="rounded-2xl bg-amber-50 p-5 ring-1 ring-amber-100">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-700">Unknown Zone</p>
+            <p className="mt-2 text-sm font-semibold text-amber-950">{toNumber(activity?.unknownZone?.onlineNow)} online · {toNumber(activity?.unknownZone?.uniqueToday)} today</p>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-7 border-t border-slate-100 pt-6">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h4 className="text-lg font-black tracking-tight text-slate-950">Weekly Website Visitors</h4>
+            <p className="mt-1 text-xs text-slate-500">Daily unique browsers, stacked by their first valid zone</p>
+          </div>
+          {weeklyActivity.startDateKey && weeklyActivity.endDateKey ? (
+            <span className="rounded-full bg-violet-50 px-3 py-1 text-xs font-bold text-violet-700">
+              {weeklyActivity.startDateKey} — {weeklyActivity.endDateKey}
+            </span>
+          ) : null}
+        </div>
+
+        {weeklyActivity.data.length ? (
+          <div className="h-[330px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={weeklyActivity.data} margin={{ top: 24, right: 8, left: -16, bottom: 4 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "#64748b" }} />
+                <YAxis allowDecimals={false} tickLine={false} axisLine={false} domain={[0, "auto"]} />
+                <Tooltip content={<WeeklyActivityTooltip footer="Unique customer website visitors" />} />
+                <Legend wrapperStyle={{ fontSize: 12, paddingTop: 12 }} />
+                {weeklyActivity.series.map((item, index) => (
+                  <Bar
+                    key={item.key}
+                    dataKey={item.key}
+                    name={item.name}
+                    stackId="websiteVisitors"
+                    fill={item.color}
+                    maxBarSize={64}
+                    radius={index === weeklyActivity.series.length - 1 ? [8, 8, 0, 0] : 0}
+                  />
+                ))}
+                <Line type="monotone" dataKey="total" name="Total" stroke="transparent" dot={false} activeDot={false} legendType="none" isAnimationActive={false}>
+                  <LabelList dataKey="total" position="top" formatter={(value) => toNumber(value).toLocaleString("en-BD")} />
+                </Line>
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="grid h-48 place-items-center rounded-2xl bg-slate-50 text-sm font-semibold text-slate-400">Website activity is not available yet.</div>
+        )}
+      </div>
+    </SectionCard>
   );
 }
 
@@ -365,6 +497,7 @@ export default function Dashboard() {
   });
   const [stats, setStats] = useState(null);
   const [activity, setActivity] = useState(null);
+  const [websiteActivity, setWebsiteActivity] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -448,51 +581,51 @@ export default function Dashboard() {
     return () => { active = false; clearInterval(timer); };
   }, []);
 
-  const weeklyActivity = useMemo(() => {
-    const weekly = activity?.weekly || {};
-    const zones = Array.isArray(weekly.zones) ? weekly.zones : [];
-    const days = Array.isArray(weekly.days) ? weekly.days : [];
-    const hasUnknown = days.some((day) => toNumber(day?.unknownZone) > 0);
-    const series = zones.map((zone, index) => ({
-      key: `zone_${zone.zoneId}`,
-      zoneId: String(zone.zoneId),
-      name: zone.zoneName || `Zone ${zone.zoneId}`,
-      color: activityColors[index % activityColors.length],
-    }));
-
-    if (hasUnknown) {
-      series.push({
-        key: "unknownZone",
-        zoneId: null,
-        name: "Unknown Zone",
-        color: "#94a3b8",
-      });
-    }
-
-    const data = days.map((day) => {
-      const row = {
-        dateKey: day.dateKey,
-        label: `${day.label || ""} ${String(day.dateKey || "").slice(5)}`.trim(),
-        fullLabel: day.dateKey || day.label || "Activity",
-        total: toNumber(day.total),
-      };
-      row.breakdown = series.map((item) => {
-        const value = item.zoneId
-          ? toNumber(day?.byZone?.[item.zoneId])
-          : toNumber(day?.unknownZone);
-        row[item.key] = value;
-        return { ...item, value };
-      });
-      return row;
-    });
-
-    return {
-      data,
-      series,
-      startDateKey: weekly.startDateKey,
-      endDateKey: weekly.endDateKey,
+  useEffect(() => {
+    let active = true;
+    let refreshTimer = null;
+    const loadWebsiteActivity = async () => {
+      try {
+        const response = await axiosInstance.get("/v3/master-admin/website-activity/summary");
+        if (active) setWebsiteActivity(response.data?.result || null);
+      } catch (error) {
+        if (active) console.error("Website activity fetch error:", error);
+      }
     };
-  }, [activity]);
+    const scheduleRefresh = () => {
+      window.clearTimeout(refreshTimer);
+      refreshTimer = window.setTimeout(loadWebsiteActivity, 500);
+    };
+    const socketUrl = (import.meta.env.VITE_SOCKET_SERVER || apiPath).replace(/\/api\/?$/, "");
+    const adminSocket = io(socketUrl, {
+      transports: ["websocket", "polling"],
+      reconnection: true,
+    });
+    const authenticate = () => {
+      const token = localStorage.getItem("AccessToken");
+      if (token) adminSocket.emit("adminSecureAuth", { token });
+    };
+
+    adminSocket.on("connect", authenticate);
+    adminSocket.on("websiteActivityChanged", scheduleRefresh);
+    loadWebsiteActivity();
+    const pollTimer = window.setInterval(loadWebsiteActivity, 15_000);
+
+    return () => {
+      active = false;
+      window.clearTimeout(refreshTimer);
+      window.clearInterval(pollTimer);
+      adminSocket.off("connect", authenticate);
+      adminSocket.off("websiteActivityChanged", scheduleRefresh);
+      adminSocket.disconnect();
+    };
+  }, []);
+
+  const weeklyActivity = useMemo(() => buildWeeklyActivity(activity), [activity]);
+  const weeklyWebsiteActivity = useMemo(
+    () => buildWeeklyActivity(websiteActivity),
+    [websiteActivity]
+  );
 
   const weekDaySales = useMemo(() => {
     const rows = Array.isArray(stats?.weekDaySales) ? stats.weekDaySales : [];
@@ -756,6 +889,11 @@ export default function Dashboard() {
               )}
             </div>
           </SectionCard>
+
+          <WebsiteActivitySection
+            activity={websiteActivity}
+            weeklyActivity={weeklyWebsiteActivity}
+          />
 
           <section className="grid gap-6 xl:grid-cols-2">
             <SectionCard
